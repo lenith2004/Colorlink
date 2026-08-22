@@ -1,0 +1,8 @@
+{
+  "name": "Remix ColorLink Pintuco",
+  "description": "Ecosistema digital inteligente que conecta necesidades de recubrimientos con soluciones técnicas, comerciales, de inventario y calidad automatizadas.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
