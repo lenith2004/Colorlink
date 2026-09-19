@@ -4,6 +4,7 @@ import {
   InventoryItem,
   PaintRequest,
   InventoryTraceabilityRecord,
+  ColorPaletteItem,
 } from '../types';
 
 export const DEMO_USERS: UserProfile[] = [
@@ -57,19 +58,22 @@ export const DEMO_USERS: UserProfile[] = [
   },
 ];
 
-export const COLOR_PALETTES = [
-  { name: 'Blanco Puro', hex: '#F9FAFB', category: 'Clásicos' },
-  { name: 'Gris Urbano', hex: '#94A3B8', category: 'Neutros' },
-  { name: 'Gris Plomo', hex: '#475569', category: 'Neutros' },
-  { name: 'Azul Pintuco', hex: '#1B2A6B', category: 'Corporativo' },
-  { name: 'Azul Naval Profundo', hex: '#0F172A', category: 'Intensos' },
-  { name: 'Verde Foresta', hex: '#2FAE6D', category: 'Vivos' },
-  { name: 'Terracota Colonial', hex: '#C2410C', category: 'Tierra' },
-  { name: 'Ocre Dorado', hex: '#D97706', category: 'Cálidos' },
-  { name: 'Marfil Suave', hex: '#FEF3C7', category: 'Clásicos' },
-  { name: 'Negro Ébano Industrial', hex: '#18181B', category: 'Especiales' },
-  { name: 'Amarillo Seguridad', hex: '#EAB308', category: 'Tráfico & Vial' },
-  { name: 'Rojo Señalización', hex: '#DC2626', category: 'Industrial' },
+export const COLOR_PALETTES: ColorPaletteItem[] = [
+  { name: 'Blanco Puro', hex: '#F9FAFB', category: 'Blancos & Neutros', code: 'PIN-1001', lrv: 88, family: 'Blanco Luminoso', description: 'Blanco luminoso de máxima reflectancia, ideal para amplitud visual, cielos y muros despejados.' },
+  { name: 'Marfil Suave', hex: '#FEF3C7', category: 'Blancos & Neutros', code: 'PIN-1025', lrv: 78, family: 'Blanco Cálido', description: 'Tono marfil aterciopelado, genera ambientes confortables, serenos y de alta elegancia.' },
+  { name: 'Lino Nórdico', hex: '#E2E8F0', category: 'Blancos & Neutros', code: 'PIN-1040', lrv: 74, family: 'Gris Arquitectónico', description: 'Grisáceo muy claro y limpio, preferido en arquitectura moderna y divisiones de drywall.' },
+  { name: 'Gris Urbano', hex: '#94A3B8', category: 'Blancos & Neutros', code: 'PIN-2015', lrv: 52, family: 'Neutro Medio', description: 'Gris medio neutro contemporáneo, excelente para fachadas corporativas, oficinas y pasillos.' },
+  { name: 'Gris Plomo', hex: '#475569', category: 'Blancos & Neutros', code: 'PIN-2080', lrv: 26, family: 'Grafito Intenso', description: 'Gris grafito profundo con gran presencia arquitectónica, contraste y solidez visual.' },
+  { name: 'Azul Pintuco', hex: '#1B2A6B', category: 'Corporativo & Acentos', code: 'PIN-5010', lrv: 12, family: 'Azul Institucional', description: 'El icónico azul institucional Pintuco: máxima solidez de pigmento, prestigio y durabilidad.' },
+  { name: 'Azul Naval Profundo', hex: '#0F172A', category: 'Corporativo & Acentos', code: 'PIN-5095', lrv: 7, family: 'Noche Profundo', description: 'Azul noche de acento sobrio, transmite lujo contemporáneo, serenidad y alta tecnología.' },
+  { name: 'Verde Foresta', hex: '#2FAE6D', category: 'Vivos & Tendencia', code: 'PIN-6020', lrv: 34, family: 'Biofilia Vibrante', description: 'Verde orgánico y natural, aporta frescura, renovación y sensación de bienestar ambiental.' },
+  { name: 'Verde Salvia Nórdico', hex: '#84A98C', category: 'Vivos & Tendencia', code: 'PIN-6045', lrv: 44, family: 'Salvia Mineral', description: 'Verde suave relajante de tendencia en interiorismo, zonas de descanso y salud.' },
+  { name: 'Terracota Colonial', hex: '#C2410C', category: 'Cálidos & Tierras', code: 'PIN-3050', lrv: 20, family: 'Arcilla Tradicional', description: 'Rojo tierra artesanal colombiano, icónico en fachadas coloniales y muros de acento.' },
+  { name: 'Ocre Dorado', hex: '#D97706', category: 'Cálidos & Tierras', code: 'PIN-3080', lrv: 29, family: 'Mostaza Cálido', description: 'Amarillo quemado energizante, aporta calidez acogedora y carácter artesanal distinguido.' },
+  { name: 'Arena Sahara', hex: '#D4B996', category: 'Cálidos & Tierras', code: 'PIN-3015', lrv: 58, family: 'Tierra Suave', description: 'Beige arena natural, muy versátil al combinarse con maderas claras y piedra estructural.' },
+  { name: 'Amarillo Seguridad', hex: '#EAB308', category: 'Industrial & Seguridad', code: 'PIN-8010', lrv: 59, family: 'Tráfico & Vial', description: 'Color normalizado de alta visibilidad para demarcación vial, bodegas y áreas de tránsito.' },
+  { name: 'Rojo Señalización', hex: '#DC2626', category: 'Industrial & Seguridad', code: 'PIN-9020', lrv: 18, family: 'Seguridad Industrial', description: 'Rojo normado de alta saturación para redes contra incendios y señalización preventiva.' },
+  { name: 'Negro Ébano Industrial', hex: '#18181B', category: 'Industrial & Seguridad', code: 'PIN-9999', lrv: 4, family: 'Azabache Mate', description: 'Negro de máxima opacidad para estructuras metálicas, tuberías y cielorrasos tipo loft.' },
 ];
 
 export const PRODUCTS_CATALOG: PaintProduct[] = [

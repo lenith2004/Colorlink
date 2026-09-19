@@ -14,8 +14,9 @@ import {
   ShieldCheck,
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
-import { SurfaceType, EnvironmentType, FinishType, ChannelSource } from '../types';
+import { SurfaceType, EnvironmentType, FinishType, ChannelSource, ColorPaletteItem } from '../types';
 import { COLOR_PALETTES } from '../data/initialData';
+import { ColorSimulationStudio } from './ColorSimulationStudio';
 
 export const ClientRequestModal: React.FC = () => {
   const {
@@ -42,18 +43,19 @@ export const ClientRequestModal: React.FC = () => {
   const [channel, setChannel] = useState<ChannelSource>('web');
 
   const [surfaceType, setSurfaceType] = useState<SurfaceType>('mamposteria');
-  const [areaSqMeters, setAreaSqMeters] = useState<number>(120);
+  const [areaSqMeters, setAreaSqMeters] = useState<number | string>(120);
   const [environment, setEnvironment] = useState<EnvironmentType>('interior');
   const [finish, setFinish] = useState<FinishType>('mate');
   const [selectedColorName, setSelectedColorName] = useState<string>('Blanco Puro');
+  const [selectedColorHex, setSelectedColorHex] = useState<string>('#F9FAFB');
   const [urgencyDays, setUrgencyDays] = useState<number>(5);
   const [notes, setNotes] = useState<string>('Requerimos entrega puntual y ficha técnica de laboratorio para interventoría.');
 
   // Room dimension helper
   const [showRoomCalc, setShowRoomCalc] = useState(false);
-  const [roomLength, setRoomLength] = useState<number>(10);
-  const [roomHeight, setRoomHeight] = useState<number>(2.5);
-  const [roomWalls, setRoomWalls] = useState<number>(4);
+  const [roomLength, setRoomLength] = useState<number | string>(10);
+  const [roomHeight, setRoomHeight] = useState<number | string>(2.5);
+  const [roomWalls, setRoomWalls] = useState<number | string>(4);
 
   // Gating prompt for guests
   const [guestActionRequested, setGuestActionRequested] = useState<'compra' | 'asesor' | null>(null);
@@ -75,10 +77,26 @@ export const ClientRequestModal: React.FC = () => {
 
   // Real-time calculation
   const calc = calculateRequirements(surfaceType, Number(areaSqMeters) || 1, environment, finish);
-  const selectedColor = COLOR_PALETTES.find((c) => c.name === selectedColorName) || COLOR_PALETTES[0];
+  const selectedColor: ColorPaletteItem = COLOR_PALETTES.find((c) => c.name.toLowerCase() === selectedColorName.toLowerCase()) || {
+    name: selectedColorName,
+    hex: selectedColorHex,
+    category: 'Personalizado',
+    code: 'PIN-CUSTOM',
+    lrv: 35,
+    family: 'Tintometría Especial',
+    description: 'Fórmula individualizada según carta o muestra física del cliente.'
+  };
+
+  const handleSelectColor = (col: ColorPaletteItem) => {
+    setSelectedColorName(col.name);
+    setSelectedColorHex(col.hex);
+  };
 
   const applyRoomCalc = () => {
-    const totalArea = Math.round(roomLength * roomHeight * roomWalls);
+    const l = Number(roomLength) || 0;
+    const h = Number(roomHeight) || 0;
+    const w = Number(roomWalls) || 0;
+    const totalArea = Math.round(l * h * w) || 1;
     setAreaSqMeters(totalArea);
     setShowRoomCalc(false);
   };
@@ -309,8 +327,12 @@ export const ClientRequestModal: React.FC = () => {
                     min="1"
                     max="100000"
                     required
+                    placeholder="Ej. 15"
                     value={areaSqMeters}
-                    onChange={(e) => setAreaSqMeters(Number(e.target.value))}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setAreaSqMeters(val === '' ? '' : Number(val));
+                    }}
                     className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-base font-extrabold text-slate-900 focus:bg-white focus:border-[#1B2A6B] outline-hidden"
                   />
                   <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">
@@ -327,8 +349,12 @@ export const ClientRequestModal: React.FC = () => {
                         <label className="text-[10px] text-slate-600 block">Largo (m)</label>
                         <input
                           type="number"
+                          placeholder="0"
                           value={roomLength}
-                          onChange={(e) => setRoomLength(Number(e.target.value))}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setRoomLength(val === '' ? '' : Number(val));
+                          }}
                           className="w-full p-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold"
                         />
                       </div>
@@ -336,8 +362,12 @@ export const ClientRequestModal: React.FC = () => {
                         <label className="text-[10px] text-slate-600 block">Alto (m)</label>
                         <input
                           type="number"
+                          placeholder="0"
                           value={roomHeight}
-                          onChange={(e) => setRoomHeight(Number(e.target.value))}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setRoomHeight(val === '' ? '' : Number(val));
+                          }}
                           className="w-full p-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold"
                         />
                       </div>
@@ -345,8 +375,12 @@ export const ClientRequestModal: React.FC = () => {
                         <label className="text-[10px] text-slate-600 block">Muros</label>
                         <input
                           type="number"
+                          placeholder="0"
                           value={roomWalls}
-                          onChange={(e) => setRoomWalls(Number(e.target.value))}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setRoomWalls(val === '' ? '' : Number(val));
+                          }}
                           className="w-full p-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold"
                         />
                       </div>
@@ -356,7 +390,7 @@ export const ClientRequestModal: React.FC = () => {
                       onClick={applyRoomCalc}
                       className="w-full py-1.5 bg-[#1B2A6B] text-white rounded-lg font-bold text-xs hover:bg-opacity-90 cursor-pointer"
                     >
-                      Aplicar {Math.round(roomLength * roomHeight * roomWalls)} m² al proyecto
+                      Aplicar {Math.round((Number(roomLength) || 0) * (Number(roomHeight) || 0) * (Number(roomWalls) || 0))} m² al proyecto
                     </button>
                   </div>
                 )}
@@ -394,28 +428,17 @@ export const ClientRequestModal: React.FC = () => {
                 </div>
               </div>
 
-              {/* Color Swatch Selector */}
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1.5 flex items-center justify-between">
-                  <span>Color Pintuco Seleccionado:</span>
-                  <span className="font-extrabold text-[#1B2A6B]">{selectedColor.name}</span>
-                </label>
-                <div className="flex items-center gap-2 flex-wrap">
-                  {COLOR_PALETTES.map((color) => (
-                    <button
-                      key={color.name}
-                      type="button"
-                      onClick={() => setSelectedColorName(color.name)}
-                      className={`w-7 h-7 rounded-full border-2 transition-transform cursor-pointer relative shadow-2xs ${
-                        selectedColorName === color.name
-                          ? 'scale-125 border-[#1B2A6B] ring-2 ring-[#2FAE6D]'
-                          : 'border-slate-300 hover:scale-110'
-                      }`}
-                      style={{ backgroundColor: color.hex }}
-                      title={color.name}
-                    />
-                  ))}
-                </div>
+              {/* Interactive Real-Time Color Simulation Studio */}
+              <div className="pt-2">
+                <ColorSimulationStudio
+                  selectedColorName={selectedColor.name}
+                  selectedColorHex={selectedColor.hex}
+                  onSelectColor={handleSelectColor}
+                  surfaceType={surfaceType}
+                  finish={finish}
+                  environment={environment}
+                  productName={calc.product.name}
+                />
               </div>
             </div>
 
@@ -522,6 +545,39 @@ export const ClientRequestModal: React.FC = () => {
                     <span>Se sugieren <strong>{calc.primerRequiredGallons} Gal</strong> de Sellomax/Imprimante base.</span>
                   </div>
                 )}
+
+                {/* Specific Color Identification Swatch */}
+                <div className="bg-white/10 p-3 rounded-xl border border-white/15 flex items-center justify-between">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div
+                      className="w-7 h-7 rounded-lg border-2 border-white/80 shadow-md shrink-0 relative overflow-hidden"
+                      style={{ backgroundColor: selectedColor.hex }}
+                    >
+                      <div className="absolute top-0 right-0 w-2.5 h-2.5 bg-white/40 rounded-bl-full pointer-events-none" />
+                    </div>
+                    <div className="min-w-0">
+                      <span className="text-[9px] text-[#2FAE6D] block uppercase font-extrabold tracking-wider">
+                        Color Específico a Entintar
+                      </span>
+                      <p className="font-bold text-white text-xs truncate">
+                        {selectedColor.name}{' '}
+                        {selectedColor.code && (
+                          <span className="text-[10px] text-slate-300 font-mono font-normal">
+                            ({selectedColor.code})
+                          </span>
+                        )}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <span className="text-[9px] font-mono text-emerald-300 bg-emerald-500/20 px-2 py-0.5 rounded border border-emerald-500/30 uppercase font-bold block">
+                      {finish}
+                    </span>
+                    <span className="text-[8px] text-slate-400 font-mono block mt-0.5">
+                      {selectedColor.hex}
+                    </span>
+                  </div>
+                </div>
               </div>
 
               {/* Estimated Price Box */}

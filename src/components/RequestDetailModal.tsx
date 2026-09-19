@@ -193,11 +193,19 @@ export const RequestDetailModal: React.FC = () => {
                 <p>• <strong>Superficie:</strong> <span className="capitalize">{req.surfaceType.replace('_', ' ')}</span> ({req.areaSqMeters} m²)</p>
                 <p>• <strong>Ambiente:</strong> <span className="capitalize">{req.environment.replace('_', ' ')}</span></p>
                 <p>• <strong>Acabado:</strong> <span className="capitalize">{req.finish.replace('_', ' ')}</span></p>
-                <p className="flex items-center gap-1.5">
-                  • <strong>Color:</strong>
-                  <span className="w-3 h-3 rounded-full border border-slate-300 inline-block" style={{ backgroundColor: req.selectedColorHex }} />
-                  <span>{req.selectedColorName}</span>
-                </p>
+                <div className="pt-1 border-t border-slate-200/80 mt-1.5">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Color de Tintometría:</span>
+                  <div className="flex items-center gap-2 bg-white p-1.5 rounded-lg border border-slate-200">
+                    <span
+                      className="w-5 h-5 rounded-md border border-slate-300 shadow-2xs shrink-0"
+                      style={{ backgroundColor: req.selectedColorHex }}
+                    />
+                    <div className="min-w-0">
+                      <span className="text-xs font-bold text-slate-900 block truncate">{req.selectedColorName}</span>
+                      <span className="text-[10px] font-mono text-slate-500 block">{req.selectedColorHex}</span>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
 

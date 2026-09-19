@@ -39,6 +39,16 @@ export type FinishType = 'mate' | 'satinado' | 'semibrillante' | 'brillante' | '
 
 export type EnvironmentType = 'interior' | 'exterior' | 'industrial_marino' | 'hospitalario_aseptico';
 
+export interface ColorPaletteItem {
+  name: string;
+  hex: string;
+  category: string;
+  code?: string;
+  lrv?: number; // Light Reflectance Value %
+  family?: string;
+  description?: string;
+}
+
 export interface PaintProduct {
   id: string;
   code: string;
