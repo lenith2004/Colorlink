@@ -35,6 +35,7 @@ export const Header: React.FC = () => {
     setIsAuthModalOpen,
     setIsChatOpen,
     products,
+    whatsAppCommercialNumber,
   } = useApp();
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -68,8 +69,20 @@ export const Header: React.FC = () => {
 
           {/* Quick contact / customer support info */}
           <div className="flex items-center gap-3 text-[11px] text-slate-300">
-            <span className="hidden sm:inline">Línea de Asesoría Técnica: <strong className="text-white">01 8000 111 247</strong></span>
-            <span className="text-[#2FAE6D] font-bold">Envíos a Nivel Nacional</span>
+            <span className="hidden sm:inline">Línea Técnica: <strong className="text-white">01 8000 111 247</strong></span>
+            <span className="text-[#2FAE6D] font-bold hidden md:inline">Envíos a Nivel Nacional</span>
+            <a
+              id="header-whatsapp-hotline"
+              href={`https://wa.me/${whatsAppCommercialNumber.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(
+                'Hola, me comunico desde la plataforma Pintuco ColorLink para solicitar asesoría técnica y cotización comercial.'
+              )}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 text-[#25D366] hover:text-emerald-300 font-extrabold bg-white/10 hover:bg-white/20 px-2.5 py-0.5 rounded-full border border-[#25D366]/40 transition-all cursor-pointer"
+            >
+              <MessageSquare className="w-3 h-3 text-[#25D366]" />
+              <span>WhatsApp Comercial</span>
+            </a>
           </div>
         </div>
       </div>
@@ -126,8 +139,20 @@ export const Header: React.FC = () => {
                       <Layers className="w-4 h-4" />
                     </div>
                     <div>
-                      <p className="font-semibold text-slate-900">Inicio & Flujo 5 Fases</p>
-                      <p className="text-xs text-slate-500">Visión global del ciclo de vida</p>
+                      <p className="font-semibold text-slate-900">Inicio Minimalista</p>
+                      <p className="text-xs text-slate-500">Banner, Procesos y Catálogo</p>
+                    </div>
+                  </button>
+                  <button
+                    onClick={() => { setActiveView('solutions'); setIsMenuOpen(false); }}
+                    className="w-full flex items-center gap-3 p-2.5 hover:bg-slate-50 rounded-xl text-left text-sm font-medium text-slate-800"
+                  >
+                    <div className="w-8 h-8 rounded-lg bg-emerald-100 text-[#2FAE6D] flex items-center justify-center">
+                      <Sparkles className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-slate-900">Centro de Procesos</p>
+                      <p className="text-xs text-slate-500">Ingreso independiente a las 5 fases</p>
                     </div>
                   </button>
                   <button

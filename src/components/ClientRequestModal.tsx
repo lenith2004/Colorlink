@@ -31,6 +31,7 @@ export const ClientRequestModal: React.FC = () => {
     selectedCity,
     setSelectedRequestForDetail,
     setActiveView,
+    whatsAppCommercialNumber,
   } = useApp();
 
   // Form states
@@ -140,6 +141,31 @@ export const ClientRequestModal: React.FC = () => {
       setIsRequestModalOpen(false);
       setIsChatOpen(true);
     }
+  };
+
+  const handleSendQuoteViaWhatsApp = () => {
+    const numericArea = Number(areaSqMeters) || 0;
+    const requirements = calculateRequirements(surfaceType, numericArea, environment, finish);
+    const text =
+      `📋 *SOLICITUD DE COTIZACIÓN - PINTUCO COLORLINK* 🎨\n\n` +
+      `🏗️ *Proyecto:* ${projectName}\n` +
+      `👤 *Contacto:* ${clientName || currentUser?.name || 'Cliente'}\n` +
+      `🏢 *Empresa / Obra:* ${clientCompany || currentUser?.company || 'Particular'}\n` +
+      `📱 *Teléfono:* ${clientPhone || currentUser?.phone || 'No indicado'}\n` +
+      `📍 *Ciudad:* ${city}\n\n` +
+      `🧪 *ESPECIFICACIÓN TÉCNICA:*\n` +
+      `• Superficie: ${surfaceType}\n` +
+      `• Área a Pintar: ${numericArea} m²\n` +
+      `• Producto Sugerido: ${requirements.product.name}\n` +
+      `• Color Seleccionado: ${selectedColorName} (${selectedColorHex})\n` +
+      `• Acabado Solicitado: ${finish}\n` +
+      `• Galones Calculados: ${requirements.gallonsNeeded} Gal\n` +
+      `• Presentación Recomendada: ${requirements.suggestedBuckets} Cuñete(s) + ${requirements.suggestedIndividualGallons} Galón(es)\n` +
+      `• Presupuesto Estimado: $${requirements.estimatedPriceCOP.toLocaleString('es-CO')} COP\n\n` +
+      `💬 Deseo coordinar con un asesor técnico de Pintuco para validar disponibilidad de stock y fecha de entrega.`;
+
+    const cleanNum = (whatsAppCommercialNumber || '573101234567').replace(/[^0-9]/g, '');
+    window.open(`https://wa.me/${cleanNum}?text=${encodeURIComponent(text)}`, '_blank');
   };
 
   const openAuthFromGate = () => {
@@ -328,10 +354,22 @@ export const ClientRequestModal: React.FC = () => {
                     max="100000"
                     required
                     placeholder="Ej. 15"
-                    value={areaSqMeters}
+                    value={areaSqMeters === 0 ? '' : areaSqMeters}
+                    onFocus={(e) => {
+                      if (areaSqMeters === 0 || areaSqMeters === '0') {
+                        setAreaSqMeters('');
+                      } else {
+                        e.target.select();
+                      }
+                    }}
                     onChange={(e) => {
                       const val = e.target.value;
-                      setAreaSqMeters(val === '' ? '' : Number(val));
+                      if (val === '') {
+                        setAreaSqMeters('');
+                      } else {
+                        const parsed = parseInt(val, 10);
+                        setAreaSqMeters(isNaN(parsed) ? '' : parsed);
+                      }
                     }}
                     className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-base font-extrabold text-slate-900 focus:bg-white focus:border-[#1B2A6B] outline-hidden"
                   />
@@ -349,11 +387,12 @@ export const ClientRequestModal: React.FC = () => {
                         <label className="text-[10px] text-slate-600 block">Largo (m)</label>
                         <input
                           type="number"
-                          placeholder="0"
-                          value={roomLength}
+                          placeholder="Ej. 10"
+                          value={roomLength === 0 ? '' : roomLength}
+                          onFocus={(e) => { if (roomLength === 0) setRoomLength(''); else e.target.select(); }}
                           onChange={(e) => {
                             const val = e.target.value;
-                            setRoomLength(val === '' ? '' : Number(val));
+                            setRoomLength(val === '' ? '' : parseFloat(val) || '');
                           }}
                           className="w-full p-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold"
                         />
@@ -362,11 +401,12 @@ export const ClientRequestModal: React.FC = () => {
                         <label className="text-[10px] text-slate-600 block">Alto (m)</label>
                         <input
                           type="number"
-                          placeholder="0"
-                          value={roomHeight}
+                          placeholder="Ej. 2.5"
+                          value={roomHeight === 0 ? '' : roomHeight}
+                          onFocus={(e) => { if (roomHeight === 0) setRoomHeight(''); else e.target.select(); }}
                           onChange={(e) => {
                             const val = e.target.value;
-                            setRoomHeight(val === '' ? '' : Number(val));
+                            setRoomHeight(val === '' ? '' : parseFloat(val) || '');
                           }}
                           className="w-full p-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold"
                         />
@@ -375,11 +415,12 @@ export const ClientRequestModal: React.FC = () => {
                         <label className="text-[10px] text-slate-600 block">Muros</label>
                         <input
                           type="number"
-                          placeholder="0"
-                          value={roomWalls}
+                          placeholder="Ej. 4"
+                          value={roomWalls === 0 ? '' : roomWalls}
+                          onFocus={(e) => { if (roomWalls === 0) setRoomWalls(''); else e.target.select(); }}
                           onChange={(e) => {
                             const val = e.target.value;
-                            setRoomWalls(val === '' ? '' : Number(val));
+                            setRoomWalls(val === '' ? '' : parseInt(val, 10) || '');
                           }}
                           className="w-full p-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold"
                         />
@@ -615,8 +656,19 @@ export const ClientRequestModal: React.FC = () => {
                   className="w-full bg-white/10 hover:bg-white/20 text-white border border-white/20 py-2.5 px-4 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer"
                 >
                   <MessageSquare className="w-3.5 h-3.5 text-emerald-300" />
-                  <span>Hablar directamente con un Asesor</span>
+                  <span>Hablar con Asesor IA Pintuco</span>
                   {!isLoggedIn && <Lock className="w-3 h-3 text-slate-300 ml-1" />}
+                </button>
+
+                {/* 3. Direct WhatsApp Quoting */}
+                <button
+                  type="button"
+                  id="modal-whatsapp-quote-btn"
+                  onClick={handleSendQuoteViaWhatsApp}
+                  className="w-full bg-[#25D366] hover:bg-[#20ba59] text-white py-2.5 px-4 rounded-xl font-extrabold text-xs flex items-center justify-center gap-2 shadow-xs hover:shadow-md transition-all cursor-pointer"
+                >
+                  <MessageSquare className="w-4 h-4" />
+                  <span>Enviar Cotización por WhatsApp Asesor</span>
                 </button>
               </div>
 

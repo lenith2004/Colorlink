@@ -9,6 +9,15 @@ import {
   Phone,
   Mail,
   FileCheck2,
+  MessageSquare,
+  Send,
+  Copy,
+  ExternalLink,
+  Edit3,
+  Check,
+  ShieldCheck,
+  MapPin,
+  ArrowRight,
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { UserProfile, DocumentType } from '../types';
@@ -20,6 +29,11 @@ export const AuthModal: React.FC = () => {
     currentUser,
     setCurrentUser,
     setActiveView,
+    whatsAppCommercialNumber,
+    setWhatsAppCommercialNumber,
+    registerClient,
+    getWhatsAppRegistrationUrl,
+    getUserConfirmationWhatsAppUrl,
   } = useApp();
 
   const [mode, setMode] = useState<'login' | 'register'>('login');
@@ -40,6 +54,19 @@ export const AuthModal: React.FC = () => {
   const [regPhone, setRegPhone] = useState('');
   const [regCity, setRegCity] = useState('Bogotá D.C.');
   const [regAcceptTerms, setRegAcceptTerms] = useState(true);
+
+  // Registration confirmation & WhatsApp state
+  const [registeredSuccessData, setRegisteredSuccessData] = useState<{
+    user: UserProfile;
+    whatsappUrl: string;
+    userWhatsAppUrl: string;
+    formattedMessage: string;
+    userConfirmationMessage: string;
+  } | null>(null);
+  const [recipientChoice, setRecipientChoice] = useState<'my_phone' | 'advisor'>('my_phone');
+  const [copiedFeedback, setCopiedFeedback] = useState(false);
+  const [isEditingWhatsApp, setIsEditingWhatsApp] = useState(false);
+  const [tempWhatsAppNumber, setTempWhatsAppNumber] = useState(whatsAppCommercialNumber);
 
   if (!isAuthModalOpen) return null;
 
@@ -65,6 +92,7 @@ export const AuthModal: React.FC = () => {
       company: loginDocType === 'NIT' ? 'Empresa Registrada' : 'Particular / Residente de Obra',
       city: 'Bogotá D.C.',
       avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80',
+      registeredAt: new Date().toLocaleString('es-CO'),
     };
     setCurrentUser(newUser);
     setAuthSuccess(`¡Bienvenido! Documento ${loginDocType} ${cleanInputDoc} validado.`);
@@ -77,6 +105,9 @@ export const AuthModal: React.FC = () => {
 
   const handleRegisterSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setAuthError(null);
+    setAuthSuccess(null);
+
     if (!regDocNumber.trim() || !regName.trim()) {
       setAuthError('Por favor completa los datos obligatorios del documento y nombre');
       return;
@@ -95,15 +126,39 @@ export const AuthModal: React.FC = () => {
       phone: regPhone.trim() || '+57 300 000 0000',
       city: regCity,
       avatarUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80',
+      registeredAt: new Date().toLocaleString('es-CO'),
     };
 
-    setCurrentUser(newUser);
-    setAuthSuccess(`¡Registro exitoso! Bienvenido ${newUser.name} (${newUser.docType} ${newUser.docNumber})`);
-    setTimeout(() => {
-      setIsAuthModalOpen(false);
-      setActiveView('dashboard');
-      setAuthSuccess(null);
-    }, 700);
+    const registrationResult = registerClient(newUser);
+    setRegisteredSuccessData(registrationResult);
+  };
+
+  const handleOpenWhatsApp = () => {
+    if (!registeredSuccessData) return;
+    const url =
+      recipientChoice === 'my_phone'
+        ? registeredSuccessData.userWhatsAppUrl
+        : getWhatsAppRegistrationUrl(registeredSuccessData.user, whatsAppCommercialNumber);
+    window.open(url, '_blank');
+  };
+
+  const handleCopyToClipboard = () => {
+    if (!registeredSuccessData) return;
+    const msg =
+      recipientChoice === 'my_phone'
+        ? registeredSuccessData.userConfirmationMessage
+        : registeredSuccessData.formattedMessage;
+    navigator.clipboard.writeText(msg);
+    setCopiedFeedback(true);
+    setTimeout(() => setCopiedFeedback(false), 2500);
+  };
+
+  const handleSaveWhatsAppNumber = () => {
+    const clean = tempWhatsAppNumber.replace(/[^0-9]/g, '');
+    if (clean) {
+      setWhatsAppCommercialNumber(clean);
+      setIsEditingWhatsApp(false);
+    }
   };
 
   return (
@@ -253,8 +308,201 @@ export const AuthModal: React.FC = () => {
             </div>
           )}
 
-          {/* TAB 2: REGISTER FORM WITH DOCUMENT */}
+          {/* TAB 2: REGISTER FORM OR WHATSAPP NOTIFICATION DISPATCH */}
           {mode === 'register' && (
+            registeredSuccessData ? (
+              <div className="space-y-4 animate-in fade-in zoom-in-95">
+                {/* Header confirmation card */}
+                <div className="bg-gradient-to-r from-emerald-50 via-teal-50 to-emerald-50 border border-emerald-200 p-4 rounded-2xl flex items-start gap-3.5 shadow-2xs">
+                  <div className="w-10 h-10 rounded-2xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-md">
+                    <CheckCircle2 className="w-5 h-5" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-[10px] bg-emerald-600 text-white font-extrabold px-2.5 py-0.5 rounded-full uppercase tracking-wider shadow-2xs">
+                        ¡Registro Exitoso!
+                      </span>
+                      <span className="text-xs font-extrabold text-emerald-800 flex items-center gap-1">
+                        <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                        Cuenta Activa en ColorLink
+                      </span>
+                    </div>
+                    <h3 className="text-base font-extrabold text-slate-900 mt-1">
+                      ¡Bienvenido, {registeredSuccessData.user.name}!
+                    </h3>
+                    <p className="text-xs text-slate-600 mt-0.5">
+                      Tu usuario ha sido creado y autenticado correctamente con documento <strong>{registeredSuccessData.user.docType} {registeredSuccessData.user.docNumber}</strong>.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Primary Action: Direct Access to Dashboard */}
+                <button
+                  type="button"
+                  id="auth-go-to-dashboard-btn"
+                  onClick={() => {
+                    setIsAuthModalOpen(false);
+                    setActiveView('dashboard');
+                    setRegisteredSuccessData(null);
+                  }}
+                  className="w-full bg-[#1B2A6B] hover:bg-[#142154] text-white py-3.5 px-4 rounded-2xl font-extrabold text-sm flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all cursor-pointer group active:scale-98"
+                >
+                  <FileCheck2 className="w-4 h-4 text-[#2FAE6D]" />
+                  <span>Ingresar Directamente a Mi Portal de Proyectos</span>
+                  <ArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
+                </button>
+
+                {/* Client summary pills */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">
+                  <div className="p-2.5 bg-slate-50 border border-slate-200 rounded-xl">
+                    <span className="text-[10px] text-slate-400 font-bold block">Contacto</span>
+                    <span className="font-extrabold text-slate-900 truncate block">{registeredSuccessData.user.name}</span>
+                  </div>
+                  <div className="p-2.5 bg-slate-50 border border-slate-200 rounded-xl">
+                    <span className="text-[10px] text-slate-400 font-bold block">Empresa / Obra</span>
+                    <span className="font-extrabold text-slate-900 truncate block">{registeredSuccessData.user.company}</span>
+                  </div>
+                  <div className="p-2.5 bg-slate-50 border border-slate-200 rounded-xl col-span-2 sm:col-span-1">
+                    <span className="text-[10px] text-slate-400 font-bold block">Celular Registrado</span>
+                    <span className="font-extrabold text-slate-900 block truncate">{registeredSuccessData.user.phone}</span>
+                  </div>
+                </div>
+
+                {/* WhatsApp options section */}
+                <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200 space-y-3">
+                  <div>
+                    <h4 className="text-xs font-extrabold text-slate-900 flex items-center gap-1.5">
+                      <MessageSquare className="w-4 h-4 text-[#25D366]" />
+                      <span>Comprobante o Asesoría por WhatsApp (Opcional)</span>
+                    </h4>
+                    <p className="text-[11px] text-slate-500 mt-0.5">
+                      ¿Deseas una copia en tu propio celular o contactar al asesor comercial de Pintuco?
+                    </p>
+                  </div>
+
+                  {/* Recipient toggle buttons */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      id="wa-recipient-my-phone-btn"
+                      onClick={() => setRecipientChoice('my_phone')}
+                      className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
+                        recipientChoice === 'my_phone'
+                          ? 'bg-emerald-50 border-emerald-300 ring-2 ring-emerald-500/20 shadow-xs'
+                          : 'bg-white border-slate-200 hover:bg-slate-100 text-slate-700'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-[11px] font-extrabold text-slate-900 flex items-center gap-1">
+                          📱 A mi número registrado
+                        </span>
+                        {recipientChoice === 'my_phone' && (
+                          <span className="w-2 h-2 rounded-full bg-[#25D366]"></span>
+                        )}
+                      </div>
+                      <span className="text-xs font-bold text-emerald-800 truncate">
+                        {registeredSuccessData.user.phone || 'Mi Celular'}
+                      </span>
+                      <span className="text-[10px] text-slate-500 mt-0.5">
+                        Guarda tu confirmación en tu WhatsApp
+                      </span>
+                    </button>
+
+                    <button
+                      type="button"
+                      id="wa-recipient-advisor-btn"
+                      onClick={() => setRecipientChoice('advisor')}
+                      className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
+                        recipientChoice === 'advisor'
+                          ? 'bg-blue-50 border-blue-300 ring-2 ring-blue-500/20 shadow-xs'
+                          : 'bg-white border-slate-200 hover:bg-slate-100 text-slate-700'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-[11px] font-extrabold text-slate-900 flex items-center gap-1">
+                          💼 Al Asesor Pintuco
+                        </span>
+                        {recipientChoice === 'advisor' && (
+                          <span className="w-2 h-2 rounded-full bg-blue-600"></span>
+                        )}
+                      </div>
+                      <span className="text-xs font-bold text-blue-900 truncate">
+                        +{whatsAppCommercialNumber}
+                      </span>
+                      <span className="text-[10px] text-slate-500 mt-0.5">
+                        Asesoría técnica para tu obra
+                      </span>
+                    </button>
+                  </div>
+
+                  {/* Message preview */}
+                  <div className="bg-white p-3 rounded-xl border border-slate-200/90 text-xs text-slate-700 whitespace-pre-wrap leading-relaxed shadow-2xs">
+                    <div className="flex items-center justify-between text-[11px] text-slate-500 mb-1.5 pb-1 border-b border-slate-100">
+                      <span className="font-bold text-slate-700">
+                        {recipientChoice === 'my_phone' ? 'Mensaje para tu celular:' : 'Mensaje para el Asesor Pintuco:'}
+                      </span>
+                      <button
+                        type="button"
+                        id="copy-whatsapp-message-btn"
+                        onClick={handleCopyToClipboard}
+                        className="text-[#1B2A6B] hover:text-blue-900 font-bold flex items-center gap-1 text-[11px] cursor-pointer"
+                      >
+                        {copiedFeedback ? (
+                          <>
+                            <Check className="w-3 h-3 text-emerald-600" />
+                            <span className="text-emerald-700">¡Copiado!</span>
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="w-3 h-3 text-slate-500" />
+                            <span>Copiar texto</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                    <div className="max-h-24 overflow-y-auto pr-1 text-[11px] text-slate-600 font-sans">
+                      {recipientChoice === 'my_phone'
+                        ? registeredSuccessData.userConfirmationMessage
+                        : registeredSuccessData.formattedMessage}
+                    </div>
+                  </div>
+
+                  {/* WhatsApp Action Button */}
+                  <button
+                    type="button"
+                    id="auth-send-whatsapp-btn"
+                    onClick={handleOpenWhatsApp}
+                    className="w-full bg-[#25D366] hover:bg-[#20ba59] text-white py-3 px-4 rounded-xl font-extrabold text-xs sm:text-sm shadow-xs hover:shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-98"
+                  >
+                    <MessageSquare className="w-4 h-4" />
+                    <span>
+                      {recipientChoice === 'my_phone'
+                        ? `Abrir WhatsApp para enviarme confirmación a ${registeredSuccessData.user.phone}`
+                        : `Abrir WhatsApp con Asesor Pintuco (+${whatsAppCommercialNumber})`}
+                    </span>
+                    <ExternalLink className="w-3.5 h-3.5 ml-1 opacity-80" />
+                  </button>
+
+                  <p className="text-[10px] text-slate-400 text-center leading-normal">
+                    ℹ️ <strong>¿Por qué se abre WhatsApp?</strong> En navegadores web, por normas de privacidad, una página web no puede mandar mensajes silenciosos en segundo plano a números personales. Al pulsar el botón, WhatsApp se abre de forma segura en tu teléfono o PC con el texto pre-cargado.
+                  </p>
+                </div>
+
+                <div className="text-center pt-0.5">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setRegisteredSuccessData(null);
+                      setRegName('');
+                      setRegDocNumber('');
+                    }}
+                    className="text-xs text-slate-500 hover:text-slate-800 underline cursor-pointer"
+                  >
+                    Registrar otro cliente diferente
+                  </button>
+                </div>
+              </div>
+            ) : (
             <form onSubmit={handleRegisterSubmit} className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 <div>
@@ -388,6 +636,7 @@ export const AuthModal: React.FC = () => {
                 <span>Registrarme y Acceder a ColorLink</span>
               </button>
             </form>
+            )
           )}
         </div>
       </div>

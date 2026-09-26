@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   Sparkles,
   Sun,
@@ -7,12 +7,20 @@ import {
   Layers,
   Check,
   Pipette,
-  Eye,
-  SlidersHorizontal,
-  Info,
   Maximize2,
-  RefreshCw,
-  Palette
+  Home,
+  Building,
+  Bed,
+  Briefcase,
+  Utensils,
+  ZoomIn,
+  Search,
+  CheckCircle2,
+  Info,
+  Split,
+  Camera,
+  RotateCcw,
+  Palette,
 } from 'lucide-react';
 import { SurfaceType, FinishType, EnvironmentType, ColorPaletteItem } from '../types';
 import { COLOR_PALETTES } from '../data/initialData';
@@ -27,8 +35,122 @@ interface ColorSimulationStudioProps {
   productName?: string;
 }
 
-type SceneView = 'interior_room' | 'exterior_facade' | 'macro_texture';
-type LightingMode = 'daylight' | 'warm' | 'cool';
+export type SceneZone =
+  | 'sala_estar'
+  | 'fachada_exterior'
+  | 'dormitorio'
+  | 'oficina_estudio'
+  | 'cocina_comedor'
+  | 'macro_textura';
+
+export type LightingMode = 'daylight' | 'warm' | 'cool' | 'golden_hour';
+
+// Extended official Pintuco Color Portfolios (Carteras de Color)
+export interface ColorPortfolio {
+  id: string;
+  name: string;
+  icon: string;
+  description: string;
+  colors: ColorPaletteItem[];
+}
+
+export const PINTUCO_PORTFOLIOS: ColorPortfolio[] = [
+  {
+    id: 'tendencias_2025',
+    name: 'Tendencias 2025',
+    icon: '🌟',
+    description: 'Paleta del año: Biofilia, calma reconfortante y tonos orgánicos equilibrados.',
+    colors: [
+      { name: 'Verde Salvia Nórdico', hex: '#84A98C', category: 'Tendencias 2025', code: 'PIN-6045', lrv: 44, family: 'Salvia Mineral', description: 'Tono botánico suave, aporta serenidad zen y conexión biofílica en interiores contemporáneos.' },
+      { name: 'Terracota Colonial', hex: '#C2410C', category: 'Tendencias 2025', code: 'PIN-3050', lrv: 20, family: 'Arcilla Tradicional', description: 'Tierra cálida de carácter artesanal, ideal para muros de acento y fachadas.' },
+      { name: 'Arena Sahara', hex: '#D4B996', category: 'Tendencias 2025', code: 'PIN-3015', lrv: 58, family: 'Tierra Suave', description: 'Neutro cálido y acogedor, combina con maderas nobles, lino y acabados en piedra.' },
+      { name: 'Lino Nórdico', hex: '#E2E8F0', category: 'Tendencias 2025', code: 'PIN-1040', lrv: 74, family: 'Gris Arquitectónico', description: 'Gris ultra claro y aireado, preferido en arquitectura moderna y divisiones de drywall.' },
+      { name: 'Ocre Dorado', hex: '#D97706', category: 'Tendencias 2025', code: 'PIN-3080', lrv: 29, family: 'Mostaza Cálido', description: 'Amarillo tostado que evoca la luz dorada de la tarde y la calidez del hogar.' },
+      { name: 'Durazno Cálido', hex: '#FDBA74', category: 'Tendencias 2025', code: 'PIN-3022', lrv: 63, family: 'Melocotón Serena', description: 'Matiz suave y envolvente para dormitorios y salas de relajación.' },
+      { name: 'Verde Eucalipto', hex: '#52796F', category: 'Tendencias 2025', code: 'PIN-6055', lrv: 24, family: 'Biofilia Profunda', description: 'Verde arquitectónico sobrio con matiz grisáceo para muros de acento.' },
+      { name: 'Marfil Suave', hex: '#FEF3C7', category: 'Tendencias 2025', code: 'PIN-1025', lrv: 78, family: 'Blanco Cálido', description: 'Elegancia clásica aterciopelada, aporta calidez y luminosidad natural.' },
+    ],
+  },
+  {
+    id: 'blancos_luminosidad',
+    name: 'Blancos & Luz',
+    icon: '⚪',
+    description: 'Máxima reflectancia lumínica (LRV > 75%), sensación de amplitud y pureza.',
+    colors: [
+      { name: 'Blanco Puro', hex: '#F9FAFB', category: 'Blancos & Luz', code: 'PIN-1001', lrv: 88, family: 'Blanco Luminoso', description: 'Blanco óptico de máxima reflectancia, perfecto para cielos rasos y muros despejados.' },
+      { name: 'Nieve Andina', hex: '#FFFFFF', category: 'Blancos & Luz', code: 'PIN-1000', lrv: 92, family: 'Blanco Absoluto', description: 'Pureza visual total, maximiza la luz natural en espacios con ventanales.' },
+      { name: 'Blanco Seda', hex: '#F1F5F9', category: 'Blancos & Luz', code: 'PIN-1030', lrv: 82, family: 'Gris Perla Suave', description: 'Blanco con leve matiz frío de alta definición arquitectónica.' },
+      { name: 'Marfil Suave', hex: '#FEF3C7', category: 'Blancos & Luz', code: 'PIN-1025', lrv: 78, family: 'Blanco Cálido', description: 'Calidez discreta y confortable sin reflejos deslumbrantes.' },
+      { name: 'Crema Imperial', hex: '#FDF6E2', category: 'Blancos & Luz', code: 'PIN-1015', lrv: 80, family: 'Vainilla Neutro', description: 'Tono marfil elegante para ambientes residenciales clásicos o transicionales.' },
+      { name: 'Lino Nórdico', hex: '#E2E8F0', category: 'Blancos & Luz', code: 'PIN-1040', lrv: 74, family: 'Gris Arquitectónico', description: 'Grisáceo luminoso que disimula el paso del tiempo y el roce cotidiano.' },
+    ],
+  },
+  {
+    id: 'grises_contemporaneos',
+    name: 'Grises & Concreto',
+    icon: '🏢',
+    description: 'Sobriedad metropolitana, textura de concreto arquitectónico y alta elegancia.',
+    colors: [
+      { name: 'Lino Nórdico', hex: '#E2E8F0', category: 'Grises & Concreto', code: 'PIN-1040', lrv: 74, family: 'Gris Luminoso', description: 'Gris perla claro, versátil para todo tipo de iluminación interior.' },
+      { name: 'Gris Urbano', hex: '#94A3B8', category: 'Grises & Concreto', code: 'PIN-2015', lrv: 52, family: 'Neutro Medio', description: 'Gris medio contemporáneo, predilecto en oficinas, recepciones y pasillos.' },
+      { name: 'Gris Cemento', hex: '#64748B', category: 'Grises & Concreto', code: 'PIN-2045', lrv: 38, family: 'Concreto Pulido', description: 'Inspirado en losas de hormigón a la vista para estilos industriales y loft.' },
+      { name: 'Gris Plomo', hex: '#475569', category: 'Grises & Concreto', code: 'PIN-2080', lrv: 26, family: 'Grafito Intenso', description: 'Gris oscuro con gran prestancia para fondos de TV o cabeceros.' },
+      { name: 'Grafito Titanio', hex: '#334155', category: 'Grises & Concreto', code: 'PIN-2090', lrv: 18, family: 'Antracita Puro', description: 'Carácter imponente y alta sofisticación para detalles arquitectónicos.' },
+      { name: 'Piedra París', hex: '#CBD5E1', category: 'Grises & Concreto', code: 'PIN-2005', lrv: 66, family: 'Gris Caliza', description: 'Tono mineral suave que aporta elegancia atemporal y equilibrio.' },
+    ],
+  },
+  {
+    id: 'azules_oceano',
+    name: 'Azules & Océano',
+    icon: '🌊',
+    description: 'Calma mental, concentración, profundidad espacial y prestigio institucional.',
+    colors: [
+      { name: 'Azul Pintuco', hex: '#1B2A6B', category: 'Azules & Océano', code: 'PIN-5010', lrv: 12, family: 'Azul Institucional', description: 'El azul de referencia Pintuco: prestigio, solidez pigmentaria y máxima durabilidad.' },
+      { name: 'Azul Naval Profundo', hex: '#0F172A', category: 'Azules & Océano', code: 'PIN-5095', lrv: 7, family: 'Noche Profundo', description: 'Azul noche de acento sobrio, transmite lujo contemporáneo y silencio visual.' },
+      { name: 'Azul Índigo Real', hex: '#1E3A8A', category: 'Azules & Océano', code: 'PIN-5040', lrv: 15, family: 'Índigo Cobalto', description: 'Tono regio y vibrante para salas de juntas y muros protagonistas.' },
+      { name: 'Azul Mediterráneo', hex: '#0284C7', category: 'Azules & Océano', code: 'PIN-5025', lrv: 28, family: 'Azul Marino Cielo', description: 'Fresco y estimulante, ideal para salas de juego, terrazas o zonas creativas.' },
+      { name: 'Celeste Glaciar', hex: '#BAE6FD', category: 'Azules & Océano', code: 'PIN-5005', lrv: 70, family: 'Pastel Aire', description: 'Claridad etérea que amplía visualmente recámaras infantiles y consultorios.' },
+    ],
+  },
+  {
+    id: 'verdes_biofilicos',
+    name: 'Verdes & Biofilia',
+    icon: '🌿',
+    description: 'Conexión con la naturaleza viva, renovación de energía y bienestar psicológico.',
+    colors: [
+      { name: 'Verde Foresta', hex: '#2FAE6D', category: 'Verdes & Biofilia', code: 'PIN-6020', lrv: 34, family: 'Biofilia Vibrante', description: 'Verde orgánico y natural, aporta frescura, renovación y equilibrio ambiental.' },
+      { name: 'Verde Salvia Nórdico', hex: '#84A98C', category: 'Verdes & Biofilia', code: 'PIN-6045', lrv: 44, family: 'Salvia Mineral', description: 'Tono botánico desaturado, favorito de diseñadores para estancias de descanso.' },
+      { name: 'Verde Esmeralda Colombia', hex: '#059669', category: 'Verdes & Biofilia', code: 'PIN-6030', lrv: 28, family: 'Joya Botánica', description: 'Verde joya profundo, resalta molduras clásicas y cuadros decorativos.' },
+      { name: 'Verde Olivo Colonial', hex: '#4D7C0F', category: 'Verdes & Biofilia', code: 'PIN-6060', lrv: 25, family: 'Olivo Rústico', description: 'Evoca olivares mediterráneos y jardines de haciendas coloniales.' },
+      { name: 'Menta Suave', hex: '#A7F3D0', category: 'Verdes & Biofilia', code: 'PIN-6010', lrv: 72, family: 'Menta Pastel', description: 'Frescura tonificante, muy recomendada en cuartos de estudio y baños.' },
+    ],
+  },
+  {
+    id: 'calidos_tierras',
+    name: 'Tierras & Terracota',
+    icon: '🏺',
+    description: 'Pigmentos telúricos, calidez artesanal colombiana y textura envolvente.',
+    colors: [
+      { name: 'Terracota Colonial', hex: '#C2410C', category: 'Tierras & Terracota', code: 'PIN-3050', lrv: 20, family: 'Arcilla Tradicional', description: 'Rojo tierra icónico en fachadas de Boyacá y Santander, y acentos interiores.' },
+      { name: 'Ocre Dorado', hex: '#D97706', category: 'Tierras & Terracota', code: 'PIN-3080', lrv: 29, family: 'Mostaza Cálido', description: 'Amarillo cálido y energizante, transmite alegría acogedora en comedores.' },
+      { name: 'Arena Sahara', hex: '#D4B996', category: 'Tierras & Terracota', code: 'PIN-3015', lrv: 58, family: 'Tierra Suave', description: 'Beige natural muy versátil con pisos de madera clara y texturas rústicas.' },
+      { name: 'Canela Tostada', hex: '#78350F', category: 'Tierras & Terracota', code: 'PIN-3090', lrv: 14, family: 'Café Especiado', description: 'Marrón profundo y aromático para bibliotecas y salas de degustación.' },
+      { name: 'Arcilla Caliza', hex: '#EA580C', category: 'Tierras & Terracota', code: 'PIN-3040', lrv: 25, family: 'Terracota Vivo', description: 'Tono vibrante lleno de vitalidad para patios interiores y muros focales.' },
+    ],
+  },
+  {
+    id: 'industrial_seguridad',
+    name: 'Industrial & Seguridad',
+    icon: '⚠️',
+    description: 'Gama técnica normada para demarcación vial, tuberías y protección estructural.',
+    colors: [
+      { name: 'Amarillo Seguridad', hex: '#EAB308', category: 'Industrial & Seguridad', code: 'PIN-8010', lrv: 59, family: 'Tráfico & Vial', description: 'Color normalizado para señalización de desniveles, bodegas y pasos peatonales.' },
+      { name: 'Rojo Señalización', hex: '#DC2626', category: 'Industrial & Seguridad', code: 'PIN-9020', lrv: 18, family: 'Seguridad Industrial', description: 'Normado para gabinetes contra incendios, válvulas y áreas de riesgo.' },
+      { name: 'Negro Ébano Industrial', hex: '#18181B', category: 'Industrial & Seguridad', code: 'PIN-9999', lrv: 4, family: 'Azabache Mate', description: 'Alta opacidad para perfiles metálicos, cielorrasos abiertos y ductos vistos.' },
+      { name: 'Blanco Tráfico', hex: '#F8FAFC', category: 'Industrial & Seguridad', code: 'PIN-8001', lrv: 86, family: 'Reflectivo Vial', description: 'Pintura de alto tráfico para líneas de parqueadero y canchas deportivas.' },
+    ],
+  },
+];
 
 export const ColorSimulationStudio: React.FC<ColorSimulationStudioProps> = ({
   selectedColorName,
@@ -39,652 +161,884 @@ export const ColorSimulationStudio: React.FC<ColorSimulationStudioProps> = ({
   environment,
   productName = 'Viniltex Avanzado® Pintuco',
 }) => {
-  const [activeScene, setActiveScene] = useState<SceneView>(
-    environment === 'exterior' ? 'exterior_facade' : 'interior_room'
+  // Scene zone state
+  const [activeZone, setActiveZone] = useState<SceneZone>(
+    environment === 'exterior' ? 'fachada_exterior' : 'sala_estar'
   );
   const [lighting, setLighting] = useState<LightingMode>('daylight');
-  const [splitComparison, setSplitComparison] = useState<boolean>(false);
-  const [activeCategory, setActiveCategory] = useState<string>('Todos');
-  const [customHex, setCustomHex] = useState<string>(selectedColorHex);
-  const [isCustomMode, setIsCustomMode] = useState<boolean>(false);
+  const [splitSliderPosition, setSplitSliderPosition] = useState<number>(50); // 0 to 100 %
+  const [isSliderActive, setIsSliderActive] = useState<boolean>(true); // Before/After split
+  const [accentWallOnly, setAccentWallOnly] = useState<boolean>(false);
+  const [activePortfolioId, setActivePortfolioId] = useState<string>('tendencias_2025');
+  const [colorSearchTerm, setColorSearchTerm] = useState<string>('');
+  const [customHex, setCustomHex] = useState<string>(selectedColorHex || '#1B2A6B');
+  const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
+  const [isDraggingSlider, setIsDraggingSlider] = useState<boolean>(false);
+  const [imageLoaded, setImageLoaded] = useState<boolean>(true);
 
-  // Find currently active color details or fallback
-  const currentColor: ColorPaletteItem = COLOR_PALETTES.find(
-    (c) => c.name.toLowerCase() === selectedColorName.toLowerCase()
-  ) || {
-    name: selectedColorName || 'Color Personalizado',
-    hex: selectedColorHex || '#1B2A6B',
-    category: 'Personalizado',
-    code: 'PIN-CUSTOM',
-    lrv: 35,
-    family: 'Tintometría Especial',
-    description: 'Tono formulado a medida mediante el sistema de tintometría computarizado Pintuco.',
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Active color lookup
+  const currentColor: ColorPaletteItem =
+    COLOR_PALETTES.find((c) => c.name.toLowerCase() === selectedColorName.toLowerCase()) || {
+      name: selectedColorName || 'Color Seleccionado',
+      hex: selectedColorHex || '#1B2A6B',
+      category: 'Personalizado',
+      code: 'PIN-CUSTOM',
+      lrv: 35,
+      family: 'Tintometría Especial',
+      description: 'Fórmula computarizada preparada con pigmentos de alta dispersión Pintuco.',
+    };
+
+  // Paint coats (Manos de pintura) - 1 mano (primer), 2 manos (óptimo Pintuco), 3 manos (máximo cubrimiento)
+  const [paintCoats, setPaintCoats] = useState<1 | 2 | 3>(2);
+  const [paintOpacity, setPaintOpacity] = useState<number>(92); // 50 to 100 %
+  const [wallMode, setWallMode] = useState<'full_wall' | 'accent_panel'>('full_wall');
+
+  // Photorealistic Architectural Scenes with Natural Architectural Wall Planes
+  // In real architecture, paint covers the entire wall plane from corner to corner and ceiling to floor,
+  // eliminating any floating patch or "mancha sobrepuesta" effect.
+  const scenes = {
+    sala_estar: {
+      id: 'sala_estar' as SceneZone,
+      title: 'Sala de Estar Contemporánea',
+      subtitle: 'Muro arquitectónico principal de fondo de esquina a esquina',
+      imageUrl: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=1600&q=85',
+      // Entire continuous wall plane from ceiling (0%) to parquet floor baseboard (78%)
+      fullPolygon: 'polygon(0% 0%, 100% 0%, 100% 78%, 0% 78%)',
+      accentPolygon: 'polygon(20% 0%, 80% 0%, 80% 78%, 20% 78%)',
+      surfaceAreaM2: 24.5,
+      wallLabelPos: { top: '38%', left: '50%' },
+      paintRecommendation: 'Viniltex® Avanzado Mate • Cero Reflejos y Alta Lavabilidad',
+      windowLightDirection: 'from-left',
+    },
+    dormitorio: {
+      id: 'dormitorio' as SceneZone,
+      title: 'Habitación Master Suite',
+      subtitle: 'Pared cabecero de descanso e iluminación arquitectónica difusa',
+      imageUrl: 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1600&q=85',
+      // Wall plane extending from ceiling to platform bed
+      fullPolygon: 'polygon(0% 0%, 100% 0%, 100% 70%, 0% 70%)',
+      accentPolygon: 'polygon(22% 0%, 78% 0%, 78% 70%, 22% 70%)',
+      surfaceAreaM2: 18.2,
+      wallLabelPos: { top: '32%', left: '50%' },
+      paintRecommendation: 'Viniltex® Avanzado Satinado • Tersura Suave y Sedosa',
+      windowLightDirection: 'from-left',
+    },
+    fachada_exterior: {
+      id: 'fachada_exterior' as SceneZone,
+      title: 'Fachada Exterior Residencial',
+      subtitle: 'Volumen arquitectónico principal en mampostería estucada',
+      imageUrl: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1600&q=85',
+      // Full right architectural stucco facade volume from roof to ground
+      fullPolygon: 'polygon(42% 16%, 98% 16%, 98% 84%, 66% 84%, 66% 52%, 42% 52%)',
+      accentPolygon: 'polygon(66% 16%, 98% 16%, 98% 84%, 66% 84%)',
+      surfaceAreaM2: 46.0,
+      wallLabelPos: { top: '36%', left: '78%' },
+      paintRecommendation: 'Koraza® 5 / Koraza® Elastomérica • Máxima Resistencia a Sol y Lluvia',
+      windowLightDirection: 'ambient-sun',
+    },
+    oficina_estudio: {
+      id: 'oficina_estudio' as SceneZone,
+      title: 'Oficina / Home Studio Moderno',
+      subtitle: 'Muro posterior de concentración y fondo de videollamadas',
+      imageUrl: 'https://images.unsplash.com/photo-1616046229478-9901c5536a45?auto=format&fit=crop&w=1600&q=85',
+      // Continuous wall plane behind modern credenza
+      fullPolygon: 'polygon(0% 0%, 100% 0%, 100% 74%, 0% 74%)',
+      accentPolygon: 'polygon(25% 0%, 75% 0%, 75% 74%, 25% 74%)',
+      surfaceAreaM2: 15.0,
+      wallLabelPos: { top: '34%', left: '50%' },
+      paintRecommendation: 'Viniltex® Avanzado Mate • Confort Visual Sin Destellos',
+      windowLightDirection: 'from-right',
+    },
+    cocina_comedor: {
+      id: 'cocina_comedor' as SceneZone,
+      title: 'Cocina & Comedor Gourmet',
+      subtitle: 'Muro perimetral sobre barra americana y salpicadero',
+      imageUrl: 'https://images.unsplash.com/photo-1556911220-e15b29be8c8f?auto=format&fit=crop&w=1600&q=85',
+      fullPolygon: 'polygon(0% 0%, 100% 0%, 100% 64%, 0% 64%)',
+      accentPolygon: 'polygon(45% 0%, 100% 0%, 100% 64%, 45% 64%)',
+      surfaceAreaM2: 16.5,
+      wallLabelPos: { top: '28%', left: '62%' },
+      paintRecommendation: 'Viniltex® Baños & Cocinas Antibacterial Semibrillante',
+      windowLightDirection: 'ambient-diffuse',
+    },
+    macro_textura: {
+      id: 'macro_textura' as SceneZone,
+      title: 'Macro Textura & Película Seca Pintuco®',
+      subtitle: 'Detalle a escala 1:1 de micrograno, absorción y acabado físico',
+      imageUrl: 'https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=1600&q=85',
+      fullPolygon: 'polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)',
+      accentPolygon: 'polygon(15% 15%, 85% 15%, 85% 85%, 15% 85%)',
+      surfaceAreaM2: 2.0,
+      wallLabelPos: { top: '50%', left: '50%' },
+      paintRecommendation: 'Acabado físico según película seca y nivel de brillo',
+      windowLightDirection: 'raking-light',
+    },
   };
 
-  // Categories extracted from palettes
-  const categories = ['Todos', 'Blancos & Neutros', 'Cálidos & Tierras', 'Vivos & Tendencia', 'Corporativo & Acentos', 'Industrial & Seguridad'];
+  const currentScene = scenes[activeZone];
+  const activePolygon = wallMode === 'accent_panel' ? currentScene.accentPolygon : currentScene.fullPolygon;
 
-  const filteredPalettes = activeCategory === 'Todos'
-    ? COLOR_PALETTES
-    : COLOR_PALETTES.filter((c) => c.category === activeCategory);
+  // Scene tabs navigation
+  const sceneTabs = [
+    { id: 'sala_estar' as SceneZone, label: 'Sala de Estar', icon: Home },
+    { id: 'dormitorio' as SceneZone, label: 'Habitación', icon: Bed },
+    { id: 'fachada_exterior' as SceneZone, label: 'Fachada Exterior', icon: Building },
+    { id: 'oficina_estudio' as SceneZone, label: 'Oficina / Estudio', icon: Briefcase },
+    { id: 'cocina_comedor' as SceneZone, label: 'Cocina & Comedor', icon: Utensils },
+    { id: 'macro_textura' as SceneZone, label: 'Textura & Brillo', icon: ZoomIn },
+  ];
 
-  // Calculate adjusted color for scene lighting simulation
-  const getLightingFilter = () => {
+  // Calculate LRV and color luminance physics
+  const colorLRV = currentColor.lrv ?? 50;
+  const isLightColor = colorLRV >= 55;
+  const isVeryLightColor = colorLRV >= 75;
+  const isDarkColor = colorLRV < 35;
+
+  // Coat multiplier for coverage
+  const coatFactor = paintCoats === 1 ? 0.70 : paintCoats === 2 ? 0.90 : 1.0;
+  const baseCoverageOpacity = (paintOpacity / 100) * coatFactor;
+
+  // Ambient lighting parameters applied purely as light bounce on the wall
+  const getLightingProps = () => {
     switch (lighting) {
       case 'warm':
-        // Warm 3000K: golden amber tint
         return {
-          ambientTint: 'rgba(251, 191, 36, 0.12)',
-          highlight: 'rgba(254, 243, 199, 0.35)',
-          shadow: 'rgba(69, 26, 3, 0.25)',
-          name: 'Luz Cálida Interior (3000K)',
+          name: 'Luz Cálida Residencial (3000K)',
           badge: '🟡 Cálida 3000K',
+          wallLightGradient:
+            'linear-gradient(135deg, rgba(251,191,36,0.24) 0%, rgba(245,158,11,0.10) 45%, transparent 80%)',
+          ambientTint: 'rgba(251,191,36,0.08)',
         };
       case 'cool':
-        // Cool 6500K: clean daylight blue tint
         return {
-          ambientTint: 'rgba(125, 211, 252, 0.10)',
-          highlight: 'rgba(224, 242, 254, 0.40)',
-          shadow: 'rgba(15, 23, 42, 0.30)',
           name: 'Luz Fría / LED Oficina (6500K)',
           badge: '🔵 Fría 6500K',
+          wallLightGradient:
+            'linear-gradient(135deg, rgba(56,189,248,0.20) 0%, rgba(14,165,233,0.08) 45%, transparent 80%)',
+          ambientTint: 'rgba(56,189,248,0.06)',
+        };
+      case 'golden_hour':
+        return {
+          name: 'Atardecer Dorado (2400K)',
+          badge: '🌅 Atardecer 2400K',
+          wallLightGradient:
+            'linear-gradient(110deg, rgba(249,115,22,0.32) 0%, rgba(234,88,12,0.14) 50%, transparent 85%)',
+          ambientTint: 'rgba(249,115,22,0.12)',
         };
       case 'daylight':
       default:
-        // Daylight 5500K: pure natural daylight
         return {
-          ambientTint: 'rgba(255, 255, 255, 0.05)',
-          highlight: 'rgba(255, 255, 255, 0.25)',
-          shadow: 'rgba(0, 0, 0, 0.20)',
-          name: 'Luz Día Natural (5500K)',
+          name: 'Luz Solar Natural (5500K)',
           badge: '☀️ Natural 5500K',
+          wallLightGradient:
+            'linear-gradient(135deg, rgba(255,255,255,0.24) 0%, rgba(255,255,255,0.08) 45%, transparent 85%)',
+          ambientTint: 'transparent',
         };
     }
   };
 
-  const lightingProps = getLightingFilter();
+  const lightingInfo = getLightingProps();
 
-  // Acabado sheen descriptor
-  const getFinishDetails = () => {
+  // Finish specular properties on the wall surface following real paint physics
+  const getFinishEffect = () => {
     switch (finish) {
-      case 'mate':
+      case 'brillante':
         return {
-          label: 'Mate Antirreflejo',
-          specularGlow: 'opacity-0',
-          textureNoise: '0.04',
-          description: 'Sin reflejos molestos; disimula imperfecciones del muro.',
-        };
-      case 'satinado':
-        return {
-          label: 'Satinado Elegante',
-          specularGlow: 'opacity-25',
-          textureNoise: '0.02',
-          description: 'Reflejo sedoso suave; alta lavabilidad y elegancia visual.',
+          name: 'Brillante Duradero',
+          sheenOpacity: 0.32,
+          desc: 'Reflejo nítido y resplandor luminoso de fácil limpieza.',
+          specularGradient: 'radial-gradient(circle at 40% 30%, rgba(255,255,255,0.65) 0%, transparent 55%)',
         };
       case 'semibrillante':
         return {
-          label: 'Semibrillante',
-          specularGlow: 'opacity-40',
-          textureNoise: '0.01',
-          description: 'Reflejo definido de luz; máxima resistencia a la humedad.',
+          name: 'Semibrillante',
+          sheenOpacity: 0.20,
+          desc: 'Brillo sutil equilibrado, ideal para áreas de alto tráfico.',
+          specularGradient: 'radial-gradient(circle at 45% 35%, rgba(255,255,255,0.45) 0%, transparent 65%)',
         };
-      case 'brillante':
+      case 'satinado':
         return {
-          label: 'Brillante Duradero',
-          specularGlow: 'opacity-65',
-          textureNoise: '0.0',
-          description: 'Alto brillo especular; resalta el color con destello nítido.',
+          name: 'Satinado Elegante',
+          sheenOpacity: 0.12,
+          desc: 'Tersura sedosa elegante y suave al tacto con reflejo difuso.',
+          specularGradient: 'radial-gradient(circle at 50% 40%, rgba(255,255,255,0.30) 0%, transparent 75%)',
         };
       case 'epoxico_antideslizante':
         return {
-          label: 'Epóxico Antideslizante',
-          specularGlow: 'opacity-30',
-          textureNoise: '0.08',
-          description: 'Capa vitrificada de alta resistencia química con microtextura.',
+          name: 'Epóxico Vitrificado',
+          sheenOpacity: 0.28,
+          desc: 'Película polimérica ultra resistente de alto impacto.',
+          specularGradient: 'radial-gradient(circle at 42% 32%, rgba(255,255,255,0.55) 0%, transparent 60%)',
+        };
+      case 'mate':
+      default:
+        return {
+          name: 'Mate Antirreflejo',
+          sheenOpacity: 0.02,
+          desc: 'Cero destellos molestos; absorbe luz y disimula imperfecciones.',
+          specularGradient: 'none',
         };
     }
   };
 
-  const finishDetails = getFinishDetails();
+  const finishEffect = getFinishEffect();
 
-  const handleCustomColorChange = (hex: string) => {
-    setCustomHex(hex);
-    setIsCustomMode(true);
-    onSelectColor({
-      name: `Tono a Medida (${hex.toUpperCase()})`,
-      hex: hex,
-      category: 'Personalizado',
-      code: 'PIN-CUSTOM',
-      lrv: 40,
-      family: 'Tintometría Especial Pintuco',
-      description: `Fórmula individualizada según carta o muestra física del cliente (${hex.toUpperCase()}).`,
-    });
+  // Slider dragging logic for Before/After split
+  const handleSliderMove = (clientX: number) => {
+    if (!containerRef.current) return;
+    const rect = containerRef.current.getBoundingClientRect();
+    const offsetX = clientX - rect.left;
+    const pct = Math.max(0, Math.min(100, (offsetX / rect.width) * 100));
+    setSplitSliderPosition(pct);
   };
 
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (e.touches.length > 0) {
+      handleSliderMove(e.touches[0].clientX);
+    }
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (isDraggingSlider) {
+      handleSliderMove(e.clientX);
+    }
+  };
+
+  const handleCustomHexInput = (hex: string) => {
+    setCustomHex(hex);
+    if (/^#([0-9A-F]{3}){1,2}$/i.test(hex)) {
+      onSelectColor({
+        name: `Color a Medida (${hex.toUpperCase()})`,
+        hex: hex,
+        category: 'Personalizado',
+        code: 'PIN-CUSTOM',
+        lrv: 40,
+        family: 'Tintometría Especial',
+        description: `Tono formulado según muestra física del cliente (${hex.toUpperCase()}).`,
+      });
+    }
+  };
+
+  // Filtered colors by portfolio and search
+  const currentPortfolio =
+    PINTUCO_PORTFOLIOS.find((p) => p.id === activePortfolioId) || PINTUCO_PORTFOLIOS[0];
+
+  const portfolioColors = currentPortfolio.colors.filter((c) => {
+    if (!colorSearchTerm.trim()) return true;
+    const term = colorSearchTerm.toLowerCase();
+    return (
+      c.name.toLowerCase().includes(term) ||
+      c.code.toLowerCase().includes(term) ||
+      c.family.toLowerCase().includes(term)
+    );
+  });
+
+  // Suggested complementary triad based on current color
+  const complementaryColors = COLOR_PALETTES.filter(
+    (c) => c.hex.toLowerCase() !== currentColor.hex.toLowerCase()
+  ).slice(0, 3);
+
   return (
-    <div className="bg-slate-900 text-white rounded-2xl p-4 sm:p-5 border border-slate-800 shadow-xl space-y-4">
-      {/* Simulator Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-800">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#1B2A6B] to-[#2FAE6D] flex items-center justify-center text-white shadow-md">
-            <Palette className="w-4 h-4" />
+    <div
+      className={`bg-slate-950 text-white rounded-3xl border border-slate-800 shadow-2xl overflow-hidden transition-all duration-300 ${
+        isFullscreen ? 'fixed inset-3 z-50 overflow-y-auto max-h-[96vh]' : 'relative'
+      }`}
+    >
+      {/* Top Header Bar */}
+      <div className="bg-slate-900/95 px-5 sm:px-6 py-4 border-b border-slate-800 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#1B2A6B] via-emerald-600 to-[#2FAE6D] flex items-center justify-center text-white shadow-lg">
+            <Camera className="w-5 h-5" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h4 className="text-sm font-bold text-white tracking-wide">
-                Simulador de Color en Vivo Pintuco®
-              </h4>
-              <span className="text-[10px] bg-emerald-500/20 text-emerald-400 font-extrabold px-2 py-0.5 rounded-full border border-emerald-500/30 flex items-center gap-1">
-                <Sparkles className="w-2.5 h-2.5" />
-                <span>Tiempo Real</span>
+              <h3 className="text-base sm:text-lg font-black tracking-tight text-white">
+                Simulador Arquitectónico Fotorrealista Pintuco®
+              </h3>
+              <span className="hidden sm:inline-flex items-center gap-1 text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                <Sparkles className="w-3 h-3" />
+                Fotografía HD Real
               </span>
             </div>
-            <p className="text-[11px] text-slate-400">
-              Visualiza con precisión cómo lucirá el tono en obra antes de confirmar tu cotización.
+            <p className="text-xs text-slate-400">
+              Fotografía arquitectónica en alta definición: el color se aplica <strong className="text-emerald-400 font-semibold">únicamente sobre la pared a pintar</strong>; mobiliario, pisos, ventanales y luz natural se conservan 100% intactos.
             </p>
           </div>
         </div>
 
-        {/* Scene View Mode Toggles */}
-        <div className="flex items-center bg-slate-800/80 p-1 rounded-xl border border-slate-700/60 self-start sm:self-auto">
-          <button
-            type="button"
-            onClick={() => setActiveScene('interior_room')}
-            className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
-              activeScene === 'interior_room'
-                ? 'bg-[#1B2A6B] text-white shadow-xs'
-                : 'text-slate-400 hover:text-white'
-            }`}
-          >
-            Muro Interior
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveScene('exterior_facade')}
-            className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
-              activeScene === 'exterior_facade'
-                ? 'bg-[#1B2A6B] text-white shadow-xs'
-                : 'text-slate-400 hover:text-white'
-            }`}
-          >
-            Fachada Exterior
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveScene('macro_texture')}
-            className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
-              activeScene === 'macro_texture'
-                ? 'bg-[#1B2A6B] text-white shadow-xs'
-                : 'text-slate-400 hover:text-white'
-            }`}
-          >
-            Zoom Acabado
-          </button>
-        </div>
-      </div>
-
-      {/* Main Simulation Stage & Card */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-center">
-        {/* Left / Center: Interactive Simulated Canvas Viewport */}
-        <div className="lg:col-span-7 space-y-2">
-          <div className="relative w-full h-56 sm:h-64 rounded-xl overflow-hidden border border-slate-700 bg-slate-950 shadow-inner group">
-            {/* Split Comparison Indicator if active */}
-            {splitComparison && (
-              <div className="absolute top-2 left-1/2 -translate-x-1/2 z-30 bg-black/70 backdrop-blur-md px-2.5 py-0.5 rounded-full border border-white/20 text-[10px] font-bold text-white flex items-center gap-2">
-                <span>Base Muro Blanco (50%)</span>
-                <span className="text-[#2FAE6D]">|</span>
-                <span className="text-[#2FAE6D]">{currentColor.name}</span>
-              </div>
-            )}
-
-            {/* SCENE 1: INTERIOR ROOM */}
-            {activeScene === 'interior_room' && (
-              <div className="relative w-full h-full select-none overflow-hidden">
-                {/* Simulated Main Wall */}
-                <div
-                  className="absolute inset-0 transition-colors duration-500"
-                  style={{
-                    backgroundColor: splitComparison ? '#F9FAFB' : currentColor.hex,
-                  }}
-                >
-                  {/* Right half of split wall when comparison is ON */}
-                  {splitComparison && (
-                    <div
-                      className="absolute top-0 right-0 bottom-0 w-1/2 transition-colors duration-500 border-l-2 border-white shadow-2xl"
-                      style={{ backgroundColor: currentColor.hex }}
-                    />
-                  )}
-
-                  {/* Surface Texture Simulation Overlay */}
-                  <div
-                    className="absolute inset-0 pointer-events-none mix-blend-multiply opacity-20"
-                    style={{
-                      backgroundImage: `radial-gradient(circle at 50% 30%, transparent 20%, rgba(0,0,0,0.4) 100%)`,
-                    }}
-                  />
-
-                  {/* Lighting Temperature Tint */}
-                  <div
-                    className="absolute inset-0 pointer-events-none transition-colors duration-500"
-                    style={{ backgroundColor: lightingProps.ambientTint }}
-                  />
-
-                  {/* Ceiling Glow / Lighting highlight based on finish */}
-                  <div
-                    className={`absolute -top-10 left-1/4 w-1/2 h-32 rounded-full blur-2xl pointer-events-none transition-opacity duration-300 ${finishDetails.specularGlow}`}
-                    style={{ backgroundColor: lightingProps.highlight }}
-                  />
-                </div>
-
-                {/* Architectural Decor & Foreground Elements (Gives Depth and Real Scale) */}
-                {/* Ceiling cornice */}
-                <div className="absolute top-0 left-0 right-0 h-4 bg-gradient-to-b from-slate-200 to-slate-300 border-b border-slate-400/40 shadow-xs z-10" />
-
-                {/* Hardwood / Architectural Flooring */}
-                <div className="absolute bottom-0 left-0 right-0 h-14 bg-gradient-to-t from-[#452714] via-[#5d351b] to-[#784725] border-t-4 border-white shadow-2xl z-10">
-                  {/* Wooden Planks Pattern */}
-                  <div className="w-full h-full opacity-30 flex divide-x divide-black/40">
-                    <div className="flex-1" />
-                    <div className="flex-1" />
-                    <div className="flex-1" />
-                    <div className="flex-1" />
-                  </div>
-                </div>
-
-                {/* Wall Baseboard (Zócalo blanco tradicional) */}
-                <div className="absolute bottom-14 left-0 right-0 h-3 bg-white border-t border-slate-300 shadow-md z-10" />
-
-                {/* Modern Art Canvas on Wall */}
-                <div className="absolute top-8 right-6 w-24 h-28 bg-white p-2 rounded-sm shadow-xl border border-slate-300 transform -rotate-1 z-10 hidden sm:block">
-                  <div className="w-full h-full bg-slate-100 flex flex-col items-center justify-center border border-slate-200 p-1 text-center">
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-400 to-rose-400 mb-1 opacity-80" />
-                    <span className="text-[7px] font-bold text-slate-500 uppercase tracking-widest">ColorLink</span>
-                  </div>
-                </div>
-
-                {/* Modern Indoor Plant (Foreground Left) */}
-                <div className="absolute bottom-12 left-4 z-20 flex flex-col items-center">
-                  <div className="flex -space-x-2 -mb-2">
-                    <div className="w-3 h-8 bg-emerald-700 rounded-full rotate-[-25deg] shadow-sm" />
-                    <div className="w-3.5 h-10 bg-emerald-600 rounded-full rotate-[5deg] shadow-sm" />
-                    <div className="w-3 h-7 bg-emerald-800 rounded-full rotate-[30deg] shadow-sm" />
-                  </div>
-                  {/* Plant Ceramic Pot */}
-                  <div className="w-8 h-10 bg-gradient-to-r from-slate-200 to-slate-400 rounded-b-md shadow-lg border-t-2 border-slate-500" />
-                </div>
-
-                {/* Modern Minimalist Chair/Pedestal */}
-                <div className="absolute bottom-12 right-28 z-20 hidden sm:flex flex-col items-center opacity-90">
-                  <div className="w-14 h-2.5 bg-slate-800 rounded-full shadow-md" />
-                  <div className="flex justify-between w-10 h-8">
-                    <div className="w-1 h-full bg-slate-700 rotate-[-5deg]" />
-                    <div className="w-1 h-full bg-slate-700 rotate-[5deg]" />
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* SCENE 2: EXTERIOR FACADE */}
-            {activeScene === 'exterior_facade' && (
-              <div className="relative w-full h-full select-none overflow-hidden">
-                {/* Sky and Cloud backdrop */}
-                <div className="absolute top-0 left-0 right-0 h-20 bg-gradient-to-b from-sky-400 via-sky-300 to-sky-100">
-                  <div className="absolute top-2 right-10 w-16 h-6 bg-white/60 rounded-full blur-xs" />
-                  <div className="absolute top-5 right-24 w-10 h-4 bg-white/50 rounded-full blur-xs" />
-                </div>
-
-                {/* Main Facade Wall */}
-                <div
-                  className="absolute top-10 left-6 right-0 bottom-0 shadow-2xl transition-colors duration-500 rounded-tl-xl border-l-2 border-t-2 border-white/20"
-                  style={{
-                    backgroundColor: splitComparison ? '#F9FAFB' : currentColor.hex,
-                  }}
-                >
-                  {splitComparison && (
-                    <div
-                      className="absolute top-0 right-0 bottom-0 w-1/2 transition-colors duration-500 border-l-2 border-white shadow-2xl"
-                      style={{ backgroundColor: currentColor.hex }}
-                    />
-                  )}
-
-                  {/* Direct Sun Shadow / Modern Canopy Overhang */}
-                  <div className="absolute top-0 left-0 right-0 h-10 bg-gradient-to-b from-black/40 to-transparent pointer-events-none" />
-
-                  {/* Architecture Window */}
-                  <div className="absolute top-6 left-8 w-24 h-28 bg-slate-900 border-2 border-slate-700 rounded-md shadow-2xl overflow-hidden">
-                    <div className="w-full h-full bg-gradient-to-tr from-sky-950 via-slate-800 to-sky-700/60 p-1 relative">
-                      {/* Window crossbars */}
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="w-full h-0.5 bg-slate-600/80" />
-                      </div>
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="h-full w-0.5 bg-slate-600/80" />
-                      </div>
-                      {/* Sun reflection */}
-                      <div className="absolute -top-4 -right-4 w-12 h-12 bg-white/20 rounded-full blur-sm rotate-45" />
-                    </div>
-                  </div>
-
-                  {/* Balcony / Accent concrete column */}
-                  <div className="absolute top-0 right-0 bottom-0 w-10 bg-stone-300 border-l border-stone-400 shadow-xl flex flex-col justify-between py-2">
-                    <div className="w-full h-1 bg-stone-400" />
-                    <div className="w-full h-1 bg-stone-400" />
-                  </div>
-
-                  {/* Lighting filter */}
-                  <div
-                    className="absolute inset-0 pointer-events-none transition-colors duration-500"
-                    style={{ backgroundColor: lightingProps.ambientTint }}
-                  />
-                </div>
-
-                {/* Ground sidewalk */}
-                <div className="absolute bottom-0 left-0 right-0 h-6 bg-stone-400 border-t border-stone-500 shadow-md z-10" />
-              </div>
-            )}
-
-            {/* SCENE 3: MACRO TEXTURE ZOOM */}
-            {activeScene === 'macro_texture' && (
-              <div
-                className="relative w-full h-full select-none transition-colors duration-500 flex items-center justify-center p-6"
-                style={{
-                  backgroundColor: splitComparison ? '#F9FAFB' : currentColor.hex,
-                }}
-              >
-                {splitComparison && (
-                  <div
-                    className="absolute top-0 right-0 bottom-0 w-1/2 transition-colors duration-500 border-l-2 border-white shadow-2xl"
-                    style={{ backgroundColor: currentColor.hex }}
-                  />
-                )}
-
-                {/* Surface Grain Texture Generator based on selected surface */}
-                <div
-                  className="absolute inset-0 pointer-events-none mix-blend-overlay opacity-50"
-                  style={{
-                    backgroundImage:
-                      surfaceType === 'mamposteria' || surfaceType === 'concreto'
-                        ? 'radial-gradient(#000 1px, transparent 1px)'
-                        : 'linear-gradient(45deg, rgba(0,0,0,0.05) 25%, transparent 25%)',
-                    backgroundSize: surfaceType === 'mamposteria' ? '4px 4px' : '8px 8px',
-                  }}
-                />
-
-                {/* Finish Specular Flare */}
-                <div
-                  className={`absolute w-36 h-36 rounded-full blur-xl pointer-events-none transition-opacity duration-300 ${finishDetails.specularGlow}`}
-                  style={{ backgroundColor: lightingProps.highlight }}
-                />
-
-                {/* Central Focus Ring */}
-                <div className="relative z-10 bg-black/40 backdrop-blur-md px-4 py-3 rounded-xl border border-white/20 text-center max-w-xs shadow-2xl">
-                  <div className="flex items-center justify-center gap-2 mb-1">
-                    <span
-                      className="w-4 h-4 rounded-full border border-white shadow-xs"
-                      style={{ backgroundColor: currentColor.hex }}
-                    />
-                    <span className="font-extrabold text-sm text-white">{currentColor.name}</span>
-                  </div>
-                  <p className="text-[10px] text-slate-300">
-                    Textura simulada para sustrato <strong>{surfaceType.replace('_', ' ').toUpperCase()}</strong> con acabado <strong>{finishDetails.label}</strong>.
-                  </p>
-                </div>
-              </div>
-            )}
-
-            {/* Floating Quick Action Overlay on Canvas */}
-            <div className="absolute bottom-2 right-2 z-30 flex items-center gap-1.5">
-              {/* Split compare button */}
-              <button
-                type="button"
-                onClick={() => setSplitComparison(!splitComparison)}
-                className={`px-2.5 py-1 rounded-lg text-[10px] font-bold flex items-center gap-1 backdrop-blur-md transition-all cursor-pointer ${
-                  splitComparison
-                    ? 'bg-[#2FAE6D] text-white shadow-md'
-                    : 'bg-black/60 hover:bg-black/80 text-white border border-white/20'
-                }`}
-                title="Comparar color contra muro base blanco"
-              >
-                <SlidersHorizontal className="w-3 h-3" />
-                <span>{splitComparison ? 'Ver Color Solo' : 'Comparar vs Blanco'}</span>
-              </button>
-            </div>
-          </div>
-
-          {/* Lighting Environment Controls */}
-          <div className="flex items-center justify-between bg-slate-800/60 px-3 py-2 rounded-xl border border-slate-700/60 text-xs">
-            <span className="text-[11px] font-bold text-slate-300 flex items-center gap-1">
-              <Lamp className="w-3.5 h-3.5 text-amber-400" />
-              <span>Prueba de Luz:</span>
-            </span>
-
-            <div className="flex items-center gap-1.5">
-              <button
-                type="button"
-                onClick={() => setLighting('daylight')}
-                className={`px-2 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer flex items-center gap-1 ${
-                  lighting === 'daylight'
-                    ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
-                    : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                <Sun className="w-3 h-3 text-amber-400" />
-                <span>Día (5500K)</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setLighting('warm')}
-                className={`px-2 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer flex items-center gap-1 ${
-                  lighting === 'warm'
-                    ? 'bg-amber-600/30 text-amber-200 border border-amber-500/50'
-                    : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                <span className="w-2 h-2 rounded-full bg-amber-400" />
-                <span>Cálida (3000K)</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setLighting('cool')}
-                className={`px-2 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer flex items-center gap-1 ${
-                  lighting === 'cool'
-                    ? 'bg-sky-500/20 text-sky-300 border border-sky-500/40'
-                    : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                <span className="w-2 h-2 rounded-full bg-sky-400" />
-                <span>Fría (6500K)</span>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Right Column: Physical Swatch Spec Sheet (Ficha de Tintometría Oficial) */}
-        <div className="lg:col-span-5 bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-3">
-          {/* Official Swatch Preview */}
-          <div className="flex items-start gap-3">
-            {/* Color Swatch Card Graphic */}
-            <div className="relative w-16 h-20 rounded-xl overflow-hidden border-2 border-white/20 shadow-lg shrink-0 flex flex-col justify-end p-1.5"
-                 style={{ backgroundColor: currentColor.hex }}>
-              {/* Gloss highlight corner */}
-              <div className="absolute top-0 right-0 w-8 h-8 bg-white/25 rounded-bl-full pointer-events-none" />
-              <span className="text-[8px] font-black uppercase text-black/80 bg-white/90 px-1 py-0.5 rounded text-center truncate">
-                {currentColor.code || 'PINTUCO'}
-              </span>
-            </div>
-
-            {/* Color Technical ID */}
-            <div className="flex-1 min-w-0">
-              <span className="text-[9px] font-extrabold uppercase text-[#2FAE6D] tracking-wider block">
-                Fórmula de Tintometría Confirmada
-              </span>
-              <h5 className="text-base font-black text-white leading-tight truncate">
-                {currentColor.name}
-              </h5>
-              <div className="flex items-center gap-2 mt-1 text-[11px] text-slate-400 flex-wrap">
-                <span className="bg-slate-800 px-1.5 py-0.5 rounded border border-slate-700 font-mono font-bold text-slate-200">
-                  {currentColor.code || 'PIN-1000'}
-                </span>
-                <span className="font-mono text-slate-300 font-semibold">
-                  HEX: {currentColor.hex}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Technical Specs Breakdown for Project Engineers / Clients */}
-          <div className="grid grid-cols-2 gap-2 text-[11px] pt-2 border-t border-slate-800">
-            <div className="bg-slate-900 p-2 rounded-lg border border-slate-800/80">
-              <span className="text-slate-400 text-[9px] uppercase font-bold block">Reflectancia (LRV)</span>
-              <span className="font-bold text-white flex items-center gap-1">
-                <span>{currentColor.lrv ? `${currentColor.lrv}%` : '40%'}</span>
-                <span className="text-[10px] text-slate-400 font-normal">
-                  ({(currentColor.lrv || 40) > 50 ? 'Luminoso' : 'Profundo'})
-                </span>
-              </span>
-            </div>
-
-            <div className="bg-slate-900 p-2 rounded-lg border border-slate-800/80">
-              <span className="text-slate-400 text-[9px] uppercase font-bold block">Acabado Activo</span>
-              <span className="font-bold text-[#2FAE6D] truncate block">
-                {finishDetails.label}
-              </span>
-            </div>
-          </div>
-
-          {/* Color description & tint note */}
-          <p className="text-[11px] text-slate-400 leading-relaxed italic bg-slate-900/50 p-2 rounded-lg border border-slate-800">
-            "{currentColor.description || 'Pigmento de alta solidez y resistencia UV formulado para recubrimientos Pintuco.'}"
-          </p>
-
-          {/* Product compatibility note */}
-          <div className="flex items-center gap-1.5 text-[10px] text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-lg border border-emerald-500/20">
-            <Check className="w-3 h-3 shrink-0" />
-            <span className="truncate">Compatible con: <strong>{productName}</strong></span>
-          </div>
-        </div>
-      </div>
-
-      {/* Color Selection Palette & Category Filter */}
-      <div className="pt-2 border-t border-slate-800 space-y-2.5">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-          <label className="text-xs font-bold text-slate-300 flex items-center gap-1.5">
-            <Palette className="w-3.5 h-3.5 text-[#2FAE6D]" />
-            <span>Selecciona o Explora el Abanico de Color Pintuco:</span>
-          </label>
-
-          {/* Category Tabs */}
-          <div className="flex items-center gap-1 overflow-x-auto pb-1 sm:pb-0 scrollbar-none text-[10px]">
-            {categories.map((cat) => (
-              <button
-                key={cat}
-                type="button"
-                onClick={() => {
-                  setActiveCategory(cat);
-                  setIsCustomMode(false);
-                }}
-                className={`px-2 py-0.5 rounded-md font-bold whitespace-nowrap transition-all cursor-pointer ${
-                  activeCategory === cat && !isCustomMode
-                    ? 'bg-[#1B2A6B] text-white shadow-xs'
-                    : 'bg-slate-800 hover:bg-slate-700 text-slate-400'
-                }`}
-              >
-                {cat}
-              </button>
-            ))}
-
-            {/* Custom Color Button */}
+        {/* Right Header Controls */}
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Paint Mode: Full Wall vs Accent Wall */}
+          <div className="bg-slate-800/90 p-0.5 rounded-xl border border-slate-700/80 flex items-center">
             <button
               type="button"
-              onClick={() => setIsCustomMode(!isCustomMode)}
-              className={`px-2 py-0.5 rounded-md font-bold whitespace-nowrap transition-all cursor-pointer flex items-center gap-1 ${
-                isCustomMode
-                  ? 'bg-[#2FAE6D] text-white shadow-xs'
-                  : 'bg-slate-800 hover:bg-slate-700 text-slate-400'
+              onClick={() => setWallMode('full_wall')}
+              className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                wallMode === 'full_wall'
+                  ? 'bg-emerald-600 text-white shadow-xs font-black'
+                  : 'text-slate-400 hover:text-white'
               }`}
+              title="Pintar toda la pared arquitectónica de esquina a esquina"
             >
-              <Pipette className="w-2.5 h-2.5" />
-              <span>Personalizado</span>
+              Pared Completa
+            </button>
+            <button
+              type="button"
+              onClick={() => setWallMode('accent_panel')}
+              className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                wallMode === 'accent_panel'
+                  ? 'bg-amber-500 text-slate-950 shadow-xs font-black'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+              title="Pintar franja o muro focal de acento decorativo"
+            >
+              Muro Acento
             </button>
           </div>
-        </div>
 
-        {/* Custom Hex / Pipette Picker Row */}
-        {isCustomMode && (
-          <div className="p-3 bg-slate-950 rounded-xl border border-emerald-500/40 flex flex-col sm:flex-row items-center gap-3 text-xs">
-            <div className="flex items-center gap-2 w-full sm:w-auto">
-              <label className="text-[11px] font-bold text-slate-300 whitespace-nowrap">
-                Pipeta de Color / Manual de Marca:
-              </label>
-              <input
-                type="color"
-                value={customHex}
-                onChange={(e) => handleCustomColorChange(e.target.value)}
-                className="w-9 h-9 rounded-lg border-2 border-white/40 cursor-pointer bg-transparent"
-                title="Elegir color personalizado"
-              />
-            </div>
-
-            <div className="flex items-center gap-2 flex-1 w-full sm:w-auto">
-              <span className="text-slate-400 font-mono text-xs">HEX:</span>
-              <input
-                type="text"
-                value={customHex}
-                onChange={(e) => handleCustomColorChange(e.target.value)}
-                placeholder="#1B2A6B"
-                className="px-2.5 py-1 bg-slate-900 border border-slate-700 rounded-lg text-xs font-mono text-white w-28 focus:border-[#2FAE6D] outline-hidden"
-              />
-              <span className="text-[10px] text-slate-400 italic">
-                El laboratorio Pintuco formulará la tintometría por espectrometría.
-              </span>
-            </div>
+          {/* Manos de Pintura (Coats of Paint) */}
+          <div className="hidden sm:flex items-center gap-1 bg-slate-800/90 px-2 py-1 rounded-xl border border-slate-700/80 text-xs">
+            <span className="text-[11px] font-bold text-slate-400 mr-1">Manos:</span>
+            {([1, 2, 3] as const).map((coat) => (
+              <button
+                key={coat}
+                type="button"
+                onClick={() => setPaintCoats(coat)}
+                className={`w-5 h-5 rounded-md text-[11px] font-black transition-all cursor-pointer ${
+                  paintCoats === coat
+                    ? 'bg-[#1B2A6B] text-white ring-1 ring-blue-400 shadow-xs'
+                    : 'text-slate-400 hover:text-white hover:bg-slate-700'
+                }`}
+                title={
+                  coat === 1
+                    ? '1 Mano: Base translúcida'
+                    : coat === 2
+                    ? '2 Manos: Acabado estándar recomendado Pintuco'
+                    : '3 Manos: Cobertura total de alto poder cubriente'
+                }
+              >
+                {coat}
+              </button>
+            ))}
           </div>
-        )}
 
-        {/* Color Swatch Tiles Grid */}
-        <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 gap-2 max-h-48 overflow-y-auto pr-1">
-          {filteredPalettes.map((color) => {
-            const isSelected = currentColor.name === color.name && !isCustomMode;
+          {/* Before/After Split Slider Toggle */}
+          <button
+            type="button"
+            onClick={() => setIsSliderActive(!isSliderActive)}
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+              isSliderActive
+                ? 'bg-[#2FAE6D] text-white shadow-md'
+                : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700'
+            }`}
+          >
+            <Split className="w-3.5 h-3.5" />
+            <span>{isSliderActive ? 'Antes / Después' : 'Solo Simulado'}</span>
+          </button>
+
+          {/* Fullscreen modal toggle */}
+          <button
+            type="button"
+            onClick={() => setIsFullscreen(!isFullscreen)}
+            className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition-colors cursor-pointer"
+            title={isFullscreen ? 'Reducir ventana' : 'Pantalla completa'}
+          >
+            <Maximize2 className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+
+      {/* ZONES NAVIGATION TABS (Fachada, Sala de Estar, Habitación, Oficina, Cocina, Textura) */}
+      <div className="bg-slate-900 border-b border-slate-800/80 px-4 sm:px-6 py-2.5">
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+          {sceneTabs.map((tab) => {
+            const Icon = tab.icon;
+            const isActive = activeZone === tab.id;
             return (
               <button
-                key={color.name}
+                key={tab.id}
                 type="button"
+                id={`scene-tab-${tab.id}`}
                 onClick={() => {
-                  setIsCustomMode(false);
-                  onSelectColor(color);
+                  setImageLoaded(false);
+                  setActiveZone(tab.id);
+                  setTimeout(() => setImageLoaded(true), 100);
                 }}
-                className={`p-1.5 rounded-xl border transition-all text-left flex flex-col items-center gap-1.5 group cursor-pointer ${
-                  isSelected
-                    ? 'bg-slate-800 border-[#2FAE6D] ring-2 ring-[#2FAE6D]/60 shadow-lg scale-102'
-                    : 'bg-slate-950/70 border-slate-800 hover:border-slate-700 hover:bg-slate-800/60'
+                className={`group px-3.5 py-2 rounded-2xl text-xs font-bold flex items-center gap-2 whitespace-nowrap transition-all duration-200 cursor-pointer ${
+                  isActive
+                    ? 'bg-[#1B2A6B] text-white shadow-md shadow-blue-950/60 ring-1 ring-blue-400/50'
+                    : 'bg-slate-800/80 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700/60'
                 }`}
               >
-                {/* Circle swatch with gloss and check if selected */}
                 <div
-                  className="w-9 h-9 rounded-full border-2 border-white/20 shadow-md relative flex items-center justify-center transition-transform group-hover:scale-105"
-                  style={{ backgroundColor: color.hex }}
+                  className={`w-6 h-6 rounded-lg flex items-center justify-center transition-colors ${
+                    isActive ? 'bg-[#2FAE6D] text-white' : 'bg-slate-700 text-slate-400 group-hover:text-white'
+                  }`}
                 >
-                  {isSelected && (
-                    <div className="w-5 h-5 rounded-full bg-black/60 flex items-center justify-center text-white">
-                      <Check className="w-3 h-3 text-[#2FAE6D]" />
-                    </div>
-                  )}
+                  <Icon className="w-3.5 h-3.5" />
                 </div>
-
-                {/* Color Name and Code */}
-                <div className="w-full text-center">
-                  <span className="text-[10px] font-bold text-slate-200 block truncate leading-tight">
-                    {color.name}
-                  </span>
-                  <span className="text-[8px] font-mono text-slate-400 block truncate">
-                    {color.code || color.hex}
-                  </span>
-                </div>
+                <span>{tab.label}</span>
               </button>
             );
           })}
+        </div>
+      </div>
+
+      {/* MAIN VIEWPORT: PHOTOREALISTIC ARCHITECTURAL STAGE */}
+      <div className="relative p-4 sm:p-6 bg-slate-950">
+        <div
+          ref={containerRef}
+          onMouseMove={handleMouseMove}
+          onTouchMove={handleTouchMove}
+          onMouseUp={() => setIsDraggingSlider(false)}
+          onTouchEnd={() => setIsDraggingSlider(false)}
+          className="relative w-full h-[360px] sm:h-[460px] md:h-[500px] rounded-2xl overflow-hidden bg-slate-900 shadow-2xl border border-slate-800 select-none group"
+        >
+          {/* 1. BASE REAL ARCHITECTURAL PHOTOGRAPH (100% UNTOUCHED BACKGROUND) */}
+          <img
+            src={currentScene.imageUrl}
+            alt={currentScene.title}
+            onLoad={() => setImageLoaded(true)}
+            className="absolute inset-0 w-full h-full object-cover select-none pointer-events-none transition-transform duration-700"
+            draggable={false}
+          />
+
+          {/* 2. ISOLATED REALISTIC PAINT LAYER ON THE ARCHITECTURAL WALL SURFACE */}
+          {/* Covers the entire natural wall plane from corner to corner, preserving room architecture */}
+          <div
+            className="absolute inset-0 pointer-events-none transition-all duration-300"
+            style={{
+              clipPath: activePolygon,
+            }}
+          >
+            {/* Split Before/After mask: reveals simulated paint only from splitSliderPosition to 100% */}
+            <div
+              className="absolute inset-0 transition-all duration-75 overflow-hidden"
+              style={{
+                clipPath: isSliderActive
+                  ? `polygon(${splitSliderPosition}% 0%, 100% 0%, 100% 100%, ${splitSliderPosition}% 100%)`
+                  : 'none',
+              }}
+            >
+              {/* LAYER A: PIGMENT HUE & SATURATION (COLOR BLEND) */}
+              {/* Delivers the pure chromatic identity of the Pintuco formula without altering surface shadows */}
+              <div
+                className="absolute inset-0 transition-all duration-500 ease-out"
+                style={{
+                  backgroundColor: currentColor.hex,
+                  mixBlendMode: 'color',
+                  opacity: Math.min(1, 0.75 + (coatFactor * 0.22)),
+                }}
+              />
+
+              {/* LAYER B: LRV LUMINOSITY MODULATION ACCORDING TO PHYSICAL PAINT REFLECTANCE */}
+              {isLightColor ? (
+                <>
+                  {/* For Light / White / Cream tones: Soft-light lifts wall luminance smoothly */}
+                  <div
+                    className="absolute inset-0 transition-all duration-500 ease-out"
+                    style={{
+                      backgroundColor: currentColor.hex,
+                      mixBlendMode: 'soft-light',
+                      opacity: Math.min(0.95, 0.65 * baseCoverageOpacity + ((colorLRV - 50) / 100) * 0.4),
+                    }}
+                  />
+                  {/* Subtle screen pass so pure whites (Blanco Puro LRV 88%) look truly crisp and luminous */}
+                  {isVeryLightColor && (
+                    <div
+                      className="absolute inset-0 transition-all duration-500 ease-out"
+                      style={{
+                        backgroundColor: currentColor.hex,
+                        mixBlendMode: 'screen',
+                        opacity: Math.min(0.35, ((colorLRV - 70) / 100) * 0.55 * baseCoverageOpacity),
+                      }}
+                    />
+                  )}
+                </>
+              ) : (
+                /* For Medium to Deep / Dark tones: Multiply deepens the tone while keeping wall plaster grain */
+                <div
+                  className="absolute inset-0 transition-all duration-500 ease-out"
+                  style={{
+                    backgroundColor: currentColor.hex,
+                    mixBlendMode: 'multiply',
+                    opacity: Math.min(0.88, (0.42 + ((55 - colorLRV) / 55) * 0.42) * baseCoverageOpacity),
+                  }}
+                />
+              )}
+
+              {/* LAYER C: WALL PLASTER GRAIN & ROLLER STIPPLE TEXTURE */}
+              {/* Gives the paint authentic tactile physical body, eliminating flat digital looks */}
+              <div
+                className="absolute inset-0 pointer-events-none opacity-20"
+                style={{
+                  backgroundImage: `radial-gradient(rgba(255,255,255,0.15) 1px, transparent 0), radial-gradient(rgba(0,0,0,0.12) 1px, transparent 0)`,
+                  backgroundSize: '4px 4px',
+                  backgroundPosition: '0 0, 2px 2px',
+                  mixBlendMode: 'overlay',
+                }}
+              />
+
+              {/* LAYER D: ARCHITECTURAL AMBIENT OCCLUSION & CORNER CONTACT SHADOWS */}
+              {/* Anchors the wall into 3D space with natural ceiling and floor contact gradients */}
+              <div
+                className="absolute inset-0 pointer-events-none"
+                style={{
+                  background:
+                    'linear-gradient(to bottom, rgba(0,0,0,0.16) 0%, transparent 12%, transparent 88%, rgba(0,0,0,0.18) 100%)',
+                  mixBlendMode: 'multiply',
+                }}
+              />
+
+              {/* LAYER E: WALL LIGHT BOUNCE BASED ON ROOM LIGHTING TEMPERATURE */}
+              <div
+                className="absolute inset-0 transition-all duration-500 pointer-events-none"
+                style={{
+                  backgroundImage: lightingInfo.wallLightGradient,
+                  mixBlendMode: 'soft-light',
+                }}
+              />
+
+              {/* LAYER F: SPECULAR SHEEN BASED ON PAINT FINISH (Mate, Satinado, Semibrillante, Brillante) */}
+              {finishEffect.sheenOpacity > 0.05 && (
+                <div
+                  className="absolute inset-0 transition-opacity duration-500 pointer-events-none"
+                  style={{
+                    background: finishEffect.specularGradient,
+                    filter: 'blur(30px)',
+                    opacity: finishEffect.sheenOpacity * coatFactor,
+                    mixBlendMode: 'overlay',
+                  }}
+                />
+              )}
+            </div>
+          </div>
+
+          {/* 3. INTERACTIVE BEFORE / AFTER SLIDER DIVIDER */}
+          {isSliderActive && (
+            <div
+              className="absolute inset-y-0 z-30 pointer-events-none"
+              style={{ left: `${splitSliderPosition}%` }}
+            >
+              {/* Vertical line with subtle glow */}
+              <div className="absolute inset-y-0 -left-px w-0.5 bg-white shadow-[0_0_10px_rgba(255,255,255,0.8)]" />
+
+              {/* Draggable Handle Button */}
+              <div
+                onMouseDown={() => setIsDraggingSlider(true)}
+                onTouchStart={() => setIsDraggingSlider(true)}
+                className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-10 h-10 rounded-full bg-slate-900/90 text-white border-2 border-white shadow-2xl flex items-center justify-center cursor-ew-resize pointer-events-auto hover:scale-110 active:scale-95 transition-transform"
+                title="Arrastra para comparar Antes vs Después"
+              >
+                <Split className="w-5 h-5 text-emerald-400" />
+              </div>
+            </div>
+          )}
+
+          {/* 4. BEFORE / AFTER FLOATING BADGES */}
+          {isSliderActive && (
+            <>
+              <div className="absolute top-4 left-4 z-20 pointer-events-none">
+                <span className="px-3 py-1 rounded-xl bg-slate-900/80 backdrop-blur-md text-slate-200 border border-white/20 text-xs font-extrabold uppercase shadow-lg flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-slate-400" />
+                  Antes (Original)
+                </span>
+              </div>
+              <div className="absolute top-4 right-4 z-20 pointer-events-none">
+                <span className="px-3 py-1 rounded-xl bg-[#1B2A6B]/90 backdrop-blur-md text-white border border-blue-400/40 text-xs font-black uppercase shadow-lg flex items-center gap-1.5">
+                  <span
+                    className="w-2.5 h-2.5 rounded-full border border-white/60 shadow-xs"
+                    style={{ backgroundColor: currentColor.hex }}
+                  />
+                  Después (Pintuco®)
+                </span>
+              </div>
+            </>
+          )}
+
+          {/* 5. INTERACTIVE SURFACE PIN INDICATOR OVER THE WALL */}
+          <div
+            className="absolute z-20 pointer-events-auto transform -translate-x-1/2 -translate-y-1/2"
+            style={{
+              top: currentScene.wallLabelPos.top,
+              left: currentScene.wallLabelPos.left,
+            }}
+          >
+            <div className="group/pin relative flex items-center justify-center">
+              <div
+                className="w-8 h-8 rounded-full border-2 border-white shadow-xl flex items-center justify-center transition-transform group-hover/pin:scale-125 cursor-pointer animate-pulse"
+                style={{ backgroundColor: currentColor.hex }}
+              >
+                <div className="w-2.5 h-2.5 rounded-full bg-white shadow-xs" />
+              </div>
+
+              {/* Tooltip on hover */}
+              <div className="absolute left-10 top-1/2 -translate-y-1/2 whitespace-nowrap bg-slate-950/90 backdrop-blur-md border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-slate-200 shadow-2xl opacity-90 group-hover/pin:opacity-100 transition-opacity pointer-events-none">
+                <div className="font-extrabold text-white flex items-center gap-1">
+                  <span>📍 {wallMode === 'accent_panel' ? 'Muro de Acento' : 'Pared Principal Completa'}</span>
+                </div>
+                <div className="text-[11px] text-slate-400">
+                  {currentScene.surfaceAreaM2} m² • {paintCoats} {paintCoats === 1 ? 'Mano' : 'Manos'} • {finishEffect.name} • {currentColor.name}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* 6. BOTTOM PHOTO INFO OVERLAY */}
+          <div className="absolute bottom-4 inset-x-4 z-20 pointer-events-none flex flex-wrap items-center justify-between gap-2">
+            <div className="bg-slate-950/80 backdrop-blur-md border border-slate-800 rounded-2xl px-4 py-2 text-xs">
+              <div className="font-black text-white flex items-center gap-2">
+                <span>{currentScene.title}</span>
+                <span className="text-emerald-400 font-bold">•</span>
+                <span className="text-slate-300 font-semibold">{currentScene.subtitle}</span>
+              </div>
+              <p className="text-[11px] text-slate-400 mt-0.5 flex items-center gap-1.5">
+                <Info className="w-3.5 h-3.5 text-amber-400" />
+                <span>{currentScene.paintRecommendation}</span>
+              </p>
+            </div>
+
+            {/* Lighting Mode Selector Pills */}
+            <div className="bg-slate-950/80 backdrop-blur-md border border-slate-800 rounded-2xl p-1 flex items-center gap-1 pointer-events-auto">
+              <button
+                type="button"
+                onClick={() => setLighting('daylight')}
+                className={`px-2.5 py-1 rounded-xl text-xs font-bold flex items-center gap-1 transition-all cursor-pointer ${
+                  lighting === 'daylight'
+                    ? 'bg-amber-500 text-slate-950 shadow-xs'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+                title="Luz Solar Natural 5500K"
+              >
+                <Sun className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">5500K</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setLighting('warm')}
+                className={`px-2.5 py-1 rounded-xl text-xs font-bold flex items-center gap-1 transition-all cursor-pointer ${
+                  lighting === 'warm'
+                    ? 'bg-amber-500 text-slate-950 shadow-xs'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+                title="Luz Cálida 3000K"
+              >
+                <Lamp className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">3000K</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setLighting('cool')}
+                className={`px-2.5 py-1 rounded-xl text-xs font-bold flex items-center gap-1 transition-all cursor-pointer ${
+                  lighting === 'cool'
+                    ? 'bg-sky-500 text-white shadow-xs'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+                title="Luz Fría LED 6500K"
+              >
+                <Moon className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">6500K</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setLighting('golden_hour')}
+                className={`px-2.5 py-1 rounded-xl text-xs font-bold flex items-center gap-1 transition-all cursor-pointer ${
+                  lighting === 'golden_hour'
+                    ? 'bg-orange-500 text-white shadow-xs'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+                title="Atardecer Dorado 2400K"
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">2400K</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* CARTERA DE COLORES PINTUCO® (COLOR PORTFOLIOS & SELECTION SYSTEM) */}
+      <div className="bg-slate-900 border-t border-slate-800 p-5 sm:p-6 space-y-5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <div className="flex items-center gap-2">
+              <Palette className="w-5 h-5 text-emerald-400" />
+              <h4 className="text-base font-black text-white tracking-tight">
+                Carteras de Color Pintuco® Oficiales
+              </h4>
+            </div>
+            <p className="text-xs text-slate-400 mt-0.5">
+              Explora las colecciones cromáticas formuladas con pigmentos arquitectónicos de alta resistencia:
+            </p>
+          </div>
+
+          {/* Quick Search in Color Portfolio */}
+          <div className="relative w-full sm:w-64">
+            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <input
+              type="text"
+              value={colorSearchTerm}
+              onChange={(e) => setColorSearchTerm(e.target.value)}
+              placeholder="Buscar tono o código (ej: PIN-1001)..."
+              className="w-full pl-9 pr-3 py-1.5 bg-slate-950 border border-slate-700 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
+            />
+          </div>
+        </div>
+
+        {/* PORTFOLIO NAVIGATION TABS */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+          {PINTUCO_PORTFOLIOS.map((portfolio) => {
+            const isActive = activePortfolioId === portfolio.id;
+            return (
+              <button
+                key={portfolio.id}
+                type="button"
+                onClick={() => setActivePortfolioId(portfolio.id)}
+                className={`px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-2 whitespace-nowrap transition-all cursor-pointer ${
+                  isActive
+                    ? 'bg-emerald-600 text-white shadow-md shadow-emerald-900/40 ring-1 ring-emerald-400/50'
+                    : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700'
+                }`}
+              >
+                <span>{portfolio.icon}</span>
+                <span>{portfolio.name}</span>
+                <span
+                  className={`text-[10px] px-1.5 py-0.2 rounded-full ${
+                    isActive ? 'bg-emerald-800 text-emerald-100' : 'bg-slate-900 text-slate-400'
+                  }`}
+                >
+                  {portfolio.colors.length}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* PORTFOLIO DESCRIPTION & ACTIVE CARTERA GRID */}
+        <div className="space-y-3">
+          <div className="flex items-center justify-between text-xs text-slate-400">
+            <span>{currentPortfolio.description}</span>
+            <span className="text-slate-500 font-mono text-[11px]">
+              {portfolioColors.length} colores disponibles
+            </span>
+          </div>
+
+          {/* COLOR SWATCHES GRID */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2.5">
+            {portfolioColors.map((color) => {
+              const isSelected = currentColor.name.toLowerCase() === color.name.toLowerCase();
+              return (
+                <button
+                  key={color.code}
+                  type="button"
+                  id={`color-swatch-${color.code.toLowerCase()}`}
+                  onClick={() => onSelectColor(color)}
+                  className={`group relative p-2 rounded-2xl border text-left transition-all duration-200 cursor-pointer flex flex-col justify-between ${
+                    isSelected
+                      ? 'bg-slate-800 border-emerald-400 ring-2 ring-emerald-400/50 shadow-xl scale-[1.03]'
+                      : 'bg-slate-950/80 hover:bg-slate-800/80 border-slate-800 hover:border-slate-600'
+                  }`}
+                >
+                  {/* Swatch color pill */}
+                  <div className="relative w-full h-14 rounded-xl overflow-hidden shadow-inner border border-white/10 mb-2">
+                    <div
+                      className="absolute inset-0 transition-transform duration-300 group-hover:scale-110"
+                      style={{ backgroundColor: color.hex }}
+                    />
+                    {isSelected && (
+                      <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
+                        <div className="w-6 h-6 rounded-full bg-white text-slate-950 flex items-center justify-center shadow-lg">
+                          <Check className="w-3.5 h-3.5 stroke-[3]" />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Color details */}
+                  <div className="space-y-0.5">
+                    <span className="block text-xs font-bold text-white truncate" title={color.name}>
+                      {color.name}
+                    </span>
+                    <div className="flex items-center justify-between text-[10px] text-slate-400 font-mono">
+                      <span>{color.code}</span>
+                      <span className="text-emerald-400 font-semibold">LRV {color.lrv}%</span>
+                    </div>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* ACTIVE COLOR TECHNICAL STRIP & COMPLEMENTARY TRIAD */}
+        <div className="bg-slate-950/90 rounded-2xl p-4 border border-slate-800 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          {/* Active color specs */}
+          <div className="flex items-center gap-4">
+            <div
+              className="w-16 h-16 rounded-2xl border-2 border-white/20 shadow-2xl relative overflow-hidden flex-shrink-0"
+              style={{ backgroundColor: currentColor.hex }}
+            >
+              <div className="absolute inset-0 bg-gradient-to-tr from-black/20 to-transparent" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h5 className="text-base font-black text-white">{currentColor.name}</h5>
+                <span className="text-xs px-2 py-0.5 rounded-lg bg-slate-800 text-slate-300 font-mono font-bold">
+                  {currentColor.code}
+                </span>
+                <span className="text-xs px-2 py-0.5 rounded-lg bg-emerald-500/20 text-emerald-400 font-bold">
+                  LRV: {currentColor.lrv}%
+                </span>
+              </div>
+              <p className="text-xs text-slate-400 mt-1 max-w-xl">
+                {currentColor.description}
+              </p>
+            </div>
+          </div>
+
+          {/* Recommended Architectural Triad */}
+          <div className="flex items-center gap-3 pt-3 lg:pt-0 border-t lg:border-t-0 lg:border-l border-slate-800 lg:pl-6">
+            <div className="text-right hidden sm:block">
+              <span className="block text-[11px] font-extrabold uppercase text-slate-400">
+                Tríada Recomendada
+              </span>
+              <span className="text-[10px] text-slate-500">Muros y Acentos Armónicos</span>
+            </div>
+            <div className="flex items-center gap-2">
+              {complementaryColors.map((comp) => (
+                <button
+                  key={comp.code}
+                  type="button"
+                  onClick={() => onSelectColor(comp)}
+                  className="group relative flex flex-col items-center cursor-pointer"
+                  title={`Combinar con ${comp.name} (${comp.code})`}
+                >
+                  <div
+                    className="w-9 h-9 rounded-xl border border-white/20 shadow-md group-hover:scale-110 transition-transform flex items-center justify-center"
+                    style={{ backgroundColor: comp.hex }}
+                  />
+                  <span className="text-[10px] text-slate-400 mt-1 truncate max-w-[65px]">
+                    {comp.name}
+                  </span>
+                </button>
+              ))}
+            </div>
+
+            {/* Custom HEX Eyedropper Input */}
+            <div className="pl-3 border-l border-slate-800 flex items-center gap-2">
+              <div className="relative">
+                <input
+                  type="color"
+                  value={customHex}
+                  onChange={(e) => handleCustomHexInput(e.target.value)}
+                  className="w-9 h-9 rounded-xl border border-slate-700 bg-slate-900 cursor-pointer overflow-hidden p-0.5"
+                  title="Seleccionar color personalizado HEX"
+                />
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

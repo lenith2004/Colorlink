@@ -22,6 +22,7 @@ import {
   INITIAL_TRACEABILITY,
   COLOR_PALETTES,
 } from '../data/initialData';
+import { ColorLinkAPI } from '../lib/supabase';
 
 interface AppContextType {
   currentUser: UserProfile;
@@ -93,6 +94,21 @@ interface AppContextType {
     primerRequiredGallons: number;
     estimatedPriceCOP: number;
   };
+
+  // WhatsApp & Registered Clients Integration
+  whatsAppCommercialNumber: string;
+  setWhatsAppCommercialNumber: (num: string) => void;
+  registeredClients: UserProfile[];
+  registerClient: (userData: UserProfile) => {
+    user: UserProfile;
+    whatsappUrl: string;
+    userWhatsAppUrl: string;
+    formattedMessage: string;
+    userConfirmationMessage: string;
+  };
+  getWhatsAppRegistrationUrl: (user: UserProfile, phoneOverride?: string) => string;
+  getUserConfirmationWhatsAppUrl: (user: UserProfile) => string;
+  getWhatsAppQuotationUrl: (request: PaintRequest, phoneOverride?: string) => string;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -103,6 +119,93 @@ const STORAGE_KEYS = {
   INVENTORY: 'pintuco_colorlink_inventory_v1',
   TRACEABILITY: 'pintuco_colorlink_traceability_v1',
   CHAT: 'pintuco_colorlink_chat_v1',
+  REGISTERED_CLIENTS: 'pintuco_colorlink_registered_clients_v1',
+  WHATSAPP_NUMBER: 'pintuco_colorlink_whatsapp_number_v1',
+};
+
+const DEFAULT_WHATSAPP_COMMERCIAL = '573101234567';
+
+const INITIAL_REGISTERED_CLIENTS: UserProfile[] = [
+  {
+    id: 'user-client-1',
+    name: 'Carlos Gómez Arango',
+    email: 'carlos.gomez@constructoraandes.com',
+    role: 'cliente',
+    docType: 'NIT',
+    docNumber: '900482195',
+    company: 'Constructora Los Andes S.A.S.',
+    phone: '+57 312 458 9920',
+    city: 'Bogotá D.C.',
+    avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80',
+    registeredAt: '24/09/2026, 09:30 AM',
+  },
+  {
+    id: 'user-client-2',
+    name: 'Arq. Mariana Vélez Botero',
+    email: 'm.velez@colpatriaconstrucciones.com',
+    role: 'cliente',
+    docType: 'NIT',
+    docNumber: '890900123',
+    company: 'Colpatria Obras Urbanas',
+    phone: '+57 310 998 7766',
+    city: 'Medellín',
+    avatarUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=150&q=80',
+    registeredAt: '25/09/2026, 02:15 PM',
+  },
+];
+
+export const normalizeWhatsAppNumber = (phoneStr: string): string => {
+  const digits = (phoneStr || '').replace(/[^0-9]/g, '');
+  if (!digits) return '';
+  // If 10 digits starting with 3 (standard Colombia mobile, e.g. 3101234567), prefix with 57
+  if (digits.length === 10 && digits.startsWith('3')) {
+    return `57${digits}`;
+  }
+  return digits;
+};
+
+export const buildUserConfirmationWhatsAppMessage = (user: UserProfile): string => {
+  return `🎨 *CONFIRMACIÓN DE REGISTRO - PINTUCO COLORLINK* 🎨\n\n` +
+    `¡Hola ${user.name}! Tu registro ha sido procesado exitosamente en el portal oficial de Pintuco ColorLink.\n\n` +
+    `📋 *Tus Datos de Acceso Registrados:*\n` +
+    `• Documento: ${user.docType || 'CC'} ${user.docNumber}\n` +
+    `• Nombre: ${user.name}\n` +
+    `• Empresa / Obra: ${user.company || 'Cliente Particular'}\n` +
+    `• Celular Registrado: ${user.phone}\n` +
+    `• Correo: ${user.email}\n` +
+    `• Ciudad Principal: ${user.city || 'Bogotá D.C.'}\n` +
+    `• Fecha: ${user.registeredAt || new Date().toLocaleString('es-CO')}\n\n` +
+    `💡 *Acceso Rápido:*\n` +
+    `Puedes ingresar siempre a tu portal con tu número de documento (${user.docNumber}) para cotizar m² de pintura, ver cartas de color y gestionar pedidos.`;
+};
+
+export const buildWhatsAppRegistrationMessage = (user: UserProfile): string => {
+  return `🏢 *NUEVO CLIENTE REGISTRADO - PINTUCO COLORLINK* 🎨\n\n` +
+    `👤 *Nombre / Contacto:* ${user.name}\n` +
+    `🆔 *Documento:* ${user.docType || 'NIT'} ${user.docNumber || 'No indicado'}\n` +
+    `🏗️ *Empresa / Obra:* ${user.company || 'Cliente Particular'}\n` +
+    `📱 *WhatsApp / Teléfono:* ${user.phone || 'No indicado'}\n` +
+    `✉️ *Correo Electrónico:* ${user.email}\n` +
+    `📍 *Ciudad de Entrega:* ${user.city || 'Bogotá D.C.'}\n` +
+    `📅 *Fecha de Registro:* ${user.registeredAt || new Date().toLocaleString('es-CO')}\n\n` +
+    `💬 *Mensaje del Cliente:* Hola, me he registrado exitosamente en el portal Pintuco ColorLink. Deseo recibir asesoría técnica y cotización comercial para mis proyectos de pintura y recubrimientos.`;
+};
+
+export const buildWhatsAppQuotationMessage = (req: PaintRequest): string => {
+  return `📋 *SOLICITUD DE COTIZACIÓN - PINTUCO COLORLINK* 🎨\n\n` +
+    `🔖 *Código Solicitud:* ${req.requestNumber}\n` +
+    `🏗️ *Proyecto:* ${req.projectName}\n` +
+    `👤 *Cliente:* ${req.clientName} (${req.clientCompany || 'Particular'})\n` +
+    `📱 *WhatsApp / Tel:* ${req.clientPhone || 'No indicado'}\n` +
+    `📍 *Ciudad:* ${req.city}\n\n` +
+    `🧪 *ESPECIFICACIÓN TÉCNICA:*\n` +
+    `• Superficie: ${req.surfaceType}\n` +
+    `• Área de Obra: ${req.areaSqMeters} m²\n` +
+    `• Producto Recomendado: ${req.recommendedProductName}\n` +
+    `• Acabado Solicitado: ${req.finish}\n` +
+    `• Galones Requeridos: ${req.gallonsNeeded} Gal\n` +
+    `• Presupuesto Estimado: $${req.estimatedPriceCOP.toLocaleString('es-CO')} COP\n\n` +
+    `💬 Deseo coordinar con un asesor técnico de Pintuco para validar disponibilidad de lote y despacho.`;
 };
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -206,6 +309,31 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEYS.TRACEABILITY, JSON.stringify(traceability));
   }, [traceability]);
+
+  // WhatsApp commercial hotline number (configurable)
+  const [whatsAppCommercialNumber, setWhatsAppCommercialNumber] = useState<string>(() => {
+    const saved = localStorage.getItem(STORAGE_KEYS.WHATSAPP_NUMBER);
+    return saved || DEFAULT_WHATSAPP_COMMERCIAL;
+  });
+
+  // Registered clients directory state
+  const [registeredClients, setRegisteredClients] = useState<UserProfile[]>(() => {
+    const saved = localStorage.getItem(STORAGE_KEYS.REGISTERED_CLIENTS);
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {}
+    }
+    return INITIAL_REGISTERED_CLIENTS;
+  });
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.WHATSAPP_NUMBER, whatsAppCommercialNumber);
+  }, [whatsAppCommercialNumber]);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.REGISTERED_CLIENTS, JSON.stringify(registeredClients));
+  }, [registeredClients]);
 
   const setCurrentUser = (user: UserProfile) => {
     setCurrentUserState(user);
@@ -351,6 +479,42 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (matchedInventory && availableGallons < calculation.gallonsNeeded) {
       console.warn(`[ColorLink Alerta] La solicitud ${requestNumber} requiere ${calculation.gallonsNeeded} gal pero hay disponible ${availableGallons} gal.`);
     }
+
+    // Sincronización asíncrona con base de datos Supabase
+    ColorLinkAPI.createProjectRequest({
+      cliente: {
+        nombre: newRequest.clientName,
+        identificacion: (currentUser.docNumber || '1020304050').replace(/\D/g, '') || '1020304050',
+        correo: newRequest.clientEmail,
+        telefono: newRequest.clientPhone,
+        tipo_cliente: 'residencial',
+      },
+      proyecto: {
+        ciudad: newRequest.city,
+        tipo_proyecto: newRequest.projectName,
+        area_m2: newRequest.areaSqMeters,
+        fecha_requerida: new Date(Date.now() + (newRequest.urgencyDays || 5) * 86400000).toISOString().slice(0, 10),
+      },
+      especificacion: {
+        tipo_superficie: newRequest.surfaceType,
+        ambiente: newRequest.environment,
+        condicion: 'buena',
+        color: newRequest.selectedColorName,
+        galones_estimados: newRequest.gallonsNeeded,
+      },
+      areas: [
+        {
+          descripcion: `Muro principal (${newRequest.surfaceType})`,
+          medida_m2: newRequest.areaSqMeters,
+        },
+      ],
+    }).then((res) => {
+      if (res.success) {
+        console.log(`[Supabase ColorLink] Proyecto persistido en Postgres con ID: ${res.proyectoId}`);
+      }
+    }).catch((e) => {
+      console.warn('[Supabase Fallback]', e);
+    });
 
     return newRequest;
   };
@@ -631,6 +795,56 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }, 600);
   };
 
+  const getWhatsAppRegistrationUrl = (user: UserProfile, phoneOverride?: string): string => {
+    const rawTarget = phoneOverride || whatsAppCommercialNumber;
+    const targetPhone = normalizeWhatsAppNumber(rawTarget);
+    const message = buildWhatsAppRegistrationMessage(user);
+    return `https://wa.me/${targetPhone}?text=${encodeURIComponent(message)}`;
+  };
+
+  const getUserConfirmationWhatsAppUrl = (user: UserProfile): string => {
+    const targetPhone = normalizeWhatsAppNumber(user.phone || '');
+    const message = buildUserConfirmationWhatsAppMessage(user);
+    return `https://wa.me/${targetPhone}?text=${encodeURIComponent(message)}`;
+  };
+
+  const getWhatsAppQuotationUrl = (req: PaintRequest, phoneOverride?: string): string => {
+    const rawTarget = phoneOverride || whatsAppCommercialNumber;
+    const targetPhone = normalizeWhatsAppNumber(rawTarget);
+    const message = buildWhatsAppQuotationMessage(req);
+    return `https://wa.me/${targetPhone}?text=${encodeURIComponent(message)}`;
+  };
+
+  const registerClient = (userData: UserProfile) => {
+    const stampedUser: UserProfile = {
+      ...userData,
+      registeredAt: userData.registeredAt || new Date().toLocaleString('es-CO'),
+    };
+
+    setRegisteredClients((prev) => {
+      const filtered = prev.filter(
+        (u) => u.id !== stampedUser.id && !(stampedUser.docNumber && u.docNumber === stampedUser.docNumber)
+      );
+      return [stampedUser, ...filtered];
+    });
+
+    setCurrentUserState(stampedUser);
+    setIsLoggedIn(true);
+
+    const userConfirmationMessage = buildUserConfirmationWhatsAppMessage(stampedUser);
+    const userWhatsAppUrl = getUserConfirmationWhatsAppUrl(stampedUser);
+    const formattedMessage = buildWhatsAppRegistrationMessage(stampedUser);
+    const whatsappUrl = getWhatsAppRegistrationUrl(stampedUser);
+
+    return {
+      user: stampedUser,
+      whatsappUrl,
+      userWhatsAppUrl,
+      formattedMessage,
+      userConfirmationMessage,
+    };
+  };
+
   return (
     <AppContext.Provider
       value={{
@@ -670,6 +884,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         chatMessages,
         sendChatMessage,
         calculateRequirements,
+        whatsAppCommercialNumber,
+        setWhatsAppCommercialNumber,
+        registeredClients,
+        registerClient,
+        getWhatsAppRegistrationUrl,
+        getUserConfirmationWhatsAppUrl,
+        getWhatsAppQuotationUrl,
       }}
     >
       {children}

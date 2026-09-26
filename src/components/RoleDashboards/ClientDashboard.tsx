@@ -15,6 +15,7 @@ import {
   Download,
   PhoneCall,
   Package,
+  MessageSquare,
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { RequestStatus } from '../../types';
@@ -27,6 +28,7 @@ export const ClientDashboard: React.FC = () => {
     setSelectedRequestForDetail,
     setIsChatOpen,
     setActiveView,
+    whatsAppCommercialNumber,
   } = useApp();
 
   const [filterStatus, setFilterStatus] = useState<string>('todos');
@@ -131,6 +133,19 @@ export const ClientDashboard: React.FC = () => {
             <Sparkles className="w-4 h-4 text-emerald-300" />
             <span>Asesor IA Pintuco</span>
           </button>
+
+          <a
+            id="client-whatsapp-advisor-btn"
+            href={`https://wa.me/${whatsAppCommercialNumber.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(
+              `Hola, soy ${currentUser?.name || 'Cliente'} (${currentUser?.docType || 'Doc'} ${currentUser?.docNumber || ''}) de la empresa/obra ${currentUser?.company || 'Particular'}. Solicito asesoría técnica y cotización comercial para mi proyecto en ${currentUser?.city || 'Colombia'}.`
+            )}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="bg-[#25D366] hover:bg-[#20ba59] text-white px-4 py-3 rounded-2xl font-extrabold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all cursor-pointer"
+          >
+            <MessageSquare className="w-4 h-4" />
+            <span>WhatsApp Asesor</span>
+          </a>
         </div>
       </div>
 

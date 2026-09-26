@@ -13,6 +13,7 @@ export interface UserProfile {
   phone?: string;
   avatarUrl?: string;
   city?: string;
+  registeredAt?: string;
 }
 
 export type RequestStatus = 
