@@ -16,6 +16,8 @@ import {
   PhoneCall,
   Package,
   MessageSquare,
+  Lock,
+  LogIn,
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { RequestStatus } from '../../types';
@@ -23,9 +25,11 @@ import { RequestStatus } from '../../types';
 export const ClientDashboard: React.FC = () => {
   const {
     currentUser,
+    isLoggedIn,
     requests,
     setIsRequestModalOpen,
     setSelectedRequestForDetail,
+    setIsAuthModalOpen,
     setIsChatOpen,
     setActiveView,
     whatsAppCommercialNumber,
@@ -88,6 +92,94 @@ export const ClientDashboard: React.FC = () => {
     servicio: { label: '5. En Despacho / Obra', bg: 'bg-purple-100', text: 'text-purple-800', icon: Sparkles },
     completado: { label: '✅ Finalizado con Garantía', bg: 'bg-emerald-100', text: 'text-emerald-800', icon: CheckCircle2 },
   };
+
+  // If the user has not logged in yet, protect private client data and projects:
+  if (!isLoggedIn || !currentUser) {
+    return (
+      <div className="max-w-4xl mx-auto py-8 sm:py-12 px-4 text-center space-y-8 animate-in fade-in duration-300">
+        {/* Header Icon & Title */}
+        <div className="space-y-3">
+          <div className="w-16 h-16 rounded-3xl bg-gradient-to-br from-[#1B2A6B] to-[#2FAE6D] text-white flex items-center justify-center mx-auto shadow-xl">
+            <Lock className="w-8 h-8" />
+          </div>
+          <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
+            Portal Privado de Clientes & Obras ColorLink
+          </h2>
+          <p className="text-xs sm:text-sm text-slate-600 max-w-xl mx-auto leading-relaxed">
+            Para consultar tus cotizaciones, trazabilidad técnica de obra y certificados de garantía oficial Pintuco, por favor inicia sesión con tu cuenta registrada o cotiza un nuevo proyecto.
+          </p>
+        </div>
+
+        {/* 2 Primary Access Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 text-left">
+          {/* Card 1: Ya estoy registrado */}
+          <div className="bg-white rounded-3xl p-6 sm:p-7 border-2 border-blue-200/80 shadow-md hover:shadow-xl transition-all flex flex-col justify-between group">
+            <div className="space-y-3">
+              <div className="w-12 h-12 rounded-2xl bg-blue-50 text-[#1B2A6B] flex items-center justify-center font-bold">
+                <LogIn className="w-6 h-6" />
+              </div>
+              <h3 className="text-lg font-extrabold text-slate-900 group-hover:text-[#1B2A6B] transition-colors">
+                Ingresar a Mi Cuenta
+              </h3>
+              <p className="text-xs text-slate-500 leading-relaxed">
+                Ingresa con tu NIT, Cédula o Correo para consultar tus solicitudes de material, aprobación de presupuestos y certificados de lote químico.
+              </p>
+            </div>
+            <div className="pt-6">
+              <button
+                id="portal-login-btn"
+                type="button"
+                onClick={() => setIsAuthModalOpen(true)}
+                className="w-full py-3 bg-[#1B2A6B] hover:bg-[#142154] text-white font-extrabold text-xs sm:text-sm rounded-2xl shadow-md flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-[0.98]"
+              >
+                <LogIn className="w-4 h-4" />
+                <span>Iniciar Sesión</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+
+          {/* Card 2: Cotizar Nueva Obra sin Registro */}
+          <div className="bg-white rounded-3xl p-6 sm:p-7 border-2 border-emerald-200/80 shadow-md hover:shadow-xl transition-all flex flex-col justify-between group">
+            <div className="space-y-3">
+              <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-[#2FAE6D] flex items-center justify-center font-bold">
+                <PlusCircle className="w-6 h-6" />
+              </div>
+              <h3 className="text-lg font-extrabold text-slate-900 group-hover:text-[#2FAE6D] transition-colors">
+                Cotizar Nueva Obra
+              </h3>
+              <p className="text-xs text-slate-500 leading-relaxed">
+                Calcula los m² de superficie, simula el color en la pared con fotorrealismo y genera el desglose de galones y cuñetes para tu proyecto.
+              </p>
+            </div>
+            <div className="pt-6">
+              <button
+                id="portal-new-quote-btn"
+                type="button"
+                onClick={() => setIsRequestModalOpen(true)}
+                className="w-full py-3 bg-[#2FAE6D] hover:bg-[#26975d] text-white font-extrabold text-xs sm:text-sm rounded-2xl shadow-md flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-[0.98]"
+              >
+                <PlusCircle className="w-4 h-4" />
+                <span>Cotizar Proyecto Ahora</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Security & Warranty Trust banner */}
+        <div className="p-4 rounded-2xl bg-slate-100 border border-slate-200 text-xs text-slate-600 flex flex-wrap items-center justify-center gap-3">
+          <div className="flex items-center gap-1.5 font-bold text-slate-700">
+            <ShieldCheck className="w-4 h-4 text-[#2FAE6D]" />
+            <span>Información Confidencial y Protegida</span>
+          </div>
+          <span>•</span>
+          <div>Garantía Oficial de Fábrica Pintuco®</div>
+          <span>•</span>
+          <div>Línea Técnica Nacional: 01 8000 111 247</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 text-left">

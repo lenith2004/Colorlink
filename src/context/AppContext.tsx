@@ -25,8 +25,8 @@ import {
 import { ColorLinkAPI } from '../lib/supabase';
 
 interface AppContextType {
-  currentUser: UserProfile;
-  setCurrentUser: (user: UserProfile) => void;
+  currentUser: UserProfile | null;
+  setCurrentUser: (user: UserProfile | null) => void;
   isLoggedIn: boolean;
   setIsLoggedIn: (logged: boolean) => void;
   logout: () => void;
@@ -57,8 +57,8 @@ interface AppContextType {
   updateServicePostSale: (requestId: string, postSaleData: Partial<ServicePostSale>) => void;
   
   // Active view navigation & modals
-  activeView: 'home' | 'dashboard' | 'products' | 'solutions' | 'contact';
-  setActiveView: (view: 'home' | 'dashboard' | 'products' | 'solutions' | 'contact') => void;
+  activeView: 'home' | 'dashboard' | 'products' | 'solutions' | 'contact' | 'simulator';
+  setActiveView: (view: 'home' | 'dashboard' | 'products' | 'solutions' | 'contact' | 'simulator') => void;
   searchQuery: string;
   setSearchQuery: (query: string) => void;
   selectedCity: string;
@@ -215,16 +215,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return saved !== null ? JSON.parse(saved) : false;
   });
 
-  const [currentUser, setCurrentUserState] = useState<UserProfile>(() => {
+  const [currentUser, setCurrentUserState] = useState<UserProfile | null>(() => {
+    const savedLoggedIn = localStorage.getItem('pintuco_colorlink_logged_in');
+    const isLogged = savedLoggedIn !== null ? JSON.parse(savedLoggedIn) : false;
+    if (!isLogged) return null;
     const saved = localStorage.getItem(STORAGE_KEYS.USER);
     if (saved) {
       try {
         return JSON.parse(saved);
       } catch (e) {
-        // fallback
+        return null;
       }
     }
-    return DEMO_USERS[0]; // Cliente por defecto
+    return null;
   });
 
   const [products] = useState<PaintProduct[]>(PRODUCTS_CATALOG);
@@ -263,7 +266,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   });
 
   // Navigation & UI state
-  const [activeView, setActiveView] = useState<'home' | 'dashboard' | 'products' | 'solutions' | 'contact'>('home');
+  const [activeView, setActiveView] = useState<'home' | 'dashboard' | 'products' | 'solutions' | 'contact' | 'simulator'>('home');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedCity, setSelectedCity] = useState<string>('Bogotá D.C.');
   const [isRequestModalOpen, setIsRequestModalOpen] = useState<boolean>(false);
@@ -291,8 +294,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Save to localStorage
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(currentUser));
-  }, [currentUser]);
+    if (currentUser && isLoggedIn) {
+      localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(currentUser));
+    } else {
+      localStorage.removeItem(STORAGE_KEYS.USER);
+    }
+  }, [currentUser, isLoggedIn]);
 
   useEffect(() => {
     localStorage.setItem('pintuco_colorlink_logged_in', JSON.stringify(isLoggedIn));
@@ -335,20 +342,31 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     localStorage.setItem(STORAGE_KEYS.REGISTERED_CLIENTS, JSON.stringify(registeredClients));
   }, [registeredClients]);
 
-  const setCurrentUser = (user: UserProfile) => {
+  const setCurrentUser = (user: UserProfile | null) => {
     setCurrentUserState(user);
-    setIsLoggedIn(true);
+    if (user) {
+      setIsLoggedIn(true);
+      localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(user));
+      localStorage.setItem('pintuco_colorlink_logged_in', 'true');
+    } else {
+      setIsLoggedIn(false);
+      localStorage.removeItem(STORAGE_KEYS.USER);
+      localStorage.setItem('pintuco_colorlink_logged_in', 'false');
+    }
   };
 
   const logout = () => {
     setIsLoggedIn(false);
+    setCurrentUserState(null);
+    localStorage.removeItem(STORAGE_KEYS.USER);
+    localStorage.setItem('pintuco_colorlink_logged_in', 'false');
+    setActiveView('home');
   };
 
   const switchRole = (role: UserRole) => {
     const found = DEMO_USERS.find((u) => u.role === role);
     if (found) {
-      setCurrentUserState(found);
-      setIsLoggedIn(true);
+      setCurrentUser(found);
     }
   };
 
@@ -437,10 +455,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       id: `req-${Date.now()}`,
       requestNumber,
       createdAt: nowStr,
-      clientName: data.clientName || currentUser.name,
-      clientCompany: data.clientCompany || currentUser.company || 'Particular',
-      clientEmail: data.clientEmail || currentUser.email,
-      clientPhone: data.clientPhone || currentUser.phone || '+57 300 000 0000',
+      clientName: data.clientName || (currentUser ? currentUser.name : 'Cliente Invitado'),
+      clientCompany: data.clientCompany || (currentUser ? currentUser.company : 'Particular / Obra'),
+      clientEmail: data.clientEmail || (currentUser ? currentUser.email : ''),
+      clientPhone: data.clientPhone || (currentUser ? currentUser.phone : '+57 300 000 0000'),
       city: data.city || selectedCity,
       channel: data.channel || 'web',
       projectName: data.projectName || `Proyecto de Pintura ${selectedColor.name}`,
@@ -484,7 +502,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     ColorLinkAPI.createProjectRequest({
       cliente: {
         nombre: newRequest.clientName,
-        identificacion: (currentUser.docNumber || '1020304050').replace(/\D/g, '') || '1020304050',
+        identificacion: (currentUser?.docNumber || '1020304050').replace(/\D/g, '') || '1020304050',
         correo: newRequest.clientEmail,
         telefono: newRequest.clientPhone,
         tipo_cliente: 'residencial',
@@ -541,7 +559,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             ...req,
             status: 'abastecimiento',
             technicalEvaluation: {
-              evaluatedBy: currentUser.name,
+              evaluatedBy: currentUser?.name || 'Asesor Comercial Pintuco',
               evaluationDate: nowStr,
               technicalNotes: data.notes,
               discountPercent: data.discountPercent,
@@ -605,7 +623,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         unitsConsumed: unitsToConsume,
         batchNumber,
         date: nowStr,
-        operator: currentUser.name,
+        operator: currentUser?.name || 'Operador Logístico ColorLink',
       };
       setTraceability((prev) => [newLog, ...prev]);
     }
@@ -617,7 +635,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             ...req,
             status: 'calidad',
             inventoryAllocation: {
-              allocatedBy: currentUser.name,
+              allocatedBy: currentUser?.name || 'Asesor Bodega Pintuco',
               allocatedDate: nowStr,
               batchNumber,
               stockAvailableBefore: !isShortage,

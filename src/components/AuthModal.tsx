@@ -29,6 +29,8 @@ export const AuthModal: React.FC = () => {
     currentUser,
     setCurrentUser,
     setActiveView,
+    registeredClients,
+    allUsers,
     whatsAppCommercialNumber,
     setWhatsAppCommercialNumber,
     registerClient,
@@ -82,20 +84,34 @@ export const AuthModal: React.FC = () => {
       return;
     }
 
-    const newUser: UserProfile = {
-      id: `user-${cleanInputDoc}`,
-      name: loginDocType === 'NIT' ? 'Cliente Corporativo / Obra' : 'Cliente Titular',
-      email: `contacto.${cleanInputDoc}@colorlink.pintuco.com`,
-      role: 'cliente',
-      docType: loginDocType,
-      docNumber: cleanInputDoc,
-      company: loginDocType === 'NIT' ? 'Empresa Registrada' : 'Particular / Residente de Obra',
-      city: 'Bogotá D.C.',
-      avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80',
-      registeredAt: new Date().toLocaleString('es-CO'),
-    };
-    setCurrentUser(newUser);
-    setAuthSuccess(`¡Bienvenido! Documento ${loginDocType} ${cleanInputDoc} validado.`);
+    // Match with registered clients or demo clients (e.g. Carlos Gómez 900482195, Mariana Vélez 890900123)
+    const allKnownClients = [...(registeredClients || []), ...(allUsers || [])];
+    const existingClient = allKnownClients.find(
+      (c) =>
+        (c.docNumber && c.docNumber.replace(/[^0-9a-zA-Z]/g, '') === cleanInputDoc) ||
+        (c.email && c.email.toLowerCase() === loginDocNumber.toLowerCase().trim())
+    );
+
+    if (existingClient) {
+      setCurrentUser(existingClient);
+      setAuthSuccess(`¡Bienvenido de nuevo, ${existingClient.name}! Sesión iniciada correctamente.`);
+    } else {
+      const newUser: UserProfile = {
+        id: `user-${cleanInputDoc}`,
+        name: loginDocType === 'NIT' ? `Empresa NIT ${cleanInputDoc}` : `Cliente Titular CC ${cleanInputDoc}`,
+        email: `contacto.${cleanInputDoc}@colorlink.pintuco.com`,
+        role: 'cliente',
+        docType: loginDocType,
+        docNumber: cleanInputDoc,
+        company: loginDocType === 'NIT' ? 'Empresa Registrada' : 'Particular / Residente de Obra',
+        city: 'Bogotá D.C.',
+        avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80',
+        registeredAt: new Date().toLocaleString('es-CO'),
+      };
+      setCurrentUser(newUser);
+      setAuthSuccess(`¡Bienvenido! Documento ${loginDocType} ${cleanInputDoc} validado.`);
+    }
+
     setTimeout(() => {
       setIsAuthModalOpen(false);
       setActiveView('dashboard');
@@ -304,6 +320,35 @@ export const AuthModal: React.FC = () => {
                   <FileCheck2 className="w-4 h-4 text-[#2FAE6D]" />
                   <span>Ingresar a Mi Portal de Proyectos</span>
                 </button>
+
+                {/* Demo quick login pills */}
+                <div className="pt-2 border-t border-slate-100">
+                  <span className="text-[11px] font-bold text-slate-400 block mb-1.5">
+                    Clientes de prueba registrados:
+                  </span>
+                  <div className="flex flex-wrap gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setLoginDocType('NIT');
+                        setLoginDocNumber('900482195');
+                      }}
+                      className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-blue-50 text-[11px] font-bold text-slate-700 hover:text-[#1B2A6B] border border-slate-200 transition-colors cursor-pointer"
+                    >
+                      🏢 Carlos Gómez (NIT: 900482195)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setLoginDocType('NIT');
+                        setLoginDocNumber('890900123');
+                      }}
+                      className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-blue-50 text-[11px] font-bold text-slate-700 hover:text-[#1B2A6B] border border-slate-200 transition-colors cursor-pointer"
+                    >
+                      🏗️ Arq. Mariana Vélez (NIT: 890900123)
+                    </button>
+                  </div>
+                </div>
               </form>
             </div>
           )}

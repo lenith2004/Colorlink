@@ -45,6 +45,27 @@ export type SceneZone =
 
 export type LightingMode = 'daylight' | 'warm' | 'cool' | 'golden_hour';
 
+export interface ForegroundElement {
+  id: string;
+  label: string;
+  clipPath: string;
+  labelPos: { top: string; left: string };
+}
+
+export interface SceneConfig {
+  id: SceneZone;
+  title: string;
+  subtitle: string;
+  imageUrl: string;
+  fullPolygon: string;
+  accentPolygon: string;
+  surfaceAreaM2: number;
+  wallLabelPos: { top: string; left: string };
+  paintRecommendation: string;
+  windowLightDirection: string;
+  foregroundElements: ForegroundElement[];
+}
+
 // Extended official Pintuco Color Portfolios (Carteras de Color)
 export interface ColorPortfolio {
   id: string;
@@ -175,6 +196,9 @@ export const ColorSimulationStudio: React.FC<ColorSimulationStudioProps> = ({
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
   const [isDraggingSlider, setIsDraggingSlider] = useState<boolean>(false);
   const [imageLoaded, setImageLoaded] = useState<boolean>(true);
+  const [protectForeground, setProtectForeground] = useState<boolean>(true);
+  const [blendMode, setBlendMode] = useState<'multiply_soft' | 'color_burn' | 'pigment_true'>('multiply_soft');
+  const [showSemanticMap, setShowSemanticMap] = useState<boolean>(false);
 
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -198,82 +222,215 @@ export const ColorSimulationStudio: React.FC<ColorSimulationStudioProps> = ({
   // Photorealistic Architectural Scenes with Natural Architectural Wall Planes
   // In real architecture, paint covers the entire wall plane from corner to corner and ceiling to floor,
   // eliminating any floating patch or "mancha sobrepuesta" effect.
-  const scenes = {
+  const scenes: Record<SceneZone, SceneConfig> = {
     sala_estar: {
-      id: 'sala_estar' as SceneZone,
+      id: 'sala_estar',
       title: 'Sala de Estar Contemporánea',
       subtitle: 'Muro arquitectónico principal de fondo de esquina a esquina',
-      imageUrl: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=1600&q=85',
-      // Entire continuous wall plane from ceiling (0%) to parquet floor baseboard (78%)
-      fullPolygon: 'polygon(0% 0%, 100% 0%, 100% 78%, 0% 78%)',
-      accentPolygon: 'polygon(20% 0%, 80% 0%, 80% 78%, 20% 78%)',
+      imageUrl: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=1200&h=800&q=85',
+      fullPolygon: 'polygon(12% 0%, 100% 0%, 100% 77%, 12% 77%)',
+      accentPolygon: 'polygon(20% 0%, 82% 0%, 82% 77%, 20% 77%)',
       surfaceAreaM2: 24.5,
       wallLabelPos: { top: '38%', left: '50%' },
       paintRecommendation: 'Viniltex® Avanzado Mate • Cero Reflejos y Alta Lavabilidad',
       windowLightDirection: 'from-left',
+      foregroundElements: [
+        {
+          id: 'floor',
+          label: 'Piso Parquet de Madera',
+          clipPath: 'polygon(0% 77%, 100% 77%, 100% 100%, 0% 100%)',
+          labelPos: { top: '86%', left: '15%' },
+        },
+        {
+          id: 'left_column',
+          label: 'Columna Lateral',
+          clipPath: 'polygon(0% 0%, 12% 0%, 12% 100%, 0% 100%)',
+          labelPos: { top: '35%', left: '3%' },
+        },
+        {
+          id: 'brass_lamp',
+          label: 'Lámpara de Pie Dorada',
+          clipPath: 'polygon(14% 16%, 28% 16%, 28% 78%, 14% 78%)',
+          labelPos: { top: '22%', left: '18%' },
+        },
+        {
+          id: 'framed_art',
+          label: 'Cuadro Decorativo',
+          clipPath: 'polygon(28% 13%, 43% 13%, 43% 58%, 28% 58%)',
+          labelPos: { top: '16%', left: '32%' },
+        },
+        {
+          id: 'armchair',
+          label: 'Sillón Mostaza',
+          clipPath: 'polygon(20% 55%, 58% 55%, 60% 78%, 18% 78%)',
+          labelPos: { top: '64%', left: '34%' },
+        },
+      ],
     },
     dormitorio: {
-      id: 'dormitorio' as SceneZone,
+      id: 'dormitorio',
       title: 'Habitación Master Suite',
       subtitle: 'Pared cabecero de descanso e iluminación arquitectónica difusa',
-      imageUrl: 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1600&q=85',
-      // Wall plane extending from ceiling to platform bed
-      fullPolygon: 'polygon(0% 0%, 100% 0%, 100% 70%, 0% 70%)',
-      accentPolygon: 'polygon(22% 0%, 78% 0%, 78% 70%, 22% 70%)',
+      imageUrl: 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1200&h=800&q=85',
+      fullPolygon: 'polygon(0% 6%, 100% 6%, 100% 68%, 0% 68%)',
+      accentPolygon: 'polygon(22% 6%, 78% 6%, 78% 68%, 22% 68%)',
       surfaceAreaM2: 18.2,
       wallLabelPos: { top: '32%', left: '50%' },
       paintRecommendation: 'Viniltex® Avanzado Satinado • Tersura Suave y Sedosa',
       windowLightDirection: 'from-left',
+      foregroundElements: [
+        {
+          id: 'ceiling',
+          label: 'Cielorraso & Cornisa',
+          clipPath: 'polygon(0% 0%, 100% 0%, 100% 6%, 0% 6%)',
+          labelPos: { top: '2%', left: '50%' },
+        },
+        {
+          id: 'bed_headboard',
+          label: 'Cabecero Tapizado & Cama',
+          clipPath: 'polygon(18% 46%, 82% 46%, 86% 100%, 14% 100%)',
+          labelPos: { top: '56%', left: '40%' },
+        },
+        {
+          id: 'nightstand_left',
+          label: 'Mesa & Lámpara Izq.',
+          clipPath: 'polygon(4% 18%, 18% 18%, 18% 76%, 4% 76%)',
+          labelPos: { top: '24%', left: '6%' },
+        },
+        {
+          id: 'nightstand_right',
+          label: 'Mesa & Lámpara Der.',
+          clipPath: 'polygon(82% 18%, 96% 18%, 96% 76%, 82% 76%)',
+          labelPos: { top: '24%', left: '80%' },
+        },
+        {
+          id: 'floor',
+          label: 'Piso de Descanso',
+          clipPath: 'polygon(0% 76%, 100% 76%, 100% 100%, 0% 100%)',
+          labelPos: { top: '88%', left: '8%' },
+        },
+      ],
     },
     fachada_exterior: {
-      id: 'fachada_exterior' as SceneZone,
+      id: 'fachada_exterior',
       title: 'Fachada Exterior Residencial',
       subtitle: 'Volumen arquitectónico principal en mampostería estucada',
-      imageUrl: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1600&q=85',
-      // Full right architectural stucco facade volume from roof to ground
+      imageUrl: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&h=800&q=85',
       fullPolygon: 'polygon(42% 16%, 98% 16%, 98% 84%, 66% 84%, 66% 52%, 42% 52%)',
       accentPolygon: 'polygon(66% 16%, 98% 16%, 98% 84%, 66% 84%)',
       surfaceAreaM2: 46.0,
       wallLabelPos: { top: '36%', left: '78%' },
       paintRecommendation: 'Koraza® 5 / Koraza® Elastomérica • Máxima Resistencia a Sol y Lluvia',
       windowLightDirection: 'ambient-sun',
+      foregroundElements: [
+        {
+          id: 'sky',
+          label: 'Cielo Abierto & Cubierta',
+          clipPath: 'polygon(0% 0%, 100% 0%, 100% 16%, 0% 16%)',
+          labelPos: { top: '6%', left: '40%' },
+        },
+        {
+          id: 'trees_left',
+          label: 'Ala Izquierda & Vegetación',
+          clipPath: 'polygon(0% 16%, 42% 16%, 42% 100%, 0% 100%)',
+          labelPos: { top: '35%', left: '10%' },
+        },
+        {
+          id: 'ground_deck',
+          label: 'Deck & Pavimento Exterior',
+          clipPath: 'polygon(0% 84%, 100% 84%, 100% 100%, 0% 100%)',
+          labelPos: { top: '90%', left: '60%' },
+        },
+        {
+          id: 'windows',
+          label: 'Ventanales Arquitectónicos',
+          clipPath: 'polygon(67% 28%, 86% 28%, 86% 50%, 67% 50%)',
+          labelPos: { top: '32%', left: '70%' },
+        },
+      ],
     },
     oficina_estudio: {
-      id: 'oficina_estudio' as SceneZone,
+      id: 'oficina_estudio',
       title: 'Oficina / Home Studio Moderno',
       subtitle: 'Muro posterior de concentración y fondo de videollamadas',
-      imageUrl: 'https://images.unsplash.com/photo-1616046229478-9901c5536a45?auto=format&fit=crop&w=1600&q=85',
-      // Continuous wall plane behind modern credenza
-      fullPolygon: 'polygon(0% 0%, 100% 0%, 100% 74%, 0% 74%)',
-      accentPolygon: 'polygon(25% 0%, 75% 0%, 75% 74%, 25% 74%)',
+      imageUrl: 'https://images.unsplash.com/photo-1616046229478-9901c5536a45?auto=format&fit=crop&w=1200&h=800&q=85',
+      fullPolygon: 'polygon(14% 0%, 100% 0%, 100% 76%, 14% 76%)',
+      accentPolygon: 'polygon(25% 0%, 75% 0%, 75% 76%, 25% 76%)',
       surfaceAreaM2: 15.0,
       wallLabelPos: { top: '34%', left: '50%' },
       paintRecommendation: 'Viniltex® Avanzado Mate • Confort Visual Sin Destellos',
       windowLightDirection: 'from-right',
+      foregroundElements: [
+        {
+          id: 'left_side',
+          label: 'Apertura de Luz Lateral',
+          clipPath: 'polygon(0% 0%, 14% 0%, 14% 100%, 0% 100%)',
+          labelPos: { top: '35%', left: '3%' },
+        },
+        {
+          id: 'credenza',
+          label: 'Credenza & Mobiliario',
+          clipPath: 'polygon(14% 54%, 88% 54%, 88% 78%, 14% 78%)',
+          labelPos: { top: '58%', left: '20%' },
+        },
+        {
+          id: 'chair_desk',
+          label: 'Silla de Oficina & Monitor',
+          clipPath: 'polygon(42% 42%, 65% 42%, 68% 84%, 40% 84%)',
+          labelPos: { top: '44%', left: '48%' },
+        },
+        {
+          id: 'floor',
+          label: 'Piso de Madera',
+          clipPath: 'polygon(0% 78%, 100% 78%, 100% 100%, 0% 100%)',
+          labelPos: { top: '88%', left: '10%' },
+        },
+      ],
     },
     cocina_comedor: {
-      id: 'cocina_comedor' as SceneZone,
+      id: 'cocina_comedor',
       title: 'Cocina & Comedor Gourmet',
       subtitle: 'Muro perimetral sobre barra americana y salpicadero',
-      imageUrl: 'https://images.unsplash.com/photo-1556911220-e15b29be8c8f?auto=format&fit=crop&w=1600&q=85',
-      fullPolygon: 'polygon(0% 0%, 100% 0%, 100% 64%, 0% 64%)',
+      imageUrl: 'https://images.unsplash.com/photo-1556911220-e15b29be8c8f?auto=format&fit=crop&w=1200&h=800&q=85',
+      fullPolygon: 'polygon(25% 0%, 100% 0%, 100% 64%, 25% 64%)',
       accentPolygon: 'polygon(45% 0%, 100% 0%, 100% 64%, 45% 64%)',
       surfaceAreaM2: 16.5,
       wallLabelPos: { top: '28%', left: '62%' },
       paintRecommendation: 'Viniltex® Baños & Cocinas Antibacterial Semibrillante',
       windowLightDirection: 'ambient-diffuse',
+      foregroundElements: [
+        {
+          id: 'cabinets_left',
+          label: 'Gabinete & Mueble Isla',
+          clipPath: 'polygon(0% 0%, 25% 0%, 25% 100%, 0% 100%)',
+          labelPos: { top: '30%', left: '5%' },
+        },
+        {
+          id: 'countertop',
+          label: 'Mesón, Barra & Bancas',
+          clipPath: 'polygon(25% 64%, 100% 64%, 100% 100%, 25% 100%)',
+          labelPos: { top: '75%', left: '45%' },
+        },
+        {
+          id: 'pendants',
+          label: 'Lámparas Colgantes Isla',
+          clipPath: 'polygon(32% 10%, 65% 10%, 65% 42%, 32% 42%)',
+          labelPos: { top: '15%', left: '38%' },
+        },
+      ],
     },
     macro_textura: {
-      id: 'macro_textura' as SceneZone,
+      id: 'macro_textura',
       title: 'Macro Textura & Película Seca Pintuco®',
       subtitle: 'Detalle a escala 1:1 de micrograno, absorción y acabado físico',
-      imageUrl: 'https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=1600&q=85',
+      imageUrl: 'https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=1200&h=800&q=85',
       fullPolygon: 'polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)',
       accentPolygon: 'polygon(15% 15%, 85% 15%, 85% 85%, 15% 85%)',
       surfaceAreaM2: 2.0,
       wallLabelPos: { top: '50%', left: '50%' },
       paintRecommendation: 'Acabado físico según película seca y nivel de brillo',
       windowLightDirection: 'raking-light',
+      foregroundElements: [],
     },
   };
 
@@ -538,6 +695,77 @@ export const ColorSimulationStudio: React.FC<ColorSimulationStudioProps> = ({
             <span>{isSliderActive ? 'Antes / Después' : 'Solo Simulado'}</span>
           </button>
 
+          {/* Foreground Protection Toggle (Pared de fondo vs objetos al frente) */}
+          <button
+            type="button"
+            onClick={() => setProtectForeground(!protectForeground)}
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+              protectForeground
+                ? 'bg-emerald-600/90 text-white shadow-xs border border-emerald-400/50'
+                : 'bg-slate-800 text-slate-400 border border-slate-700 hover:text-white'
+            }`}
+            title="Conserva lámparas, cuadros y muebles al frente; el color se aplica exclusivamente en la pared de fondo"
+          >
+            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-300" />
+            <span className="hidden sm:inline">Mobiliario al Frente</span>
+          </button>
+
+          {/* Blend Mode Selection */}
+          <div className="bg-slate-800/90 p-0.5 rounded-xl border border-slate-700/80 flex items-center text-xs">
+            <span className="hidden xl:inline text-[11px] font-bold text-slate-400 px-2">Fusión:</span>
+            <button
+              type="button"
+              onClick={() => setBlendMode('multiply_soft')}
+              className={`px-2 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
+                blendMode === 'multiply_soft'
+                  ? 'bg-blue-600 text-white shadow-xs font-black'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+              title="Modo Multiply Fotorrealista: preserva sombras de esquina, textura de estuco y luz natural"
+            >
+              Multiply
+            </button>
+            <button
+              type="button"
+              onClick={() => setBlendMode('color_burn')}
+              className={`px-2 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
+                blendMode === 'color_burn'
+                  ? 'bg-amber-600 text-white shadow-xs font-black'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+              title="Modo Color Burn: resalta la rugosidad, textura profunda y relieve de la pared"
+            >
+              Color Burn
+            </button>
+            <button
+              type="button"
+              onClick={() => setBlendMode('pigment_true')}
+              className={`px-2 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
+                blendMode === 'pigment_true'
+                  ? 'bg-emerald-600 text-white shadow-xs font-black'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+              title="Modo Pigmento Real: fidelidad cromática Pintuco sobre luminancia arquitectónica"
+            >
+              Pigmento Real
+            </button>
+          </div>
+
+          {/* AI Semantic Segmentation Map Toggle */}
+          <button
+            type="button"
+            onClick={() => setShowSemanticMap(!showSemanticMap)}
+            className={`px-2.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+              showSemanticMap
+                ? 'bg-cyan-500 text-slate-950 font-black shadow-md shadow-cyan-900/50'
+                : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700'
+            }`}
+            title="Inspeccionar mapa de segmentación semántica IA de la pared y objetos aislados"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
+            <span className="hidden md:inline">Máscara IA</span>
+          </button>
+
           {/* Fullscreen modal toggle */}
           <button
             type="button"
@@ -586,6 +814,8 @@ export const ColorSimulationStudio: React.FC<ColorSimulationStudioProps> = ({
         </div>
       </div>
 
+
+
       {/* MAIN VIEWPORT: PHOTOREALISTIC ARCHITECTURAL STAGE */}
       <div className="relative p-4 sm:p-6 bg-slate-950">
         <div
@@ -594,127 +824,180 @@ export const ColorSimulationStudio: React.FC<ColorSimulationStudioProps> = ({
           onTouchMove={handleTouchMove}
           onMouseUp={() => setIsDraggingSlider(false)}
           onTouchEnd={() => setIsDraggingSlider(false)}
-          className="relative w-full h-[360px] sm:h-[460px] md:h-[500px] rounded-2xl overflow-hidden bg-slate-900 shadow-2xl border border-slate-800 select-none group"
+          className="relative w-full aspect-[3/2] max-h-[520px] rounded-2xl overflow-hidden bg-slate-950 shadow-2xl border border-slate-800 select-none group"
         >
-          {/* 1. BASE REAL ARCHITECTURAL PHOTOGRAPH (100% UNTOUCHED BACKGROUND) */}
+          {/* ======================================================== */}
+          {/* LAYER 1: ANTES (ORIGINAL ROOM PHOTOGRAPH) - BASE LAYER   */}
+          {/* ======================================================== */}
           <img
             src={currentScene.imageUrl}
             alt={currentScene.title}
-            onLoad={() => setImageLoaded(true)}
-            className="absolute inset-0 w-full h-full object-cover select-none pointer-events-none transition-transform duration-700"
+            className="absolute inset-0 w-full h-full object-cover select-none pointer-events-none"
             draggable={false}
           />
 
-          {/* 2. ISOLATED REALISTIC PAINT LAYER ON THE ARCHITECTURAL WALL SURFACE */}
-          {/* Covers the entire natural wall plane from corner to corner, preserving room architecture */}
+          {/* ======================================================== */}
+          {/* LAYER 2: DESPUÉS (SIMULATION COMPOSITE)                   */}
+          {/* Revealed from splitSliderPosition% to 100%               */}
+          {/* ======================================================== */}
           <div
-            className="absolute inset-0 pointer-events-none transition-all duration-300"
+            className="absolute inset-0 overflow-hidden pointer-events-none select-none"
             style={{
-              clipPath: activePolygon,
+              clipPath: isSliderActive ? `inset(0 0 0 ${splitSliderPosition}%)` : 'none',
             }}
           >
-            {/* Split Before/After mask: reveals simulated paint only from splitSliderPosition to 100% */}
+            {/* 2.1: Base room photo for the AFTER side */}
+            <img
+              src={currentScene.imageUrl}
+              alt="Base de simulación"
+              className="absolute inset-0 w-full h-full object-cover select-none pointer-events-none"
+              draggable={false}
+            />
+
+            {/* 2.2: REALISTIC WALL PAINT LAYER CONVERGING DIRECTLY ON WALL */}
             <div
-              className="absolute inset-0 transition-all duration-75 overflow-hidden"
+              className="absolute inset-0 pointer-events-none"
               style={{
-                clipPath: isSliderActive
-                  ? `polygon(${splitSliderPosition}% 0%, 100% 0%, 100% 100%, ${splitSliderPosition}% 100%)`
-                  : 'none',
+                clipPath: activePolygon,
               }}
             >
-              {/* LAYER A: PIGMENT HUE & SATURATION (COLOR BLEND) */}
-              {/* Delivers the pure chromatic identity of the Pintuco formula without altering surface shadows */}
+              {/* 2.2.A: Volumetric Chromatic Pigment Body */}
               <div
-                className="absolute inset-0 transition-all duration-500 ease-out"
+                className="absolute inset-0"
                 style={{
                   backgroundColor: currentColor.hex,
-                  mixBlendMode: 'color',
-                  opacity: Math.min(1, 0.75 + (coatFactor * 0.22)),
+                  mixBlendMode:
+                    blendMode === 'color_burn'
+                      ? 'color-burn'
+                      : blendMode === 'pigment_true'
+                      ? 'overlay'
+                      : isLightColor
+                      ? 'soft-light'
+                      : 'multiply',
+                  opacity:
+                    blendMode === 'color_burn'
+                      ? 0.88 * coatFactor
+                      : isLightColor
+                      ? Math.min(0.96, (0.70 + (colorLRV / 100) * 0.26) * coatFactor)
+                      : Math.min(0.94, (0.55 + ((60 - colorLRV) / 60) * 0.35) * coatFactor),
                 }}
               />
 
-              {/* LAYER B: LRV LUMINOSITY MODULATION ACCORDING TO PHYSICAL PAINT REFLECTANCE */}
-              {isLightColor ? (
-                <>
-                  {/* For Light / White / Cream tones: Soft-light lifts wall luminance smoothly */}
-                  <div
-                    className="absolute inset-0 transition-all duration-500 ease-out"
-                    style={{
-                      backgroundColor: currentColor.hex,
-                      mixBlendMode: 'soft-light',
-                      opacity: Math.min(0.95, 0.65 * baseCoverageOpacity + ((colorLRV - 50) / 100) * 0.4),
-                    }}
-                  />
-                  {/* Subtle screen pass so pure whites (Blanco Puro LRV 88%) look truly crisp and luminous */}
-                  {isVeryLightColor && (
-                    <div
-                      className="absolute inset-0 transition-all duration-500 ease-out"
-                      style={{
-                        backgroundColor: currentColor.hex,
-                        mixBlendMode: 'screen',
-                        opacity: Math.min(0.35, ((colorLRV - 70) / 100) * 0.55 * baseCoverageOpacity),
-                      }}
-                    />
-                  )}
-                </>
-              ) : (
-                /* For Medium to Deep / Dark tones: Multiply deepens the tone while keeping wall plaster grain */
-                <div
-                  className="absolute inset-0 transition-all duration-500 ease-out"
-                  style={{
-                    backgroundColor: currentColor.hex,
-                    mixBlendMode: 'multiply',
-                    opacity: Math.min(0.88, (0.42 + ((55 - colorLRV) / 55) * 0.42) * baseCoverageOpacity),
-                  }}
-                />
-              )}
-
-              {/* LAYER C: WALL PLASTER GRAIN & ROLLER STIPPLE TEXTURE */}
-              {/* Gives the paint authentic tactile physical body, eliminating flat digital looks */}
+              {/* 2.2.B: Additional Color Vibrancy for high-chroma tones */}
               <div
-                className="absolute inset-0 pointer-events-none opacity-20"
+                className="absolute inset-0"
                 style={{
-                  backgroundImage: `radial-gradient(rgba(255,255,255,0.15) 1px, transparent 0), radial-gradient(rgba(0,0,0,0.12) 1px, transparent 0)`,
+                  backgroundColor: currentColor.hex,
+                  mixBlendMode: 'color',
+                  opacity: Math.min(0.85, 0.70 * coatFactor),
+                }}
+              />
+
+              {/* 2.2.C: Wall Plaster & Roller Stipple Texture Grain */}
+              <div
+                className="absolute inset-0 opacity-20 pointer-events-none"
+                style={{
+                  backgroundImage: `radial-gradient(circle at 1px 1px, rgba(255,255,255,0.4) 1px, transparent 0), radial-gradient(circle at 3px 3px, rgba(0,0,0,0.3) 1px, transparent 0)`,
                   backgroundSize: '4px 4px',
-                  backgroundPosition: '0 0, 2px 2px',
                   mixBlendMode: 'overlay',
                 }}
               />
 
-              {/* LAYER D: ARCHITECTURAL AMBIENT OCCLUSION & CORNER CONTACT SHADOWS */}
-              {/* Anchors the wall into 3D space with natural ceiling and floor contact gradients */}
+              {/* 2.2.D: Ambient Occlusion & Contact Shadows (Ceiling, Floor, Corners) */}
               <div
                 className="absolute inset-0 pointer-events-none"
                 style={{
                   background:
-                    'linear-gradient(to bottom, rgba(0,0,0,0.16) 0%, transparent 12%, transparent 88%, rgba(0,0,0,0.18) 100%)',
+                    'linear-gradient(to bottom, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.08) 8%, transparent 20%, transparent 80%, rgba(0,0,0,0.12) 90%, rgba(0,0,0,0.38) 100%)',
                   mixBlendMode: 'multiply',
+                  opacity: 0.75,
                 }}
               />
 
-              {/* LAYER E: WALL LIGHT BOUNCE BASED ON ROOM LIGHTING TEMPERATURE */}
+              {/* 2.2.E: Natural Room Lighting Bounce (5500K, 3000K, 6500K, 2400K) */}
               <div
-                className="absolute inset-0 transition-all duration-500 pointer-events-none"
+                className="absolute inset-0 pointer-events-none"
                 style={{
-                  backgroundImage: lightingInfo.wallLightGradient,
+                  background: lightingInfo.wallLightGradient,
                   mixBlendMode: 'soft-light',
+                  opacity: 0.9,
                 }}
               />
 
-              {/* LAYER F: SPECULAR SHEEN BASED ON PAINT FINISH (Mate, Satinado, Semibrillante, Brillante) */}
+              {/* 2.2.F: Paint Specular Sheen based on selected Finish */}
               {finishEffect.sheenOpacity > 0.05 && (
                 <div
-                  className="absolute inset-0 transition-opacity duration-500 pointer-events-none"
+                  className="absolute inset-0 pointer-events-none"
                   style={{
                     background: finishEffect.specularGradient,
-                    filter: 'blur(30px)',
-                    opacity: finishEffect.sheenOpacity * coatFactor,
                     mixBlendMode: 'overlay',
+                    opacity: finishEffect.sheenOpacity * coatFactor,
                   }}
                 />
               )}
             </div>
+
+            {/* ======================================================== */}
+            {/* LAYER 3: FOREGROUND SHIELD (KEEPS OBJECTS 100% IN FRONT)  */}
+            {/* Furniture, brass lamps, frames and floor stay intact!    */}
+            {/* ======================================================== */}
+            {protectForeground && currentScene.foregroundElements && (
+              <div className="absolute inset-0 pointer-events-none">
+                {currentScene.foregroundElements.map((elem) => (
+                  <div
+                    key={elem.id}
+                    className="absolute inset-0 overflow-hidden pointer-events-none"
+                    style={{
+                      clipPath: elem.clipPath,
+                    }}
+                  >
+                    <img
+                      src={currentScene.imageUrl}
+                      alt={elem.label}
+                      className="absolute inset-0 w-full h-full object-cover select-none pointer-events-none"
+                      draggable={false}
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* ======================================================== */}
+            {/* LAYER 4: AI SEMANTIC SEGMENTATION MASK OVERLAY           */}
+            {/* ======================================================== */}
+            {showSemanticMap && (
+              <div className="absolute inset-0 pointer-events-none z-10 transition-opacity duration-300">
+                {/* Wall zone highlighted in emerald */}
+                <div
+                  className="absolute inset-0 bg-emerald-500/35 border-2 border-emerald-400"
+                  style={{ clipPath: activePolygon }}
+                >
+                  <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-emerald-950/95 text-emerald-300 border border-emerald-400 px-3 py-1 rounded-full text-xs font-black shadow-lg flex items-center gap-1.5 whitespace-nowrap">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>Muro Principal Segmentado ({currentScene.surfaceAreaM2} m²)</span>
+                  </div>
+                </div>
+
+                {/* Foreground objects outlined in cyan */}
+                {protectForeground &&
+                  currentScene.foregroundElements?.map((elem) => (
+                    <div
+                      key={`map-${elem.id}`}
+                      className="absolute inset-0 border-2 border-cyan-400 bg-cyan-500/20"
+                      style={{ clipPath: elem.clipPath }}
+                    >
+                      <div
+                        className="absolute bg-slate-950/95 text-cyan-300 border border-cyan-400 px-2 py-0.5 rounded-lg text-[10px] font-black shadow-md flex items-center gap-1 pointer-events-none whitespace-nowrap"
+                        style={{ top: elem.labelPos.top, left: elem.labelPos.left }}
+                      >
+                        <span>🛡️ {elem.label}</span>
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            )}
           </div>
+
 
           {/* 3. INTERACTIVE BEFORE / AFTER SLIDER DIVIDER */}
           {isSliderActive && (

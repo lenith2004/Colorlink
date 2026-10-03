@@ -15,6 +15,9 @@ import { Footer } from './components/Footer';
 // Client Dashboard
 import { ClientDashboard } from './components/RoleDashboards/ClientDashboard';
 
+import { ColorSimulationStudio } from './components/ColorSimulationStudio';
+import { ColorPaletteItem } from './types';
+
 import {
   Package,
   ShieldCheck,
@@ -22,11 +25,20 @@ import {
   PlusCircle,
   Truck,
   CheckCircle2,
+  Calculator,
 } from 'lucide-react';
 
 const MainContent: React.FC = () => {
-  const { activeView, setIsRequestModalOpen } = useApp();
+  const { activeView, setActiveView, setIsRequestModalOpen } = useApp();
   const [selectedProcessId, setSelectedProcessId] = useState<string | null>(null);
+  const [simColor, setSimColor] = useState<ColorPaletteItem>({
+    name: 'Azul Pintuco',
+    hex: '#1B2A6B',
+    category: 'Corporativo & Acentos',
+    code: 'PIN-5010',
+    lrv: 12,
+    family: 'Azul Institucional',
+  });
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 text-slate-800">
@@ -37,7 +49,7 @@ const MainContent: React.FC = () => {
         {activeView === 'home' && (
           <div>
             {/* 1. Minimalist KOAJ-Style Hero Banner */}
-            <HeroBanner onOpenSimulator={() => setSelectedProcessId('solucion_tecnica')} />
+            <HeroBanner onOpenSimulator={() => setActiveView('simulator')} />
 
             {/* 2. Ingreso a Cada Proceso de Forma Separada */}
             <ProcessAccessSection onSelectProcess={(id) => setSelectedProcessId(id)} />
@@ -113,6 +125,65 @@ const MainContent: React.FC = () => {
               <p className="text-xs text-slate-500">Acceso individual a los 5 módulos técnicos de ColorLink.</p>
             </div>
             <ProcessAccessSection onSelectProcess={(id) => setSelectedProcessId(id)} />
+          </div>
+        )}
+
+        {activeView === 'simulator' && (
+          <div className="py-6 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6 text-left">
+            {/* Simulator Header & Breadcrumb */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-5 sm:p-6 rounded-3xl border border-slate-200 shadow-xs">
+              <div>
+                <div className="flex items-center gap-2 text-xs text-slate-500 mb-1.5">
+                  <button
+                    onClick={() => setActiveView('home')}
+                    className="hover:text-[#1B2A6B] font-semibold cursor-pointer flex items-center gap-1 text-slate-600"
+                  >
+                    <span>Inicio</span>
+                  </button>
+                  <span>/</span>
+                  <span className="text-[#2FAE6D] font-bold">Simulador 3D en Fotos</span>
+                </div>
+                <h1 className="text-2xl sm:text-3xl font-black text-slate-900 flex items-center gap-2.5">
+                  <span className="w-9 h-9 rounded-2xl bg-[#2FAE6D] text-white flex items-center justify-center shrink-0">
+                    <Sparkles className="w-5 h-5" />
+                  </span>
+                  <span>Simulador Arquitectónico Pintuco® ColorLink</span>
+                </h1>
+                <p className="text-xs sm:text-sm text-slate-500 mt-1 max-w-2xl">
+                  Simulación fotorrealista sobre fotografía real: la pintura se integra al muro de fondo respetando su textura y sombra, manteniendo todos los muebles, lámparas y cuadros en primer plano intactos.
+                </p>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2.5">
+                <button
+                  onClick={() => setIsRequestModalOpen(true)}
+                  className="px-4 py-2.5 bg-[#2FAE6D] hover:bg-[#27995f] text-white rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 shadow-xs cursor-pointer transition-all active:scale-95"
+                >
+                  <Calculator className="w-4 h-4" />
+                  <span>Cotizar este Color en m²</span>
+                </button>
+                <button
+                  onClick={() => setActiveView('products')}
+                  className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-1.5 cursor-pointer transition-all"
+                >
+                  <Package className="w-4 h-4 text-[#1B2A6B]" />
+                  <span>Ver Catálogo</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Direct Studio Simulator Component */}
+            <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden p-2 sm:p-4">
+              <ColorSimulationStudio
+                selectedColorName={simColor.name}
+                selectedColorHex={simColor.hex}
+                onSelectColor={(col) => setSimColor(col)}
+                surfaceType="mamposteria"
+                finish="mate"
+                environment="interior"
+                productName="Viniltex Avanzado® Pintuco"
+              />
+            </div>
           </div>
         )}
 

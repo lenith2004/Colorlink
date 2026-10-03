@@ -114,8 +114,36 @@ export const Header: React.FC = () => {
               </div>
             </button>
 
-            {/* Menu Hamburger */}
-            <div className="relative hidden lg:block ml-2">
+            {/* Direct Quick Links (Simulador 3D & Catálogo) */}
+            <div className="hidden lg:flex items-center gap-1.5 ml-2">
+              <button
+                id="header-simulator-btn"
+                onClick={() => setActiveView('simulator')}
+                className={`flex items-center gap-1.5 px-3 py-2 text-xs sm:text-sm font-bold rounded-xl transition-all cursor-pointer ${
+                  activeView === 'simulator'
+                    ? 'bg-[#2FAE6D] text-white shadow-xs'
+                    : 'text-slate-700 hover:text-[#1B2A6B] hover:bg-slate-100'
+                }`}
+              >
+                <Sparkles className={`w-4 h-4 ${activeView === 'simulator' ? 'text-white' : 'text-[#2FAE6D]'}`} />
+                <span>Simulador 3D</span>
+              </button>
+
+              <button
+                id="header-catalog-btn"
+                onClick={() => setActiveView('products')}
+                className={`flex items-center gap-1.5 px-3 py-2 text-xs sm:text-sm font-bold rounded-xl transition-all cursor-pointer ${
+                  activeView === 'products'
+                    ? 'bg-[#1B2A6B] text-white shadow-xs'
+                    : 'text-slate-700 hover:text-[#1B2A6B] hover:bg-slate-100'
+                }`}
+              >
+                <span>Catálogo</span>
+              </button>
+            </div>
+
+            {/* Menu Hamburger Soluciones */}
+            <div className="relative hidden xl:block ml-1">
               <button
                 id="header-solutions-menu-btn"
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -144,15 +172,15 @@ export const Header: React.FC = () => {
                     </div>
                   </button>
                   <button
-                    onClick={() => { setActiveView('solutions'); setIsMenuOpen(false); }}
+                    onClick={() => { setActiveView('simulator'); setIsMenuOpen(false); }}
                     className="w-full flex items-center gap-3 p-2.5 hover:bg-slate-50 rounded-xl text-left text-sm font-medium text-slate-800"
                   >
                     <div className="w-8 h-8 rounded-lg bg-emerald-100 text-[#2FAE6D] flex items-center justify-center">
                       <Sparkles className="w-4 h-4" />
                     </div>
                     <div>
-                      <p className="font-semibold text-slate-900">Centro de Procesos</p>
-                      <p className="text-xs text-slate-500">Ingreso independiente a las 5 fases</p>
+                      <p className="font-semibold text-slate-900">Simulador 3D en Fotos</p>
+                      <p className="text-xs text-slate-500">Paredes, luces y tonos oficiales</p>
                     </div>
                   </button>
                   <button
@@ -165,6 +193,18 @@ export const Header: React.FC = () => {
                     <div>
                       <p className="font-semibold text-slate-900">Catálogo Técnico</p>
                       <p className="text-xs text-slate-500">Viniltex, Koraza, Epóxicos y más</p>
+                    </div>
+                  </button>
+                  <button
+                    onClick={() => { setActiveView('solutions'); setIsMenuOpen(false); }}
+                    className="w-full flex items-center gap-3 p-2.5 hover:bg-slate-50 rounded-xl text-left text-sm font-medium text-slate-800"
+                  >
+                    <div className="w-8 h-8 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center">
+                      <Layers className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-slate-900">Centro de Procesos</p>
+                      <p className="text-xs text-slate-500">Ingreso independiente a las 5 fases</p>
                     </div>
                   </button>
                   <button
@@ -384,13 +424,20 @@ export const Header: React.FC = () => {
       <div className="md:hidden flex items-center justify-around border-t border-slate-100 bg-white py-2 px-3">
         <button
           onClick={() => setActiveView('home')}
-          className={`text-xs font-semibold px-3 py-1 rounded-lg ${activeView === 'home' ? 'text-[#1B2A6B] bg-blue-50' : 'text-slate-600'}`}
+          className={`text-xs font-semibold px-2.5 py-1 rounded-lg ${activeView === 'home' ? 'text-[#1B2A6B] bg-blue-50 font-bold' : 'text-slate-600'}`}
         >
           Inicio
         </button>
         <button
+          onClick={() => setActiveView('simulator')}
+          className={`text-xs font-semibold px-2.5 py-1 rounded-lg flex items-center gap-1 ${activeView === 'simulator' ? 'text-white bg-[#2FAE6D] font-bold shadow-xs' : 'text-emerald-700 bg-emerald-50/70'}`}
+        >
+          <Sparkles className="w-3 h-3" />
+          <span>Simulador</span>
+        </button>
+        <button
           onClick={() => setActiveView('products')}
-          className={`text-xs font-semibold px-3 py-1 rounded-lg ${activeView === 'products' ? 'text-[#1B2A6B] bg-blue-50' : 'text-slate-600'}`}
+          className={`text-xs font-semibold px-2.5 py-1 rounded-lg ${activeView === 'products' ? 'text-[#1B2A6B] bg-blue-50 font-bold' : 'text-slate-600'}`}
         >
           Catálogo
         </button>
