@@ -216,7 +216,6 @@ export const FeaturedProducts: React.FC = () => {
   return (
     <section id="catalogo-section" className="py-10 bg-slate-50 border-b border-slate-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        
         {/* Main Structure Header */}
         <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-xs mb-8 text-left">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-5 border-b border-slate-100">
@@ -425,6 +424,13 @@ export const FeaturedProducts: React.FC = () => {
                       src={displayImage}
                       alt={product.name}
                       referrerPolicy="no-referrer"
+                      onError={(e) => {
+                        const target = e.currentTarget;
+                        if (!target.dataset.hasFallback) {
+                          target.dataset.hasFallback = 'true';
+                          target.src = 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=800&q=80';
+                        }
+                      }}
                       onClick={() => openProductModal(product)}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out cursor-pointer"
                     />
@@ -579,6 +585,13 @@ export const FeaturedProducts: React.FC = () => {
                               src={p.image}
                               alt={p.name}
                               referrerPolicy="no-referrer"
+                              onError={(e) => {
+                                const target = e.currentTarget;
+                                if (!target.dataset.hasFallback) {
+                                  target.dataset.hasFallback = 'true';
+                                  target.src = 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=800&q=80';
+                                }
+                              }}
                               onClick={() => openProductModal(p)}
                               className="w-12 h-12 rounded-xl object-cover bg-slate-900 shrink-0 cursor-pointer hover:opacity-90 border border-slate-200"
                             />
@@ -686,6 +699,13 @@ export const FeaturedProducts: React.FC = () => {
                     src={activeProductModal.image}
                     alt={activeProductModal.name}
                     referrerPolicy="no-referrer"
+                    onError={(e) => {
+                      const target = e.currentTarget;
+                      if (!target.dataset.hasFallback) {
+                        target.dataset.hasFallback = 'true';
+                        target.src = 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=800&q=80';
+                      }
+                    }}
                     className="w-full h-full object-cover"
                   />
                   <div className="absolute bottom-2.5 left-2.5 px-3 py-1 rounded-lg bg-black/75 text-white text-[11px] font-extrabold backdrop-blur-xs flex items-center gap-1.5 border border-white/20">
@@ -698,6 +718,13 @@ export const FeaturedProducts: React.FC = () => {
                     src={activeProductModal.surfaceImage || activeProductModal.image}
                     alt={`Superficie ${activeProductModal.name}`}
                     referrerPolicy="no-referrer"
+                    onError={(e) => {
+                      const target = e.currentTarget;
+                      if (!target.dataset.hasFallback) {
+                        target.dataset.hasFallback = 'true';
+                        target.src = 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=800&q=80';
+                      }
+                    }}
                     className="w-full h-full object-cover"
                   />
                   <div className="absolute bottom-2.5 left-2.5 px-3 py-1 rounded-lg bg-black/75 text-white text-[11px] font-extrabold backdrop-blur-xs flex items-center gap-1.5 border border-white/20">

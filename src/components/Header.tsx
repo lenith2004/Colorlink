@@ -2,9 +2,7 @@ import React, { useState } from 'react';
 import {
   Search,
   MapPin,
-  Menu,
   X,
-  Layers,
   Sparkles,
   ClipboardList,
   PlusCircle,
@@ -14,8 +12,10 @@ import {
   LogOut,
   User,
   ShieldCheck,
+  Database,
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
+import { BrandLogo } from './BrandLogo';
 
 export const Header: React.FC = () => {
   const {
@@ -36,9 +36,10 @@ export const Header: React.FC = () => {
     setIsChatOpen,
     products,
     whatsAppCommercialNumber,
+    supabaseStatus,
+    refreshFromSupabase,
   } = useApp();
 
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isCityDropdownOpen, setIsCityDropdownOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 
@@ -68,7 +69,43 @@ export const Header: React.FC = () => {
           </div>
 
           {/* Quick contact / customer support info */}
-          <div className="flex items-center gap-3 text-[11px] text-slate-300">
+          <div className="flex items-center gap-2.5 text-[11px] text-slate-300">
+            {/* Supabase Status Pill & Quick Access */}
+            <button
+              onClick={() => {
+                refreshFromSupabase();
+                const el = document.getElementById('supabase-products-section') || document.getElementById('catalogo-section');
+                if (el) {
+                  el.scrollIntoView({ behavior: 'smooth' });
+                } else {
+                  setActiveView('home');
+                  setTimeout(() => {
+                    document.getElementById('supabase-products-section')?.scrollIntoView({ behavior: 'smooth' });
+                  }, 60);
+                }
+              }}
+              disabled={supabaseStatus.isSyncing}
+              title={`Supabase: ${supabaseStatus.message}. Clic para consultar y ver tabla PRODUCTO.`}
+              className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full font-semibold border transition-all cursor-pointer ${
+                supabaseStatus.connected
+                  ? 'bg-emerald-500/20 text-emerald-300 border-emerald-400/40 hover:bg-emerald-500/30'
+                  : 'bg-amber-500/20 text-amber-300 border-amber-400/40 hover:bg-amber-500/30'
+              }`}
+            >
+              <span
+                className={`w-1.5 h-1.5 rounded-full ${
+                  supabaseStatus.connected ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'
+                }`}
+              />
+              <span>
+                {supabaseStatus.isSyncing
+                  ? 'Sincronizando...'
+                  : supabaseStatus.connected
+                  ? 'Supabase: Tabla PRODUCTO'
+                  : 'Supabase Local'}
+              </span>
+            </button>
+
             <span className="hidden sm:inline">Línea Técnica: <strong className="text-white">01 8000 111 247</strong></span>
             <span className="text-[#2FAE6D] font-bold hidden md:inline">Envíos a Nivel Nacional</span>
             <a
@@ -95,23 +132,10 @@ export const Header: React.FC = () => {
             <button
               id="brand-logo-btn"
               onClick={() => setActiveView('home')}
-              className="flex items-center gap-2.5 text-left group cursor-pointer"
+              className="text-left group cursor-pointer transition-transform duration-200 focus:outline-hidden"
+              aria-label="Ir a inicio de Pintuco ColorLink"
             >
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#1B2A6B] to-[#0d163a] flex items-center justify-center text-white shadow-md group-hover:scale-105 transition-transform">
-                <span className="font-extrabold text-xl tracking-tighter text-[#2FAE6D]">P</span>
-                <span className="font-bold text-sm tracking-tighter text-white -ml-0.5">C</span>
-              </div>
-              <div className="flex flex-col">
-                <div className="flex items-center gap-1.5">
-                  <span className="text-xl font-extrabold tracking-tight text-[#1B2A6B]">PINTUCO</span>
-                  <span className="text-xs bg-[#2FAE6D] text-white font-bold px-1.5 py-0.2 rounded-sm tracking-wider uppercase">
-                    ColorLink
-                  </span>
-                </div>
-                <span className="text-[10px] text-slate-500 font-medium tracking-wide">
-                  Ecosistema Digital Inteligente
-                </span>
-              </div>
+              <BrandLogo variant="full" theme="light" size="md" />
             </button>
 
             {/* Direct Quick Links (Simulador 3D & Catálogo) */}
@@ -140,88 +164,24 @@ export const Header: React.FC = () => {
               >
                 <span>Catálogo</span>
               </button>
-            </div>
 
-            {/* Menu Hamburger Soluciones */}
-            <div className="relative hidden xl:block ml-1">
               <button
-                id="header-solutions-menu-btn"
-                onClick={() => setIsMenuOpen(!isMenuOpen)}
-                className="flex items-center gap-2 px-3 py-2 text-sm font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors cursor-pointer"
+                id="header-supabase-btn"
+                onClick={() => {
+                  setActiveView('home');
+                  setTimeout(() => {
+                    const el = document.getElementById('supabase-products-section') || document.getElementById('catalogo-section');
+                    el?.scrollIntoView({ behavior: 'smooth' });
+                  }, 60);
+                }}
+                className="flex items-center gap-1.5 px-3 py-2 text-xs sm:text-sm font-bold rounded-xl transition-all cursor-pointer text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 shadow-2xs"
+                title="Ver lista de productos directamente de la tabla PRODUCTO en Supabase"
               >
-                <Menu className="w-4 h-4 text-[#1B2A6B]" />
-                <span>Soluciones</span>
-                <ChevronDown className={`w-3.5 h-3.5 text-slate-500 transition-transform ${isMenuOpen ? 'rotate-180' : ''}`} />
+                <Database className="w-4 h-4 text-indigo-600" />
+                <span>Tabla PRODUCTO</span>
               </button>
-
-              {isMenuOpen && (
-                <div className="absolute left-0 mt-2 w-72 bg-white rounded-2xl shadow-xl border border-slate-100 p-2 z-50 animate-in fade-in slide-in-from-top-2">
-                  <div className="p-2 border-b border-slate-100">
-                    <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Módulos del Ecosistema</p>
-                  </div>
-                  <button
-                    onClick={() => { setActiveView('home'); setIsMenuOpen(false); }}
-                    className="w-full flex items-center gap-3 p-2.5 hover:bg-slate-50 rounded-xl text-left text-sm font-medium text-slate-800"
-                  >
-                    <div className="w-8 h-8 rounded-lg bg-blue-100 text-[#1B2A6B] flex items-center justify-center">
-                      <Layers className="w-4 h-4" />
-                    </div>
-                    <div>
-                      <p className="font-semibold text-slate-900">Inicio Minimalista</p>
-                      <p className="text-xs text-slate-500">Banner, Procesos y Catálogo</p>
-                    </div>
-                  </button>
-                  <button
-                    onClick={() => { setActiveView('simulator'); setIsMenuOpen(false); }}
-                    className="w-full flex items-center gap-3 p-2.5 hover:bg-slate-50 rounded-xl text-left text-sm font-medium text-slate-800"
-                  >
-                    <div className="w-8 h-8 rounded-lg bg-emerald-100 text-[#2FAE6D] flex items-center justify-center">
-                      <Sparkles className="w-4 h-4" />
-                    </div>
-                    <div>
-                      <p className="font-semibold text-slate-900">Simulador 3D en Fotos</p>
-                      <p className="text-xs text-slate-500">Paredes, luces y tonos oficiales</p>
-                    </div>
-                  </button>
-                  <button
-                    onClick={() => { setActiveView('products'); setIsMenuOpen(false); }}
-                    className="w-full flex items-center gap-3 p-2.5 hover:bg-slate-50 rounded-xl text-left text-sm font-medium text-slate-800"
-                  >
-                    <div className="w-8 h-8 rounded-lg bg-emerald-100 text-[#2FAE6D] flex items-center justify-center">
-                      <Sparkles className="w-4 h-4" />
-                    </div>
-                    <div>
-                      <p className="font-semibold text-slate-900">Catálogo Técnico</p>
-                      <p className="text-xs text-slate-500">Viniltex, Koraza, Epóxicos y más</p>
-                    </div>
-                  </button>
-                  <button
-                    onClick={() => { setActiveView('solutions'); setIsMenuOpen(false); }}
-                    className="w-full flex items-center gap-3 p-2.5 hover:bg-slate-50 rounded-xl text-left text-sm font-medium text-slate-800"
-                  >
-                    <div className="w-8 h-8 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center">
-                      <Layers className="w-4 h-4" />
-                    </div>
-                    <div>
-                      <p className="font-semibold text-slate-900">Centro de Procesos</p>
-                      <p className="text-xs text-slate-500">Ingreso independiente a las 5 fases</p>
-                    </div>
-                  </button>
-                  <button
-                    onClick={() => { setActiveView('dashboard'); setIsMenuOpen(false); }}
-                    className="w-full flex items-center gap-3 p-2.5 hover:bg-slate-50 rounded-xl text-left text-sm font-medium text-slate-800"
-                  >
-                    <div className="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center">
-                      <ClipboardList className="w-4 h-4" />
-                    </div>
-                    <div>
-                      <p className="font-semibold text-slate-900">Mis Solicitudes y Proyectos</p>
-                      <p className="text-xs text-slate-500">Rastreo de cotizaciones, lotes y garantías</p>
-                    </div>
-                  </button>
-                </div>
-              )}
             </div>
+
           </div>
 
           {/* Central Rounded Search Bar */}

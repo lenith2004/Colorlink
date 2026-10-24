@@ -4,6 +4,7 @@ export type DocumentType = 'CC' | 'NIT' | 'CE' | 'PASAPORTE' | 'RUT';
 
 export interface UserProfile {
   id: string;
+  dbUsuarioId?: number;
   name: string;
   email: string;
   role: UserRole;
@@ -76,7 +77,9 @@ export interface PaintProduct {
 
 export interface InventoryItem {
   id: string;
+  dbInventoryId?: number;
   productId: string;
+  dbProductId?: number;
   productName: string;
   category: string;
   colorName: string;
@@ -133,6 +136,7 @@ export interface ServicePostSale {
 
 export interface PaintRequest {
   id: string;
+  dbProjectId?: number;
   requestNumber: string; // ej. SOL-104
   createdAt: string;
   clientName: string;

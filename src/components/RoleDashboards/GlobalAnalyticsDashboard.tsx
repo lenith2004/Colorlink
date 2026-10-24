@@ -12,12 +12,23 @@ import {
   Globe,
   MessageSquare,
   Store,
+  Database,
+  RefreshCw,
+  Table,
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { WORKFLOW_STAGES } from '../../data/initialData';
 
 export const GlobalAnalyticsDashboard: React.FC = () => {
-  const { requests, inventory, setSelectedRequestForDetail } = useApp();
+  const {
+    requests,
+    inventory,
+    products,
+    registeredClients,
+    supabaseStatus,
+    refreshFromSupabase,
+    setSelectedRequestForDetail,
+  } = useApp();
 
   const totalRequests = requests.length;
   const completedRequests = requests.filter((r) => r.status === 'completado').length;
@@ -200,6 +211,127 @@ export const GlobalAnalyticsDashboard: React.FC = () => {
               <span className="text-base font-black text-amber-900">{storeCount}</span>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Supabase 9 Tables Sync Panel */}
+      <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-2xs space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-emerald-50 text-[#2FAE6D] flex items-center justify-center font-bold border border-emerald-100">
+              <Database className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="font-bold text-base text-slate-900">
+                  Base de Datos Supabase (PostgreSQL)
+                </h3>
+                <span
+                  className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full border ${
+                    supabaseStatus.connected
+                      ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                      : 'bg-amber-50 text-amber-700 border-amber-200'
+                  }`}
+                >
+                  {supabaseStatus.connected ? 'Conectado Live' : 'Modo Local / Caché'}
+                </span>
+              </div>
+              <p className="text-xs text-slate-500">
+                Lectura y escritura en las 9 tablas normalizadas con nombres y columnas en mayúsculas.
+              </p>
+            </div>
+          </div>
+
+          <button
+            onClick={() => refreshFromSupabase()}
+            disabled={supabaseStatus.isSyncing}
+            className="inline-flex items-center gap-2 px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-all cursor-pointer"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${supabaseStatus.isSyncing ? 'animate-spin' : ''}`} />
+            <span>{supabaseStatus.isSyncing ? 'Sincronizando...' : 'Sincronizar Tablas'}</span>
+          </button>
+        </div>
+
+        {/* 9 Tables Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {[
+            {
+              name: 'USUARIO',
+              desc: 'Clientes y usuarios operativos',
+              columns: 'USUARIO_ID, NOMBRE, IDENTIFICACION, CORREO, TELEFONO, TIPO_CLIENTE',
+              count: registeredClients.length,
+            },
+            {
+              name: 'PROYECTO',
+              desc: 'Expediente central de obras y etapas',
+              columns: 'PROYECTO_ID, USUARIO_ID, CIUDAD, TIPO_PROYECTO, AREA_M2, ESTADO_PROYECTO',
+              count: requests.length,
+            },
+            {
+              name: 'PRODUCTO',
+              desc: 'Catálogo de pinturas Pintuco',
+              columns: 'ID_DE_PRODUCTO, SKU, NOMBRE_PRODUCTO, TIPO_PRODUCTO, PRECIO_UNITARIO',
+              count: products.length,
+            },
+            {
+              name: 'COTIZACION_DETALLE',
+              desc: 'Renglones y costos por proyecto',
+              columns: 'COTIZACION_DETALLE_ID, PROYECTO_ID, ID_DE_PRODUCTO, CANTIDAD_REQUERIDA',
+              count: requests.filter((r) => r.technicalEvaluation).length,
+            },
+            {
+              name: 'ESPECIFICACION_TECNICA',
+              desc: 'Superficie, ambiente y galones',
+              columns: 'ID_ESPECIFICADO, PROYECTO_ID, TIPO_SUPERFICIE, AMBIENTE, COLOR',
+              count: requests.length,
+            },
+            {
+              name: 'AREA',
+              desc: 'Zonas y áreas específicas en m²',
+              columns: 'AREA_ID, ID_ESPECIFICADO, DESCRIPCION, MEDIDA_M2',
+              count: requests.length,
+            },
+            {
+              name: 'INVENTARIO',
+              desc: 'Existencias y lotes por centro',
+              columns: 'ID_DE_INVENTARIO, ID_DE_PRODUCTO, CENTRO_DISTRIBUCION, STOCK_DISPONIBLE',
+              count: inventory.length,
+            },
+            {
+              name: 'SERVICIO_APLICACION',
+              desc: 'Contratista asignado y fechas',
+              columns: 'SERVICIOS_ID, PROYECTO_ID, CONTRATISTA_ASIGNADO, ESTADO_SERVICIO',
+              count: requests.filter((r) => r.servicePostSale).length,
+            },
+            {
+              name: 'EVIDENCIA',
+              desc: 'Inspecciones y control de calidad',
+              columns: 'EVIDENCIA_ID, PROYECTO_ID, ETAPA_OBRA, DESCRIPCION, FOTOS_URL',
+              count: requests.filter((r) => r.qualityChecklist).length,
+            },
+          ].map((table) => (
+            <div
+              key={table.name}
+              className="p-3.5 bg-slate-50/70 rounded-2xl border border-slate-200/80 hover:border-[#1B2A6B]/30 transition-all flex flex-col justify-between"
+            >
+              <div>
+                <div className="flex items-center justify-between">
+                  <span className="font-mono font-bold text-xs text-[#1B2A6B]">
+                    {table.name}
+                  </span>
+                  <span className="text-[10px] font-extrabold px-1.5 py-0.5 bg-white text-slate-700 rounded-md border border-slate-200">
+                    {table.count} registros
+                  </span>
+                </div>
+                <p className="text-[11px] text-slate-600 font-medium mt-1">
+                  {table.desc}
+                </p>
+              </div>
+              <p className="text-[9px] font-mono text-slate-400 mt-2 truncate" title={table.columns}>
+                {table.columns}
+              </p>
+            </div>
+          ))}
         </div>
       </div>
     </div>

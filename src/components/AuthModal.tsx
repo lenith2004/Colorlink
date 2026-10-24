@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { UserProfile, DocumentType } from '../types';
+import { BrandLogo } from './BrandLogo';
 
 export const AuthModal: React.FC = () => {
   const {
@@ -190,19 +191,9 @@ export const AuthModal: React.FC = () => {
             <X className="w-4 h-4" />
           </button>
 
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 rounded-xl bg-[#2FAE6D] text-white flex items-center justify-center font-extrabold text-xl shadow-md">
-              P
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="font-extrabold text-xl tracking-tight text-white">PINTUCO</span>
-                <span className="text-xs bg-[#2FAE6D] text-white font-extrabold px-2 py-0.5 rounded-md uppercase tracking-wider">
-                  ColorLink
-                </span>
-              </div>
-              <p className="text-xs text-slate-300">Portal de Acceso para Clientes, Empresas y Constructores</p>
-            </div>
+          <div className="mb-2">
+            <BrandLogo variant="compact" theme="dark" size="lg" />
+            <p className="text-xs text-slate-300 mt-2">Portal de Acceso para Clientes, Empresas y Constructores</p>
           </div>
 
           {/* Mode Switch Tabs */}
@@ -320,35 +311,6 @@ export const AuthModal: React.FC = () => {
                   <FileCheck2 className="w-4 h-4 text-[#2FAE6D]" />
                   <span>Ingresar a Mi Portal de Proyectos</span>
                 </button>
-
-                {/* Demo quick login pills */}
-                <div className="pt-2 border-t border-slate-100">
-                  <span className="text-[11px] font-bold text-slate-400 block mb-1.5">
-                    Clientes de prueba registrados:
-                  </span>
-                  <div className="flex flex-wrap gap-1.5">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setLoginDocType('NIT');
-                        setLoginDocNumber('900482195');
-                      }}
-                      className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-blue-50 text-[11px] font-bold text-slate-700 hover:text-[#1B2A6B] border border-slate-200 transition-colors cursor-pointer"
-                    >
-                      🏢 Carlos Gómez (NIT: 900482195)
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setLoginDocType('NIT');
-                        setLoginDocNumber('890900123');
-                      }}
-                      className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-blue-50 text-[11px] font-bold text-slate-700 hover:text-[#1B2A6B] border border-slate-200 transition-colors cursor-pointer"
-                    >
-                      🏗️ Arq. Mariana Vélez (NIT: 890900123)
-                    </button>
-                  </div>
-                </div>
               </form>
             </div>
           )}

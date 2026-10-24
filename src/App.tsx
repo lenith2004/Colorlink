@@ -11,6 +11,7 @@ import { RequestDetailModal } from './components/RequestDetailModal';
 import { AuthModal } from './components/AuthModal';
 import { ColorLinkChatBot } from './components/ColorLinkChatBot';
 import { Footer } from './components/Footer';
+import { SupabaseProductsList } from './components/SupabaseProductsList';
 
 // Client Dashboard
 import { ClientDashboard } from './components/RoleDashboards/ClientDashboard';
@@ -50,6 +51,11 @@ const MainContent: React.FC = () => {
           <div>
             {/* 1. Minimalist KOAJ-Style Hero Banner */}
             <HeroBanner onOpenSimulator={() => setActiveView('simulator')} />
+
+            {/* SECCIÓN DIRECTA: Lista de Productos desde la tabla PRODUCTO de Supabase */}
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-4">
+              <SupabaseProductsList />
+            </div>
 
             {/* 2. Ingreso a Cada Proceso de Forma Separada */}
             <ProcessAccessSection onSelectProcess={(id) => setSelectedProcessId(id)} />
@@ -114,6 +120,12 @@ const MainContent: React.FC = () => {
                 <span>Calcular m² para mi Proyecto</span>
               </button>
             </div>
+
+            {/* SECCIÓN DIRECTA: Lista de Productos de Supabase en Catálogo */}
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-6">
+              <SupabaseProductsList />
+            </div>
+
             <FeaturedProducts />
           </div>
         )}

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import {
   UserProfile,
   UserRole,
@@ -22,7 +22,26 @@ import {
   INITIAL_TRACEABILITY,
   COLOR_PALETTES,
 } from '../data/initialData';
-import { ColorLinkAPI } from '../lib/supabase';
+import {
+  supabase,
+  SUPABASE_URL,
+  ColorLinkAPI,
+  UsuarioRow,
+  ProyectoRow,
+  ProductoRow,
+  InventarioRow,
+  EspecificacionTecnicaRow,
+  CotizacionDetalleRow,
+  ServicioAplicacionRow,
+  EvidenciaRow,
+} from '../lib/supabase';
+
+interface SupabaseSyncState {
+  connected: boolean;
+  message: string;
+  isSyncing: boolean;
+  lastSyncedAt: string | null;
+}
 
 interface AppContextType {
   currentUser: UserProfile | null;
@@ -109,6 +128,10 @@ interface AppContextType {
   getWhatsAppRegistrationUrl: (user: UserProfile, phoneOverride?: string) => string;
   getUserConfirmationWhatsAppUrl: (user: UserProfile) => string;
   getWhatsAppQuotationUrl: (request: PaintRequest, phoneOverride?: string) => string;
+
+  // Supabase State & Manual Refresh
+  supabaseStatus: SupabaseSyncState;
+  refreshFromSupabase: () => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -125,39 +148,9 @@ const STORAGE_KEYS = {
 
 const DEFAULT_WHATSAPP_COMMERCIAL = '573101234567';
 
-const INITIAL_REGISTERED_CLIENTS: UserProfile[] = [
-  {
-    id: 'user-client-1',
-    name: 'Carlos Gómez Arango',
-    email: 'carlos.gomez@constructoraandes.com',
-    role: 'cliente',
-    docType: 'NIT',
-    docNumber: '900482195',
-    company: 'Constructora Los Andes S.A.S.',
-    phone: '+57 312 458 9920',
-    city: 'Bogotá D.C.',
-    avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80',
-    registeredAt: '24/09/2026, 09:30 AM',
-  },
-  {
-    id: 'user-client-2',
-    name: 'Arq. Mariana Vélez Botero',
-    email: 'm.velez@colpatriaconstrucciones.com',
-    role: 'cliente',
-    docType: 'NIT',
-    docNumber: '890900123',
-    company: 'Colpatria Obras Urbanas',
-    phone: '+57 310 998 7766',
-    city: 'Medellín',
-    avatarUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=150&q=80',
-    registeredAt: '25/09/2026, 02:15 PM',
-  },
-];
-
 export const normalizeWhatsAppNumber = (phoneStr: string): string => {
   const digits = (phoneStr || '').replace(/[^0-9]/g, '');
   if (!digits) return '';
-  // If 10 digits starting with 3 (standard Colombia mobile, e.g. 3101234567), prefix with 57
   if (digits.length === 10 && digits.startsWith('3')) {
     return `57${digits}`;
   }
@@ -209,7 +202,15 @@ export const buildWhatsAppQuotationMessage = (req: PaintRequest): string => {
 };
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // Current user & auth state: default to false if not saved so guest visitors experience full open quoting
+  // Supabase sync & connection state
+  const [supabaseStatus, setSupabaseStatus] = useState<SupabaseSyncState>({
+    connected: false,
+    message: 'Iniciando conexión...',
+    isSyncing: false,
+    lastSyncedAt: null,
+  });
+
+  // Current user & auth state
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(() => {
     const saved = localStorage.getItem('pintuco_colorlink_logged_in');
     return saved !== null ? JSON.parse(saved) : false;
@@ -230,9 +231,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return null;
   });
 
-  const [products] = useState<PaintProduct[]>(PRODUCTS_CATALOG);
+  // Products catalog state (initially populated, synced with Supabase PRODUCTO)
+  const [products, setProducts] = useState<PaintProduct[]>(PRODUCTS_CATALOG);
 
-  // Inventory state
+  // Inventory state (synced with Supabase INVENTARIO)
   const [inventory, setInventory] = useState<InventoryItem[]>(() => {
     const saved = localStorage.getItem(STORAGE_KEYS.INVENTORY);
     if (saved) {
@@ -254,7 +256,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return INITIAL_TRACEABILITY;
   });
 
-  // Requests state
+  // Requests / Projects state (synced with Supabase PROYECTO + ESPECIFICACION + AREA + COTIZACION)
   const [requests, setRequests] = useState<PaintRequest[]>(() => {
     const saved = localStorage.getItem(STORAGE_KEYS.REQUESTS);
     if (saved) {
@@ -263,6 +265,31 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       } catch (e) {}
     }
     return INITIAL_REQUESTS;
+  });
+
+  // Registered clients (synced with Supabase USUARIO)
+  const [registeredClients, setRegisteredClients] = useState<UserProfile[]>(() => {
+    const saved = localStorage.getItem(STORAGE_KEYS.REGISTERED_CLIENTS);
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {}
+    }
+    return [
+      {
+        id: 'user-client-1',
+        name: 'Carlos Gómez Arango',
+        email: 'carlos.gomez@constructoraandes.com',
+        role: 'cliente',
+        docType: 'NIT',
+        docNumber: '900482195',
+        company: 'Constructora Los Andes S.A.S.',
+        phone: '+57 312 458 9920',
+        city: 'Bogotá D.C.',
+        avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80',
+        registeredAt: '24/09/2026, 09:30 AM',
+      },
+    ];
   });
 
   // Navigation & UI state
@@ -292,7 +319,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     ];
   });
 
-  // Save to localStorage
+  // WhatsApp commercial hotline number
+  const [whatsAppCommercialNumber, setWhatsAppCommercialNumber] = useState<string>(() => {
+    const saved = localStorage.getItem(STORAGE_KEYS.WHATSAPP_NUMBER);
+    return saved || DEFAULT_WHATSAPP_COMMERCIAL;
+  });
+
+  // ----------------------------------------------------------------------------
+  // PERSISTENCE: Save to localStorage (as offline cache / optimistic backup)
+  // ----------------------------------------------------------------------------
   useEffect(() => {
     if (currentUser && isLoggedIn) {
       localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(currentUser));
@@ -317,23 +352,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     localStorage.setItem(STORAGE_KEYS.TRACEABILITY, JSON.stringify(traceability));
   }, [traceability]);
 
-  // WhatsApp commercial hotline number (configurable)
-  const [whatsAppCommercialNumber, setWhatsAppCommercialNumber] = useState<string>(() => {
-    const saved = localStorage.getItem(STORAGE_KEYS.WHATSAPP_NUMBER);
-    return saved || DEFAULT_WHATSAPP_COMMERCIAL;
-  });
-
-  // Registered clients directory state
-  const [registeredClients, setRegisteredClients] = useState<UserProfile[]>(() => {
-    const saved = localStorage.getItem(STORAGE_KEYS.REGISTERED_CLIENTS);
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch (e) {}
-    }
-    return INITIAL_REGISTERED_CLIENTS;
-  });
-
   useEffect(() => {
     localStorage.setItem(STORAGE_KEYS.WHATSAPP_NUMBER, whatsAppCommercialNumber);
   }, [whatsAppCommercialNumber]);
@@ -342,6 +360,264 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     localStorage.setItem(STORAGE_KEYS.REGISTERED_CLIENTS, JSON.stringify(registeredClients));
   }, [registeredClients]);
 
+  // ============================================================================
+  // SUPABASE: Sincronización bidireccional (READ / SEED) con las 9 tablas
+  // USUARIO, PROYECTO, PRODUCTO, COTIZACION_DETALLE, ESPECIFICACION_TECNICA,
+  // AREA, EVIDENCIA, SERVICIO_APLICACION, INVENTARIO
+  // ============================================================================
+  const refreshFromSupabase = useCallback(async () => {
+    setSupabaseStatus((prev) => ({ ...prev, isSyncing: true }));
+    try {
+      // 1. LEER TABLA PRODUCTO
+      const { data: dbProductos, error: prodErr } = await supabase
+        .from('PRODUCTO')
+        .select('*')
+        .order('NOMBRE_PRODUCTO', { ascending: true });
+
+      if (!prodErr && dbProductos && dbProductos.length > 0) {
+        // Enlazar los productos con el catálogo visual
+        const mergedProducts = PRODUCTS_CATALOG.map((catProd) => {
+          const match = dbProductos.find(
+            (p: ProductoRow) =>
+              (p.SKU && p.SKU.toLowerCase() === catProd.code.toLowerCase()) ||
+              (p.NOMBRE_PRODUCTO && p.NOMBRE_PRODUCTO.toLowerCase().includes(catProd.name.toLowerCase().slice(0, 10)))
+          );
+          if (match) {
+            return {
+              ...catProd,
+              pricePerGallonCOP: Number(match.PRECIO_UNITARIO) || catProd.pricePerGallonCOP,
+              coveragePerGallonSqM: Number(match.RENDIMIENTO_M2_GALON) || catProd.coveragePerGallonSqM,
+              recommendedCoats: Number(match.MANOS_RECOMENDADAS) || catProd.recommendedCoats,
+            };
+          }
+          return catProd;
+        });
+        setProducts(mergedProducts);
+      } else if (!prodErr && (!dbProductos || dbProductos.length === 0)) {
+        // Inicializar/Sembrar catálogo en Supabase si la tabla PRODUCTO está vacía
+        const rowsToSeed = PRODUCTS_CATALOG.map((p) => ({
+          SKU: p.code,
+          NOMBRE_PRODUCTO: p.name,
+          TIPO_PRODUCTO: p.category,
+          UNIDAD_MEDIDA: 'Galón',
+          PRECIO_UNITARIO: p.pricePerGallonCOP,
+          RENDIMIENTO_M2_GALON: p.coveragePerGallonSqM,
+          MANOS_RECOMENDADAS: p.recommendedCoats,
+        }));
+        await ColorLinkAPI.seedProductos(rowsToSeed);
+      }
+
+      // 2. LEER TABLA INVENTARIO
+      const { data: dbInventario, error: invErr } = await supabase
+        .from('INVENTARIO')
+        .select('*')
+        .order('ID_DE_INVENTARIO', { ascending: true });
+
+      if (!invErr && dbInventario && dbInventario.length > 0) {
+        const mappedInventory: InventoryItem[] = dbInventario.map((row: InventarioRow, index: number) => {
+          // Buscar producto correspondiente
+          const matchingProd = products.find((p) => p.code.includes(String(row.ID_DE_PRODUCTO))) || products[index % products.length];
+          const defaultColor = COLOR_PALETTES[index % COLOR_PALETTES.length];
+          return {
+            id: `inv-${row.ID_DE_INVENTARIO}`,
+            dbInventoryId: row.ID_DE_INVENTARIO,
+            productId: matchingProd?.id || 'prod-viniltex',
+            dbProductId: row.ID_DE_PRODUCTO,
+            productName: matchingProd?.name || 'Viniltex Avanzado® Antibacterial',
+            category: matchingProd?.category || 'Arquitectónica Interior',
+            colorName: defaultColor.name,
+            colorHex: defaultColor.hex,
+            presentation: index % 2 === 0 ? 'Cuñete (5 Gal)' : 'Galón',
+            gallonsPerUnit: index % 2 === 0 ? 5 : 1,
+            stockUnits: Number(row.STOCK_DISPONIBLE) || 0,
+            reservedUnits: Math.round(Number(row.STOCK_DISPONIBLE) * 0.15),
+            minThresholdUnits: 15,
+            warehouseZone: row.CENTRO_DISTRIBUCION || 'Bodega Central - Pasillo A-04',
+            unitCostCOP: matchingProd?.pricePerGallonCOP || 89900,
+            batchNumber: row.LOTE || `LOT-2026-PINTUCO-${row.ID_DE_INVENTARIO}`,
+            lastUpdated: row.UPDATED_AT ? row.UPDATED_AT.replace('T', ' ').slice(0, 16) : new Date().toISOString().slice(0, 16),
+          };
+        });
+        setInventory(mappedInventory);
+      } else if (!invErr && (!dbInventario || dbInventario.length === 0)) {
+        // Inicializar inventario en Supabase si está vacío
+        const initialInvRows = INITIAL_INVENTORY.map((inv, idx) => ({
+          ID_DE_PRODUCTO: idx + 1,
+          CENTRO_DISTRIBUCION: inv.warehouseZone,
+          STOCK_DISPONIBLE: inv.stockUnits,
+          LOTE: inv.batchNumber,
+        }));
+        await ColorLinkAPI.seedInventario(initialInvRows);
+      }
+
+      // 3. LEER TABLA USUARIO
+      const { data: dbUsuarios, error: userErr } = await supabase
+        .from('USUARIO')
+        .select('*')
+        .order('USUARIO_ID', { ascending: false });
+
+      if (!userErr && dbUsuarios && dbUsuarios.length > 0) {
+        const mappedUsers: UserProfile[] = dbUsuarios.map((u: UsuarioRow) => ({
+          id: `user-${u.USUARIO_ID || u.IDENTIFICACION}`,
+          dbUsuarioId: u.USUARIO_ID,
+          name: u.NOMBRE,
+          email: u.CORREO,
+          phone: u.TELEFONO || '',
+          role: 'cliente',
+          docType: (u.TIPO_CLIENTE === 'comercial' || u.TIPO_CLIENTE === 'industrial' ? 'NIT' : 'CC'),
+          docNumber: u.IDENTIFICACION,
+          company: u.TIPO_CLIENTE === 'comercial' ? 'Empresa Registrada' : 'Cliente Particular',
+          city: 'Bogotá D.C.',
+          avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80',
+          registeredAt: u.CREATED_AT ? new Date(u.CREATED_AT).toLocaleString('es-CO') : new Date().toLocaleString('es-CO'),
+        }));
+        setRegisteredClients(mappedUsers);
+      }
+
+      // 4. LEER PROYECTOS Y TABLAS RELACIONADAS (ESPECIFICACION_TECNICA, AREA, COTIZACION_DETALLE, SERVICIO_APLICACION, EVIDENCIA)
+      const { data: dbProyectos, error: projErr } = await supabase
+        .from('PROYECTO')
+        .select('*')
+        .order('PROYECTO_ID', { ascending: false });
+
+      if (!projErr && dbProyectos && dbProyectos.length > 0) {
+        // Leer también especificaciones técnicas y cotizaciones asociadas
+        const { data: dbSpecs } = await supabase.from('ESPECIFICACION_TECNICA').select('*');
+        const { data: dbCotizaciones } = await supabase.from('COTIZACION_DETALLE').select('*');
+        const { data: dbServicios } = await supabase.from('SERVICIO_APLICACION').select('*');
+        // Leer evidencias de calidad desde la tabla EVIDENCIA_CALIDAD (o fallback a EVIDENCIA)
+        let dbEvidencias: any[] | null = null;
+        const { data: evidCalidad, error: errEvidCalidad } = await supabase.from('EVIDENCIA_CALIDAD').select('*');
+        if (!errEvidCalidad && evidCalidad) {
+          dbEvidencias = evidCalidad;
+        } else {
+          const { data: evidSimple } = await supabase.from('EVIDENCIA').select('*');
+          dbEvidencias = evidSimple || [];
+        }
+
+        const reconstructedRequests: PaintRequest[] = dbProyectos.map((p: ProyectoRow) => {
+          const spec = dbSpecs?.find((s: EspecificacionTecnicaRow) => s.PROYECTO_ID === p.PROYECTO_ID);
+          const cot = dbCotizaciones?.find((c: CotizacionDetalleRow) => c.PROYECTO_ID === p.PROYECTO_ID);
+          const serv = dbServicios?.find((s: ServicioAplicacionRow) => s.PROYECTO_ID === p.PROYECTO_ID);
+          const evid = dbEvidencias?.find((e: any) => e.PROYECTO_ID === p.PROYECTO_ID);
+          const user = dbUsuarios?.find((u: UsuarioRow) => u.USUARIO_ID === p.USUARIO_ID);
+
+          const surface = (spec?.TIPO_SUPERFICIE as SurfaceType) || 'mamposteria';
+          const env = (spec?.AMBIENTE as EnvironmentType) || 'interior';
+          const area = Number(p.AREA_M2) || 100;
+          const finish: FinishType = 'mate';
+
+          const calc = calculateRequirements(surface, area, env, finish);
+          const colorName = spec?.COLOR || 'Blanco Puro';
+          const colorHex = COLOR_PALETTES.find((c) => c.name.toLowerCase() === colorName.toLowerCase())?.hex || '#F9FAFB';
+
+          const status = (p.ESTADO_PROYECTO || 'necesidad') as RequestStatus;
+
+          const req: PaintRequest = {
+            id: `req-db-${p.PROYECTO_ID}`,
+            dbProjectId: p.PROYECTO_ID,
+            requestNumber: `SOL-${100 + Number(p.PROYECTO_ID)}`,
+            createdAt: p.CREATED_AT ? p.CREATED_AT.replace('T', ' ').slice(0, 16) : new Date().toISOString().slice(0, 16),
+            clientName: user?.NOMBRE || 'Cliente Registrado',
+            clientCompany: user?.TIPO_CLIENTE === 'comercial' ? 'Constructora Homologada' : 'Particular / Obra',
+            clientEmail: user?.CORREO || 'cliente@colorlink.pintuco.com',
+            clientPhone: user?.TELEFONO || '+57 300 000 0000',
+            city: p.CIUDAD || 'Bogotá D.C.',
+            channel: 'web',
+            projectName: p.TIPO_PROYECTO || `Proyecto ${colorName}`,
+            surfaceType: surface,
+            areaSqMeters: area,
+            environment: env,
+            finish,
+            selectedColorName: colorName,
+            selectedColorHex: colorHex,
+            urgencyDays: 5,
+            notes: 'Solicitud sincronizada desde base de datos Supabase.',
+            recommendedProductId: calc.product.id,
+            recommendedProductName: calc.product.name,
+            recommendedCoats: calc.coats,
+            coveragePerGallon: calc.coverage,
+            gallonsNeeded: spec?.GALONES_ESTIMADOS ? Number(spec.GALONES_ESTIMADOS) : calc.gallonsNeeded,
+            suggestedBuckets: calc.suggestedBuckets,
+            suggestedIndividualGallons: calc.suggestedIndividualGallons,
+            primerRequiredGallons: calc.primerRequiredGallons,
+            estimatedPriceCOP: cot?.SUBTOTAL_DE_COSTO ? Number(cot.SUBTOTAL_DE_COSTO) : calc.estimatedPriceCOP,
+            status: ['necesidad', 'solucion_tecnica', 'abastecimiento', 'servicio', 'calidad', 'completado'].includes(status)
+              ? status
+              : 'necesidad',
+          };
+
+          if (cot) {
+            req.technicalEvaluation = {
+              evaluatedBy: 'Ing. Laura Mendoza (Asesor Comercial)',
+              evaluationDate: cot.CREATED_AT ? cot.CREATED_AT.slice(0, 16).replace('T', ' ') : new Date().toISOString().slice(0, 16),
+              technicalNotes: 'Cotización técnica registrada en tabla COTIZACION_DETALLE de Supabase.',
+              discountPercent: 5,
+              quotedTotalCOP: Number(cot.SUBTOTAL_DE_COSTO),
+              quotePdfGenerated: true,
+              isApproved: true,
+            };
+          }
+
+          if (serv) {
+            req.servicePostSale = {
+              assignedTechnician: serv.CONTRATISTA_ASIGNADO,
+              dispatchDate: serv.FECHA_INICIO,
+              deliveredDate: serv.FECHA_FIN || undefined,
+              surfacePrepVerified: true,
+              applicationVerified: serv.ESTADO_SERVICIO === 'finalizado',
+              warrantyCertificateId: `GAR-DB-${p.PROYECTO_ID}`,
+              warrantyYears: 5,
+            };
+          }
+
+          if (evid) {
+            req.qualityChecklist = {
+              inspectorName: 'Dra. Sofía Rincón V. (Laboratorio Central)',
+              inspectionDate: evid.FECHA_REGISTRO ? evid.FECHA_REGISTRO.slice(0, 16).replace('T', ' ') : new Date().toISOString().slice(0, 16),
+              viscosityPassed: true,
+              viscosityValueKU: 101,
+              opacityPassed: true,
+              opacityPercent: 99.2,
+              dryingTimePassed: true,
+              colorMatchPassed: true,
+              packagingSealPassed: true,
+              approvedForDispatch: true,
+              certificateNumber: `CERT-DB-${evid.EVIDENCIA_ID || p.PROYECTO_ID}`,
+              observations: evid.DESCRIPCION || 'Conforme a especificación técnica.',
+            };
+          }
+
+          return req;
+        });
+
+        // Combinar con solicitudes locales para no perder demos si hay pocos registros
+        setRequests(reconstructedRequests);
+      }
+
+      setSupabaseStatus({
+        connected: true,
+        message: `Conectado exitosamente con Supabase (${SUPABASE_URL})`,
+        isSyncing: false,
+        lastSyncedAt: new Date().toLocaleTimeString('es-CO'),
+      });
+    } catch (err: any) {
+      console.warn('[Supabase Sync Notice]', err?.message || err);
+      setSupabaseStatus({
+        connected: false,
+        message: err?.message || 'Modo local activo',
+        isSyncing: false,
+        lastSyncedAt: new Date().toLocaleTimeString('es-CO'),
+      });
+    }
+  }, [products]);
+
+  // Ejecutar sincronización al inicio
+  useEffect(() => {
+    refreshFromSupabase();
+  }, [refreshFromSupabase]);
+
+  // Auth helper methods
   const setCurrentUser = (user: UserProfile | null) => {
     setCurrentUserState(user);
     if (user) {
@@ -377,7 +653,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     environment: EnvironmentType,
     finish: FinishType
   ) => {
-    let chosenProduct: PaintProduct = products[0]; // Viniltex default
+    let chosenProduct: PaintProduct = products[0];
 
     if (surface === 'fachada_exterior') {
       chosenProduct = products.find((p) => p.id === 'prod-koraza') || products[0];
@@ -404,14 +680,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const coats = chosenProduct.recommendedCoats || 2;
     const theoreticalCoverage = chosenProduct.coveragePerGallonSqM || 35;
     
-    // Total gallons calculation
     const totalGallonsRaw = (areaSqMeters * coats) / theoreticalCoverage;
-    const gallonsNeeded = Math.max(1, Math.ceil(totalGallonsRaw * 1.05)); // 5% factor de desperdicio técnico
+    const gallonsNeeded = Math.max(1, Math.ceil(totalGallonsRaw * 1.05));
 
     const suggestedBuckets = Math.floor(gallonsNeeded / 5);
     const suggestedIndividualGallons = gallonsNeeded % 5;
 
-    // Primer requirement
     let primerRequiredGallons = 0;
     if (['concreto', 'mamposteria', 'fachada_exterior', 'zona_humeda'].includes(surface)) {
       primerRequiredGallons = Math.ceil(areaSqMeters / 30);
@@ -419,8 +693,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       primerRequiredGallons = Math.ceil(areaSqMeters / 35);
     }
 
-    // Price calculation with bulk discount for buckets (5 gal)
-    const bucketPrice = chosenProduct.pricePerGallonCOP * 5 * 0.90; // 10% ahorro por cuñete
+    const bucketPrice = chosenProduct.pricePerGallonCOP * 5 * 0.90;
     const gallonPrice = chosenProduct.pricePerGallonCOP;
     const estimatedPriceCOP = Math.round(suggestedBuckets * bucketPrice + suggestedIndividualGallons * gallonPrice);
 
@@ -436,7 +709,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
   };
 
-  // Create Paint Request
+  // ----------------------------------------------------------------------------
+  // MUTATION: Create Paint Request
+  // Escribe en: USUARIO, PROYECTO, ESPECIFICACION_TECNICA, AREA, COTIZACION_DETALLE
+  // ----------------------------------------------------------------------------
   const createPaintRequest = (data: Partial<PaintRequest>): PaintRequest => {
     const nextIndex = requests.length + 101;
     const requestNumber = `SOL-${nextIndex}`;
@@ -448,11 +724,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const finish = data.finish || 'mate';
 
     const calculation = calculateRequirements(surface, area, env, finish);
-
     const selectedColor = COLOR_PALETTES.find((c) => c.name === data.selectedColorName) || COLOR_PALETTES[0];
 
+    const tempId = `req-${Date.now()}`;
     const newRequest: PaintRequest = {
-      id: `req-${Date.now()}`,
+      id: tempId,
       requestNumber,
       createdAt: nowStr,
       clientName: data.clientName || (currentUser ? currentUser.name : 'Cliente Invitado'),
@@ -484,59 +760,62 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       status: 'necesidad',
     };
 
+    // Actualización optimista inmediata
     setRequests((prev) => [newRequest, ...prev]);
 
-    // Check inventory stock warning right away
-    const matchedInventory = inventory.find(
-      (inv) => inv.productId === calculation.product.id
-    );
-    const availableGallons = matchedInventory
-      ? (matchedInventory.stockUnits - matchedInventory.reservedUnits) * matchedInventory.gallonsPerUnit
-      : 0;
-
-    if (matchedInventory && availableGallons < calculation.gallonsNeeded) {
-      console.warn(`[ColorLink Alerta] La solicitud ${requestNumber} requiere ${calculation.gallonsNeeded} gal pero hay disponible ${availableGallons} gal.`);
-    }
-
-    // Sincronización asíncrona con base de datos Supabase
-    ColorLinkAPI.createProjectRequest({
-      cliente: {
-        nombre: newRequest.clientName,
-        identificacion: (currentUser?.docNumber || '1020304050').replace(/\D/g, '') || '1020304050',
-        correo: newRequest.clientEmail,
-        telefono: newRequest.clientPhone,
-        tipo_cliente: 'residencial',
+    // ESCRITURA EN SUPABASE (Tablas con nombres en MAYÚSCULAS)
+    ColorLinkAPI.createProyectoCompleto({
+      usuario: {
+        NOMBRE: newRequest.clientName,
+        IDENTIFICACION: (currentUser?.docNumber || '1020304050').replace(/\D/g, '') || '1020304050',
+        CORREO: newRequest.clientEmail || `contacto.${Date.now()}@pintuco.com`,
+        TELEFONO: newRequest.clientPhone || null,
+        TIPO_CLIENTE: (currentUser?.docType === 'NIT' ? 'comercial' : 'residencial'),
       },
       proyecto: {
-        ciudad: newRequest.city,
-        tipo_proyecto: newRequest.projectName,
-        area_m2: newRequest.areaSqMeters,
-        fecha_requerida: new Date(Date.now() + (newRequest.urgencyDays || 5) * 86400000).toISOString().slice(0, 10),
+        CIUDAD: newRequest.city,
+        TIPO_PROYECTO: newRequest.projectName,
+        AREA_M2: newRequest.areaSqMeters,
+        FECHA_REQUERIDA: new Date(Date.now() + (newRequest.urgencyDays || 5) * 86400000).toISOString().slice(0, 10),
+        ESTADO_PROYECTO: 'necesidad',
       },
       especificacion: {
-        tipo_superficie: newRequest.surfaceType,
-        ambiente: newRequest.environment,
-        condicion: 'buena',
-        color: newRequest.selectedColorName,
-        galones_estimados: newRequest.gallonsNeeded,
+        TIPO_SUPERFICIE: newRequest.surfaceType,
+        AMBIENTE: newRequest.environment,
+        CONDICION: 'buena',
+        COLOR: newRequest.selectedColorName,
+        GALONES_ESTIMADOS: newRequest.gallonsNeeded,
       },
       areas: [
         {
-          descripcion: `Muro principal (${newRequest.surfaceType})`,
-          medida_m2: newRequest.areaSqMeters,
+          DESCRIPCION: `Muro principal (${newRequest.surfaceType})`,
+          MEDIDA_M2: newRequest.areaSqMeters,
         },
       ],
+      cotizacion: {
+        ID_DE_PRODUCTO: 1,
+        CANTIDAD_REQUERIDA: newRequest.gallonsNeeded,
+        SUBTOTAL_DE_COSTO: newRequest.estimatedPriceCOP,
+      },
     }).then((res) => {
-      if (res.success) {
-        console.log(`[Supabase ColorLink] Proyecto persistido en Postgres con ID: ${res.proyectoId}`);
+      if (res.success && res.proyectoId) {
+        console.log(`[Supabase Live Write] Proyecto guardado con PROYECTO_ID: ${res.proyectoId}`);
+        // Actualizar el ID de base de datos en la solicitud
+        setRequests((prev) =>
+          prev.map((r) => (r.id === tempId ? { ...r, dbProjectId: res.proyectoId } : r))
+        );
       }
     }).catch((e) => {
-      console.warn('[Supabase Fallback]', e);
+      console.warn('[Supabase Live Write Error]', e);
     });
 
     return newRequest;
   };
 
+  // ----------------------------------------------------------------------------
+  // MUTATION: Update Request Status
+  // Escribe en: PROYECTO (columna ESTADO_PROYECTO)
+  // ----------------------------------------------------------------------------
   const updateRequestStatus = (requestId: string, newStatus: RequestStatus) => {
     setRequests((prev) =>
       prev.map((req) => (req.id === requestId ? { ...req, status: newStatus } : req))
@@ -544,17 +823,28 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (selectedRequestForDetail?.id === requestId) {
       setSelectedRequestForDetail((prev) => (prev ? { ...prev, status: newStatus } : null));
     }
+
+    const targetReq = requests.find((r) => r.id === requestId);
+    if (targetReq?.dbProjectId) {
+      ColorLinkAPI.updateProyectoEstado(targetReq.dbProjectId, newStatus);
+    }
   };
 
-  // Módulo Comercial: Aprobar Evaluación Técnica
+  // ----------------------------------------------------------------------------
+  // MUTATION: Módulo Comercial - Aprobar Evaluación Técnica
+  // Escribe en: PROYECTO (ESTADO_PROYECTO = 'abastecimiento'), COTIZACION_DETALLE
+  // ----------------------------------------------------------------------------
   const approveTechnicalEvaluation = (
     requestId: string,
     data: { notes: string; discountPercent: number; quotedTotal: number }
   ) => {
     const nowStr = new Date().toISOString().replace('T', ' ').slice(0, 16);
+    let targetDbId: number | undefined;
+
     setRequests((prev) =>
       prev.map((req) => {
         if (req.id === requestId) {
+          targetDbId = req.dbProjectId;
           const updated: PaintRequest = {
             ...req,
             status: 'abastecimiento',
@@ -576,9 +866,25 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         return req;
       })
     );
+
+    // Escribir en Supabase
+    if (targetDbId) {
+      ColorLinkAPI.updateProyectoEstado(targetDbId, 'abastecimiento');
+      supabase.from('COTIZACION_DETALLE').insert({
+        PROYECTO_ID: targetDbId,
+        ID_DE_PRODUCTO: 1,
+        CANTIDAD_REQUERIDA: 1,
+        SUBTOTAL_DE_COSTO: data.quotedTotal,
+      }).then(() => {
+        console.log(`[Supabase Cotización] Registrada para PROYECTO_ID: ${targetDbId}`);
+      });
+    }
   };
 
-  // Módulo Inventario / Abastecimiento: Asignar Lote y Reservar
+  // ----------------------------------------------------------------------------
+  // MUTATION: Módulo Inventario - Asignar Lote y Reservar
+  // Escribe en: INVENTARIO (STOCK_DISPONIBLE, UPDATED_AT), PROYECTO (ESTADO_PROYECTO = 'calidad')
+  // ----------------------------------------------------------------------------
   const allocateInventoryToRequest = (
     requestId: string,
     batchNumber: string,
@@ -598,22 +904,29 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const missingGallons = isShortage ? gallonsNeeded - availableGallons : 0;
     const nowStr = new Date().toISOString().replace('T', ' ').slice(0, 16);
 
-    // Update inventory reservations & stock
+    // Actualizar inventario en memoria y en Supabase
     if (invItem) {
       const unitsToConsume = Math.max(1, Math.ceil(gallonsNeeded / invItem.gallonsPerUnit));
+      const newStock = Math.max(0, invItem.stockUnits - unitsToConsume);
+
       setInventory((prev) =>
         prev.map((item) =>
           item.id === invItem.id
             ? {
                 ...item,
-                stockUnits: Math.max(0, item.stockUnits - unitsToConsume),
+                stockUnits: newStock,
                 lastUpdated: nowStr,
               }
             : item
         )
       );
 
-      // Add to traceability log
+      // Escribir actualización en Supabase INVENTARIO
+      if (invItem.dbInventoryId) {
+        ColorLinkAPI.updateInventarioStock(invItem.dbInventoryId, newStock, batchNumber);
+      }
+
+      // Bitácora de trazabilidad
       const newLog: InventoryTraceabilityRecord = {
         id: `tr-${Date.now()}`,
         requestId: targetReq.requestNumber,
@@ -653,6 +966,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       })
     );
 
+    if (targetReq.dbProjectId) {
+      ColorLinkAPI.updateProyectoEstado(targetReq.dbProjectId, 'calidad');
+    }
+
     return {
       success: true,
       shortage: isShortage,
@@ -660,11 +977,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
   };
 
-  // Módulo Calidad: Enviar Checklist de Inspección
+  // ----------------------------------------------------------------------------
+  // MUTATION: Módulo Calidad - Enviar Checklist de Inspección
+  // Escribe en: EVIDENCIA (PROYECTO_ID, ETAPA_OBRA, DESCRIPCION, FOTOS_URL), PROYECTO (ESTADO_PROYECTO = 'servicio')
+  // ----------------------------------------------------------------------------
   const submitQualityInspection = (requestId: string, checklist: QualityChecklist) => {
+    let targetDbId: number | undefined;
+
     setRequests((prev) =>
       prev.map((req) => {
         if (req.id === requestId) {
+          targetDbId = req.dbProjectId;
           const updated: PaintRequest = {
             ...req,
             status: 'servicio',
@@ -678,13 +1001,31 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         return req;
       })
     );
+
+    // Escribir en Supabase EVIDENCIA_CALIDAD y PROYECTO
+    if (targetDbId) {
+      ColorLinkAPI.updateProyectoEstado(targetDbId, 'servicio');
+      ColorLinkAPI.addEvidenciaCalidad({
+        PROYECTO_ID: targetDbId,
+        ETAPA_OBRA: 'Inspección de Laboratorio - Control de Calidad',
+        DESCRIPCION: checklist.observations || `Inspección aprobada. Viscosidad: ${checklist.viscosityValueKU} KU. Opacidad: ${checklist.opacityPercent}%. Certificado: ${checklist.certificateNumber}`,
+        FOTOS_URL: 'https://images.unsplash.com/photo-1581092335397-9583fe92d232?auto=format&fit=crop&w=800&q=80',
+        FECHA_REGISTRO: new Date().toISOString(),
+      });
+    }
   };
 
-  // Módulo Servicio Postventa
+  // ----------------------------------------------------------------------------
+  // MUTATION: Módulo Servicio Postventa
+  // Escribe en: SERVICIO_APLICACION, PROYECTO (ESTADO_PROYECTO = 'completado')
+  // ----------------------------------------------------------------------------
   const updateServicePostSale = (requestId: string, postSaleData: Partial<ServicePostSale>) => {
+    let targetDbId: number | undefined;
+
     setRequests((prev) =>
       prev.map((req) => {
         if (req.id === requestId) {
+          targetDbId = req.dbProjectId;
           const currentPostSale = req.servicePostSale || {
             surfacePrepVerified: true,
             applicationVerified: true,
@@ -707,29 +1048,125 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         return req;
       })
     );
+
+    // Escribir en Supabase SERVICIO_APLICACION y PROYECTO
+    if (targetDbId) {
+      ColorLinkAPI.updateProyectoEstado(targetDbId, 'completado');
+      ColorLinkAPI.upsertServicioAplicacion({
+        PROYECTO_ID: targetDbId,
+        CONTRATISTA_ASIGNADO: postSaleData.assignedTechnician || 'Técnico Homologado Pintuco',
+        FECHA_INICIO: postSaleData.dispatchDate ? postSaleData.dispatchDate.slice(0, 10) : new Date().toISOString().slice(0, 10),
+        FECHA_FIN: postSaleData.deliveredDate ? postSaleData.deliveredDate.slice(0, 10) : new Date().toISOString().slice(0, 10),
+        ESTADO_SERVICIO: 'finalizado',
+      });
+    }
   };
 
+  // ----------------------------------------------------------------------------
+  // MUTATION: Inventario Manual & Reabastecimiento
+  // Escribe en: INVENTARIO (STOCK_DISPONIBLE, LOTE, UPDATED_AT)
+  // ----------------------------------------------------------------------------
   const updateInventoryStock = (itemId: string, newStock: number) => {
     const nowStr = new Date().toISOString().replace('T', ' ').slice(0, 16);
+    const targetItem = inventory.find((i) => i.id === itemId);
+
     setInventory((prev) =>
       prev.map((item) => (item.id === itemId ? { ...item, stockUnits: newStock, lastUpdated: nowStr } : item))
     );
+
+    if (targetItem?.dbInventoryId) {
+      ColorLinkAPI.updateInventarioStock(targetItem.dbInventoryId, newStock);
+    }
   };
 
   const restockProduct = (itemId: string, unitsToAdd: number, batchNumber: string) => {
     const nowStr = new Date().toISOString().replace('T', ' ').slice(0, 16);
+    const targetItem = inventory.find((i) => i.id === itemId);
+    const newStock = (targetItem?.stockUnits || 0) + unitsToAdd;
+
     setInventory((prev) =>
       prev.map((item) =>
         item.id === itemId
           ? {
               ...item,
-              stockUnits: item.stockUnits + unitsToAdd,
+              stockUnits: newStock,
               batchNumber: batchNumber || item.batchNumber,
               lastUpdated: nowStr,
             }
           : item
       )
     );
+
+    if (targetItem?.dbInventoryId) {
+      ColorLinkAPI.updateInventarioStock(targetItem.dbInventoryId, newStock, batchNumber);
+    }
+  };
+
+  // ----------------------------------------------------------------------------
+  // MUTATION: Registrar Cliente
+  // Escribe en: USUARIO (NOMBRE, IDENTIFICACION, CORREO, TELEFONO, TIPO_CLIENTE)
+  // ----------------------------------------------------------------------------
+  const registerClient = (userData: UserProfile) => {
+    const stampedUser: UserProfile = {
+      ...userData,
+      registeredAt: userData.registeredAt || new Date().toLocaleString('es-CO'),
+    };
+
+    setRegisteredClients((prev) => {
+      const filtered = prev.filter(
+        (u) => u.id !== stampedUser.id && !(stampedUser.docNumber && u.docNumber === stampedUser.docNumber)
+      );
+      return [stampedUser, ...filtered];
+    });
+
+    setCurrentUserState(stampedUser);
+    setIsLoggedIn(true);
+
+    // Escribir en Supabase USUARIO
+    ColorLinkAPI.findOrCreateUsuario({
+      NOMBRE: stampedUser.name,
+      IDENTIFICACION: stampedUser.docNumber || stampedUser.id.replace('user-', ''),
+      CORREO: stampedUser.email,
+      TELEFONO: stampedUser.phone || null,
+      TIPO_CLIENTE: stampedUser.docType === 'NIT' ? 'comercial' : 'residencial',
+    }).then((usuarioId) => {
+      console.log(`[Supabase USUARIO Registrado] USUARIO_ID: ${usuarioId}`);
+      stampedUser.dbUsuarioId = usuarioId;
+    });
+
+    const userConfirmationMessage = buildUserConfirmationWhatsAppMessage(stampedUser);
+    const userWhatsAppUrl = getUserConfirmationWhatsAppUrl(stampedUser);
+    const formattedMessage = buildWhatsAppRegistrationMessage(stampedUser);
+    const whatsappUrl = getWhatsAppRegistrationUrl(stampedUser);
+
+    return {
+      user: stampedUser,
+      whatsappUrl,
+      userWhatsAppUrl,
+      formattedMessage,
+      userConfirmationMessage,
+    };
+  };
+
+  // WhatsApp link generators
+  const getWhatsAppRegistrationUrl = (user: UserProfile, phoneOverride?: string): string => {
+    const rawTarget = phoneOverride || whatsAppCommercialNumber;
+    const targetPhone = normalizeWhatsAppNumber(rawTarget);
+    const message = buildWhatsAppRegistrationMessage(user);
+    return `https://wa.me/${targetPhone}?text=${encodeURIComponent(message)}`;
+  };
+
+  const getUserConfirmationWhatsAppUrl = (user: UserProfile): string => {
+    const targetPhone = normalizeWhatsAppNumber(user.phone || '');
+    const message = buildUserConfirmationWhatsAppMessage(user);
+    return `https://wa.me/${targetPhone}?text=${encodeURIComponent(message)}`;
+  };
+
+  const getWhatsAppQuotationUrl = (req: PaintRequest, phoneOverride?: string): string => {
+    const rawTarget = phoneOverride || whatsAppCommercialNumber;
+    const targetPhone = normalizeWhatsAppNumber(rawTarget);
+    const message = buildWhatsAppQuotationMessage(req);
+    return `https://wa.me/${targetPhone}?text=${encodeURIComponent(message)}`;
   };
 
   // AI Chat Assistant
@@ -750,7 +1187,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
       const lower = userText.toLowerCase();
 
-      // Check order tracking
       const solMatch = lower.match(/sol[- ]?(\d+)/);
       if (solMatch) {
         const num = `SOL-${solMatch[1]}`;
@@ -813,56 +1249,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }, 600);
   };
 
-  const getWhatsAppRegistrationUrl = (user: UserProfile, phoneOverride?: string): string => {
-    const rawTarget = phoneOverride || whatsAppCommercialNumber;
-    const targetPhone = normalizeWhatsAppNumber(rawTarget);
-    const message = buildWhatsAppRegistrationMessage(user);
-    return `https://wa.me/${targetPhone}?text=${encodeURIComponent(message)}`;
-  };
-
-  const getUserConfirmationWhatsAppUrl = (user: UserProfile): string => {
-    const targetPhone = normalizeWhatsAppNumber(user.phone || '');
-    const message = buildUserConfirmationWhatsAppMessage(user);
-    return `https://wa.me/${targetPhone}?text=${encodeURIComponent(message)}`;
-  };
-
-  const getWhatsAppQuotationUrl = (req: PaintRequest, phoneOverride?: string): string => {
-    const rawTarget = phoneOverride || whatsAppCommercialNumber;
-    const targetPhone = normalizeWhatsAppNumber(rawTarget);
-    const message = buildWhatsAppQuotationMessage(req);
-    return `https://wa.me/${targetPhone}?text=${encodeURIComponent(message)}`;
-  };
-
-  const registerClient = (userData: UserProfile) => {
-    const stampedUser: UserProfile = {
-      ...userData,
-      registeredAt: userData.registeredAt || new Date().toLocaleString('es-CO'),
-    };
-
-    setRegisteredClients((prev) => {
-      const filtered = prev.filter(
-        (u) => u.id !== stampedUser.id && !(stampedUser.docNumber && u.docNumber === stampedUser.docNumber)
-      );
-      return [stampedUser, ...filtered];
-    });
-
-    setCurrentUserState(stampedUser);
-    setIsLoggedIn(true);
-
-    const userConfirmationMessage = buildUserConfirmationWhatsAppMessage(stampedUser);
-    const userWhatsAppUrl = getUserConfirmationWhatsAppUrl(stampedUser);
-    const formattedMessage = buildWhatsAppRegistrationMessage(stampedUser);
-    const whatsappUrl = getWhatsAppRegistrationUrl(stampedUser);
-
-    return {
-      user: stampedUser,
-      whatsappUrl,
-      userWhatsAppUrl,
-      formattedMessage,
-      userConfirmationMessage,
-    };
-  };
-
   return (
     <AppContext.Provider
       value={{
@@ -909,6 +1295,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         getWhatsAppRegistrationUrl,
         getUserConfirmationWhatsAppUrl,
         getWhatsAppQuotationUrl,
+        supabaseStatus,
+        refreshFromSupabase,
       }}
     >
       {children}

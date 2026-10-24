@@ -432,7 +432,7 @@ export const PRODUCTS_CATALOG: PaintProduct[] = [
     paintType: 'Base Anticorrosiva Alquídica con Fosfato de Zinc',
     description: 'Imprimante anticorrosivo para estructuras metálicas, tuberías, puentes y maquinaria. Inhibe la oxidación galvánica y prepara la superficie para esmaltes de acabado.',
     suitableSurfaces: ['metal_acero'],
-    surfaceImage: 'https://images.unsplash.com/photo-1541888946425-d0fbb186c5f7?auto=format&fit=crop&w=800&q=80',
+    surfaceImage: '/src/assets/images/corrotec_metal_anticorrosivo_1792110965533.jpg',
     surfaceLabels: [
       { name: 'Vigas y Perfilería Metálica', icon: '🏗️', description: 'Imprimación previa al montaje en obra' },
       { name: 'Tuberías y Tanques', icon: '🛢️', description: 'Protección contra corrosión ambiental' },
@@ -444,7 +444,7 @@ export const PRODUCTS_CATALOG: PaintProduct[] = [
     availableFinishes: ['mate'],
     colors: ['Gris Plomo', 'Rojo Señalización', 'Blanco Puro'],
     pricePerGallonCOP: 79900,
-    image: 'https://images.unsplash.com/photo-1541888946425-d0fbb186c5f7?auto=format&fit=crop&w=800&q=80',
+    image: '/src/assets/images/corrotec_metal_anticorrosivo_1792110965533.jpg',
     badge: 'Inhibidor Químico',
     dryingTimeHours: 2.5,
     vocLevel: 'Medio',
