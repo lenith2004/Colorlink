@@ -138,19 +138,19 @@ export const Header: React.FC = () => {
               <BrandLogo variant="full" theme="light" size="md" />
             </button>
 
-            {/* Direct Quick Links (Simulador 3D & Catálogo) */}
+            {/* Direct Quick Links (Catálogo y Simulador) */}
             <div className="hidden lg:flex items-center gap-1.5 ml-2">
               <button
                 id="header-simulator-btn"
                 onClick={() => setActiveView('simulator')}
                 className={`flex items-center gap-1.5 px-3 py-2 text-xs sm:text-sm font-bold rounded-xl transition-all cursor-pointer ${
                   activeView === 'simulator'
-                    ? 'bg-[#2FAE6D] text-white shadow-xs'
+                    ? 'bg-[#1B2A6B] text-white shadow-xs'
                     : 'text-slate-700 hover:text-[#1B2A6B] hover:bg-slate-100'
                 }`}
               >
-                <Sparkles className={`w-4 h-4 ${activeView === 'simulator' ? 'text-white' : 'text-[#2FAE6D]'}`} />
-                <span>Simulador 3D</span>
+                <Sparkles className="w-3.5 h-3.5 text-[#2FAE6D]" />
+                <span>Simulador de Color</span>
               </button>
 
               <button
@@ -384,20 +384,20 @@ export const Header: React.FC = () => {
       <div className="md:hidden flex items-center justify-around border-t border-slate-100 bg-white py-2 px-3">
         <button
           onClick={() => setActiveView('home')}
-          className={`text-xs font-semibold px-2.5 py-1 rounded-lg ${activeView === 'home' ? 'text-[#1B2A6B] bg-blue-50 font-bold' : 'text-slate-600'}`}
+          className={`text-xs font-semibold px-2 py-1 rounded-lg ${activeView === 'home' ? 'text-[#1B2A6B] bg-blue-50 font-bold' : 'text-slate-600'}`}
         >
           Inicio
         </button>
         <button
           onClick={() => setActiveView('simulator')}
-          className={`text-xs font-semibold px-2.5 py-1 rounded-lg flex items-center gap-1 ${activeView === 'simulator' ? 'text-white bg-[#2FAE6D] font-bold shadow-xs' : 'text-emerald-700 bg-emerald-50/70'}`}
+          className={`text-xs font-semibold px-2 py-1 rounded-lg flex items-center gap-1 ${activeView === 'simulator' ? 'text-[#1B2A6B] bg-blue-50 font-bold' : 'text-slate-600'}`}
         >
-          <Sparkles className="w-3 h-3" />
+          <Sparkles className="w-3 h-3 text-[#2FAE6D]" />
           <span>Simulador</span>
         </button>
         <button
           onClick={() => setActiveView('products')}
-          className={`text-xs font-semibold px-2.5 py-1 rounded-lg ${activeView === 'products' ? 'text-[#1B2A6B] bg-blue-50 font-bold' : 'text-slate-600'}`}
+          className={`text-xs font-semibold px-2 py-1 rounded-lg ${activeView === 'products' ? 'text-[#1B2A6B] bg-blue-50 font-bold' : 'text-slate-600'}`}
         >
           Catálogo
         </button>

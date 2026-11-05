@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   PlusCircle,
   Clock,
@@ -18,9 +18,14 @@ import {
   MessageSquare,
   Lock,
   LogIn,
+  Camera,
+  UserCheck,
+  Database,
+  RefreshCw,
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { RequestStatus } from '../../types';
+import { supabase } from '../../lib/supabase';
 
 export const ClientDashboard: React.FC = () => {
   const {
@@ -37,6 +42,70 @@ export const ClientDashboard: React.FC = () => {
 
   const [filterStatus, setFilterStatus] = useState<string>('todos');
   const [clientSearch, setClientSearch] = useState<string>('');
+
+  // Supabase live projects state (PROYECTO + USUARIO + SERVICIO_APLICACION + EVIDENCIA_CALIDAD)
+  const [supabaseProjects, setSupabaseProjects] = useState<any[]>([]);
+  const [isLoadingSupabaseProjects, setIsLoadingSupabaseProjects] = useState<boolean>(false);
+
+  const loadSupabaseProjects = useCallback(async () => {
+    setIsLoadingSupabaseProjects(true);
+    try {
+      const { data, error } = await supabase
+        .from('PROYECTO')
+        .select(`
+          *,
+          USUARIO (*),
+          SERVICIO_APLICACION (*),
+          EVIDENCIA_CALIDAD (*)
+        `)
+        .order('Proyecto_ID', { ascending: false });
+
+      if (!error && data) {
+        setSupabaseProjects(data);
+      }
+    } catch (e) {
+      console.warn('[Error loading Supabase projects]', e);
+    } finally {
+      setIsLoadingSupabaseProjects(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadSupabaseProjects();
+  }, [loadSupabaseProjects]);
+
+  const handleOpenSupabaseProject = (p: any) => {
+    const userObj = p.USUARIO || {};
+    setSelectedRequestForDetail({
+      id: `PROJ-${p.Proyecto_ID}`,
+      dbProjectId: p.Proyecto_ID,
+      requestNumber: `PROY-${p.Proyecto_ID}`,
+      projectName: `Proyecto #${p.Proyecto_ID} - ${p.Ciudad || 'Colombia'} (${p.Tipo_proyecto || 'General'})`,
+      createdAt: p.Fecha_requerida || new Date().toLocaleDateString('es-CO'),
+      clientName: userObj.nombre || userObj.NOMBRE || 'Cliente Supabase',
+      clientEmail: userObj.correo || userObj.CORREO || 'cliente@pintuco.com',
+      clientPhone: userObj.telefono || userObj.TELEFONO || '+57 300 000 0000',
+      city: p.Ciudad || 'Bogotá',
+      channel: 'web',
+      surfaceType: 'mamposteria',
+      areaSqMeters: Number(p.Area_m2) || 120,
+      environment: 'interior',
+      finish: 'mate',
+      selectedColorName: 'Blanco Almendra',
+      selectedColorHex: '#F3F4F6',
+      urgencyDays: 5,
+      recommendedProductId: 'prod-1',
+      recommendedProductName: 'Viniltex Avanzado Pintuco',
+      recommendedCoats: 2,
+      coveragePerGallon: 35,
+      gallonsNeeded: Math.ceil((Number(p.Area_m2) || 120) / 35),
+      suggestedBuckets: 1,
+      suggestedIndividualGallons: 0,
+      primerRequiredGallons: 0,
+      estimatedPriceCOP: (Number(p.Area_m2) || 120) * 85000,
+      status: 'servicio',
+    });
+  };
 
   // Isolate requests strictly to the current logged-in client for data privacy
   const clientRequests = requests.filter((r) => {

@@ -9,11 +9,7 @@ import {
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 
-interface HeroBannerProps {
-  onOpenSimulator?: () => void;
-}
-
-export const HeroBanner: React.FC<HeroBannerProps> = ({ onOpenSimulator }) => {
+export const HeroBanner: React.FC = () => {
   const { currentUser, isLoggedIn, setIsRequestModalOpen, setActiveView } = useApp();
 
   const handleExploreCatalog = () => {
@@ -65,25 +61,23 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({ onOpenSimulator }) => {
         {/* Action Buttons (Retail CTAs) */}
         <div className="mt-8 flex flex-wrap items-center justify-center sm:justify-start gap-3">
           <button
+            id="hero-simulator-cta-btn"
+            onClick={() => setActiveView('simulator')}
+            className="bg-gradient-to-r from-blue-600 to-[#1B2A6B] hover:from-blue-500 hover:to-[#17245c] text-white px-7 py-3.5 rounded-2xl font-bold text-sm sm:text-base flex items-center gap-2.5 shadow-xl shadow-blue-950/40 border border-white/20 transition-all transform active:scale-98 cursor-pointer ring-2 ring-blue-400/40 hover:shadow-blue-500/25"
+          >
+            <Sparkles className="w-5 h-5 text-amber-300" />
+            <span>Simulador de Color en Fotos</span>
+            <ArrowRight className="w-4 h-4 ml-0.5" />
+          </button>
+
+          <button
             id="hero-register-need-btn"
             onClick={() => setIsRequestModalOpen(true)}
-            className="bg-[#2FAE6D] hover:bg-[#27985f] text-white px-7 py-3.5 rounded-2xl font-bold text-sm sm:text-base flex items-center gap-2 shadow-lg shadow-emerald-950/30 transition-all transform active:scale-98 cursor-pointer"
+            className="bg-[#2FAE6D] hover:bg-[#27985f] text-white px-6 py-3.5 rounded-2xl font-bold text-sm sm:text-base flex items-center gap-2 shadow-lg shadow-emerald-950/30 transition-all transform active:scale-98 cursor-pointer"
           >
             <Calculator className="w-4 h-4" />
             <span>Cotizar Proyecto m²</span>
-            <ArrowRight className="w-4 h-4 ml-1" />
           </button>
-
-          {onOpenSimulator && (
-            <button
-              id="hero-open-simulator-btn"
-              onClick={onOpenSimulator}
-              className="bg-white/10 hover:bg-white/20 border border-emerald-400/40 text-emerald-300 hover:text-white px-5 py-3.5 rounded-2xl font-bold text-sm sm:text-base flex items-center gap-2 transition-all cursor-pointer backdrop-blur-xs shadow-xs"
-            >
-              <Sparkles className="w-4 h-4 text-emerald-400" />
-              <span>Simulador 3D en Fotos</span>
-            </button>
-          )}
 
           <button
             id="hero-explore-solutions-btn"

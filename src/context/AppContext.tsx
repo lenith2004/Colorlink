@@ -13,7 +13,10 @@ import {
   QualityChecklist,
   ServicePostSale,
   ChatMessage,
+  CartItem,
+  BotParsedAction,
 } from '../types';
+import { processPintuBotMessage } from '../lib/pintuBotEngine';
 import {
   DEMO_USERS,
   PRODUCTS_CATALOG,
@@ -78,6 +81,8 @@ interface AppContextType {
   // Active view navigation & modals
   activeView: 'home' | 'dashboard' | 'products' | 'solutions' | 'contact' | 'simulator';
   setActiveView: (view: 'home' | 'dashboard' | 'products' | 'solutions' | 'contact' | 'simulator') => void;
+  simulatorScenario: string;
+  setSimulatorScenario: (id: string) => void;
   searchQuery: string;
   setSearchQuery: (query: string) => void;
   selectedCity: string;
@@ -294,6 +299,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Navigation & UI state
   const [activeView, setActiveView] = useState<'home' | 'dashboard' | 'products' | 'solutions' | 'contact' | 'simulator'>('home');
+  const [simulatorScenario, setSimulatorScenario] = useState<string>('sala_de_estar');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedCity, setSelectedCity] = useState<string>('Bogotá D.C.');
   const [isRequestModalOpen, setIsRequestModalOpen] = useState<boolean>(false);
@@ -1273,6 +1279,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         updateServicePostSale,
         activeView,
         setActiveView,
+        simulatorScenario,
+        setSimulatorScenario,
         searchQuery,
         setSearchQuery,
         selectedCity,

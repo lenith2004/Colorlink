@@ -19,8 +19,6 @@ import {
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { WORKFLOW_STAGES } from '../data/initialData';
-import { ColorSimulationStudio } from './ColorSimulationStudio';
-import { ColorPaletteItem } from '../types';
 
 interface ProcessDetailModalProps {
   stageId: string | null;
@@ -42,14 +40,6 @@ export const ProcessDetailModal: React.FC<ProcessDetailModalProps> = ({
 
   const [activeTab, setActiveTab] = useState<string>(stageId || 'necesidad');
   const [stockSearch, setStockSearch] = useState('');
-  const [simColor, setSimColor] = useState<ColorPaletteItem>({
-    name: 'Azul Pintuco',
-    hex: '#1B2A6B',
-    category: 'Corporativo & Acentos',
-    code: 'PIN-5010',
-    lrv: 12,
-    family: 'Azul Institucional',
-  });
 
   if (!stageId) return null;
 
@@ -203,7 +193,7 @@ export const ProcessDetailModal: React.FC<ProcessDetailModalProps> = ({
                   </div>
                 </div>
                 <div className="pt-2 flex justify-between items-center">
-                  <p className="text-xs text-slate-500">Prueba tonos oficiales en fachada, sala, dormitorios y oficinas:</p>
+                  <p className="text-xs text-slate-500">Consulta asesoría de formulación técnica y fichas oficiales:</p>
                   <button
                     onClick={() => {
                       onClose();
@@ -217,17 +207,34 @@ export const ProcessDetailModal: React.FC<ProcessDetailModalProps> = ({
                 </div>
               </div>
 
-              {/* Real-time Color Simulation Studio Embedded */}
-              <div className="pt-2">
-                <ColorSimulationStudio
-                  selectedColorName={simColor.name}
-                  selectedColorHex={simColor.hex}
-                  onSelectColor={(col) => setSimColor(col)}
-                  surfaceType="mamposteria"
-                  finish="mate"
-                  environment="interior"
-                  productName="Viniltex Avanzado® Pintuco"
-                />
+              {/* Guía Técnica y Especificación de Superficies */}
+              <div className="p-5 rounded-2xl bg-white border border-slate-200 space-y-3">
+                <h4 className="font-extrabold text-sm text-slate-900 flex items-center gap-2">
+                  <Layers className="w-4 h-4 text-[#1B2A6B]" />
+                  <span>Especificación Técnica y Rendimiento Recomendado</span>
+                </h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs text-slate-600">
+                  <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 space-y-1">
+                    <span className="font-bold text-slate-900">Rendimiento Estándar:</span>
+                    <p className="text-[11px]">35 a 40 m² por galón a dos manos según porosidad y rugosidad del sustrato.</p>
+                  </div>
+                  <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 space-y-1">
+                    <span className="font-bold text-slate-900">Preparación de Superficie:</span>
+                    <p className="text-[11px]">Limpieza profunda, remoción de partes sueltas, neutralización de sales y secado completo.</p>
+                  </div>
+                </div>
+                <div className="pt-2 flex justify-end">
+                  <button
+                    onClick={() => {
+                      onClose();
+                      setIsRequestModalOpen(true);
+                    }}
+                    className="bg-[#1B2A6B] hover:bg-[#142154] text-white py-2 px-4 rounded-xl text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-xs"
+                  >
+                    <Calculator className="w-4 h-4" />
+                    <span>Iniciar Diagnóstico & Cotización</span>
+                  </button>
+                </div>
               </div>
             </div>
           )}

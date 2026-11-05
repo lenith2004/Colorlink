@@ -25,6 +25,7 @@ import {
   ShoppingCart,
   DollarSign,
   Package,
+  ShieldCheck,
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import {
@@ -33,6 +34,7 @@ import {
   crearProyectoEnSupabase,
   guardarEspecificacionTecnicaYAreasEnSupabase,
   guardarCotizacionDetalleEnSupabase,
+  updateEstadoProyectoEnSupabase,
   SolicitudClienteResult,
   SolicitudProyectoResult,
   SolicitudEspecificacionResult,
@@ -76,6 +78,7 @@ export const ClientRequestModal: React.FC = () => {
     isLoggedIn,
     selectedCity,
     refreshFromSupabase,
+    setSelectedRequestForDetail,
   } = useApp();
 
   // Active step:
@@ -130,9 +133,10 @@ export const ClientRequestModal: React.FC = () => {
   const [isProcessingSpec, setIsProcessingSpec] = useState<boolean>(false);
 
   // --------------------------------------------------------------------------
-  // PASO 4: COTIZACIÓN (COTIZACION_DETALLE y PRODUCTO)
+  // PASO 4: COTIZACIÓN (COTIZACION_DETALLE, PRODUCTO e INVENTARIO)
   // --------------------------------------------------------------------------
   const [availableProducts, setAvailableProducts] = useState<SupabaseProductItem[]>([]);
+  const [inventoryItems, setInventoryItems] = useState<any[]>([]);
   const [isLoadingProducts, setIsLoadingProducts] = useState<boolean>(false);
   const [cotizacionLines, setCotizacionLines] = useState<CotizacionRowState[]>([]);
   const [cotizacionResult, setCotizacionResult] = useState<SolicitudCotizacionResult | null>(null);
@@ -163,25 +167,42 @@ export const ClientRequestModal: React.FC = () => {
     }
   }, [isRequestModalOpen, currentUser, isLoggedIn, selectedCity]);
 
-  // Consultar productos de la tabla PRODUCTO en Supabase
+  // Consultar productos de la tabla PRODUCTO e inventario de INVENTARIO en Supabase
   useEffect(() => {
     if (isRequestModalOpen) {
-      const loadProducts = async () => {
+      const loadProductsAndInventory = async () => {
         setIsLoadingProducts(true);
         try {
-          const { data, error } = await supabase.from('PRODUCTO').select('*');
-          if (!error && data) {
-            setAvailableProducts(data);
+          const [prodRes, invRes] = await Promise.all([
+            supabase.from('PRODUCTO').select('*'),
+            supabase.from('INVENTARIO').select('*'),
+          ]);
+          if (!prodRes.error && prodRes.data) {
+            setAvailableProducts(prodRes.data);
+          }
+          if (!invRes.error && invRes.data) {
+            setInventoryItems(invRes.data);
           }
         } catch (e) {
-          console.warn('[Error cargando productos]', e);
+          console.warn('[Error cargando productos o inventario]', e);
         } finally {
           setIsLoadingProducts(false);
         }
       };
-      loadProducts();
+      loadProductsAndInventory();
     }
   }, [isRequestModalOpen]);
+
+  // Helper para obtener Stock_disponible de cada producto desde la tabla INVENTARIO
+  const getStockInfo = (idProducto: number): { stock: number; centro: string } => {
+    const inv = inventoryItems.find((i) => Number(i.ID_de_producto) === Number(idProducto));
+    if (!inv) return { stock: 0, centro: 'Bodega Principal' };
+    const val = Number(inv.Stock_disponible ?? inv.STOCK_DISPONIBLE ?? inv.stock_disponible);
+    return {
+      stock: isNaN(val) ? 0 : val,
+      centro: inv.Centro_distribucion || inv.CENTRO_DISTRIBUCION || 'Bodega Principal',
+    };
+  };
 
   // --------------------------------------------------------------------------
   // CÁLCULO DE GALONES ESTIMADOS (35 m² por galón a dos manos)
@@ -510,6 +531,9 @@ export const ClientRequestModal: React.FC = () => {
         Proyecto_ID: projectResult.proyectoId,
         items: itemsPayload,
       });
+
+      // Requirement 4: Actualizar Estado_proyecto en PROYECTO a 'En cotización'
+      await updateEstadoProyectoEnSupabase(projectResult.proyectoId, 'En cotización');
 
       setCotizacionResult(res);
       // Avanzar al Paso 5: Resumen final
@@ -1208,6 +1232,8 @@ export const ClientRequestModal: React.FC = () => {
                       const unitPrice = selectedProd ? getProdPrecio(selectedProd) : 0;
                       const cant = Number(line.Cantidad_requerida) || 0;
                       const subtotal = cant * unitPrice;
+                      const stockInfo = getStockInfo(line.ID_de_producto);
+                      const isOverStock = cant > stockInfo.stock;
 
                       return (
                         <tr key={line.id} className="hover:bg-slate-50/50">
@@ -1227,12 +1253,34 @@ export const ClientRequestModal: React.FC = () => {
                               ))}
                             </select>
                             {selectedProd && (
-                              <div className="text-[10px] text-slate-400 mt-1 flex items-center gap-2">
-                                <span>ID_de_producto: {selectedProd.ID_DE_PRODUCTO}</span>
-                                <span>•</span>
-                                <span>Tipo: {getProdTipo(selectedProd)}</span>
-                                <span>•</span>
-                                <span>Unidad: {selectedProd.Unidad_medida || 'Galón'}</span>
+                              <div className="text-[10px] text-slate-500 mt-1 space-y-1">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <span>ID_de_producto: {selectedProd.ID_DE_PRODUCTO}</span>
+                                  <span>•</span>
+                                  <span>Tipo: {getProdTipo(selectedProd)}</span>
+                                  <span>•</span>
+                                  <span
+                                    className={`inline-flex items-center gap-1 font-bold px-2 py-0.5 rounded-md ${
+                                      stockInfo.stock > 0
+                                        ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                                        : 'bg-rose-50 text-rose-800 border border-rose-200'
+                                    }`}
+                                  >
+                                    <Package className="w-3 h-3 text-emerald-600" />
+                                    <span>
+                                      Stock disponible: <strong className="font-mono">{stockInfo.stock}</strong> ({stockInfo.centro})
+                                    </span>
+                                  </span>
+                                </div>
+
+                                {isOverStock && (
+                                  <div className="p-2 rounded-xl bg-amber-50 border border-amber-300 text-amber-950 flex items-start gap-1.5 font-medium animate-in fade-in">
+                                    <AlertTriangle className="w-3.5 h-3.5 text-amber-600 shrink-0 mt-0.5" />
+                                    <span>
+                                      ⚠️ <strong>¡Alerta de Inventario!</strong> La cantidad pedida ({cant}) supera el Stock_disponible ({stockInfo.stock} en {stockInfo.centro}). Se requerirá reposición o traslado.
+                                    </span>
+                                  </div>
+                                )}
                               </div>
                             )}
                           </td>
@@ -1460,7 +1508,47 @@ export const ClientRequestModal: React.FC = () => {
                   Crear Otra Solicitud
                 </button>
 
-                <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+                <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-end">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsRequestModalOpen(false);
+                      setSelectedRequestForDetail({
+                        id: `PROJ-${projectResult.proyectoId}`,
+                        dbProjectId: projectResult.proyectoId,
+                        requestNumber: `PROY-${projectResult.proyectoId}`,
+                        projectName: `Proyecto #${projectResult.proyectoId} - ${ciudad} (${tipoProyecto})`,
+                        createdAt: new Date().toLocaleDateString('es-CO'),
+                        clientName: nombre,
+                        clientEmail: correo,
+                        clientPhone: telefono,
+                        city: ciudad,
+                        channel: 'web',
+                        surfaceType: 'mamposteria',
+                        areaSqMeters: Number(areaM2) || 140,
+                        environment: 'interior',
+                        finish: 'mate',
+                        selectedColorName: color,
+                        selectedColorHex: '#1B2A6B',
+                        urgencyDays: 5,
+                        recommendedProductId: 'prod-1',
+                        recommendedProductName: availableProducts[0] ? getProdNombre(availableProducts[0]) : 'Pintura Pintuco',
+                        recommendedCoats: 2,
+                        coveragePerGallon: 35,
+                        gallonsNeeded: Number(galonesEstimados) || 4,
+                        suggestedBuckets: 1,
+                        suggestedIndividualGallons: 0,
+                        primerRequiredGallons: 0,
+                        estimatedPriceCOP: totalCotizacionCalculado,
+                        status: 'servicio',
+                      });
+                    }}
+                    className="w-full sm:w-auto px-4 py-2.5 bg-[#2FAE6D] hover:bg-[#27995f] text-white rounded-xl text-xs font-bold transition-all cursor-pointer shadow-md flex items-center justify-center gap-1.5 active:scale-95"
+                  >
+                    <ShieldCheck className="w-4 h-4" />
+                    <span>Gestionar Servicio & Evidencias</span>
+                  </button>
+
                   <button
                     type="button"
                     onClick={() => {

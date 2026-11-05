@@ -35,12 +35,12 @@ export const ProcessAccessSection: React.FC<ProcessAccessSectionProps> = ({
     {
       id: 'solucion_tecnica',
       number: '02',
-      title: 'Simulador & Solución Técnica',
-      description: 'Simula colores en fotos reales de fachada, sala, cuarto y oficina.',
+      title: 'Solución & Especificación Técnica',
+      description: 'Evaluación técnica de superficies, compatibilidad y rendimiento de manos.',
       icon: Sliders,
       color: 'from-emerald-600 to-teal-600',
       badgeColor: 'bg-emerald-100 text-emerald-800',
-      btnText: 'Abrir Simulador de Color',
+      btnText: 'Ver Solución Técnica',
       action: 'modal',
     },
     {

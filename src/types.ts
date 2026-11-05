@@ -198,10 +198,36 @@ export interface PaintRequest {
   servicePostSale?: ServicePostSale;
 }
 
+export interface CartItem {
+  id: string;
+  productId: string;
+  sku: string;
+  name: string;
+  category: string;
+  colorName: string;
+  colorHex: string;
+  presentation: 'Cuarto (1/4 Gal)' | 'Galón' | 'Cuñete (5 Gal)';
+  gallonsPerUnit: number;
+  pricePerUnitCOP: number;
+  quantity: number;
+  image?: string;
+}
+
+export interface BotParsedAction {
+  type: 'NAVIGATE_TO' | 'SEARCH_PRODUCT' | 'ADD_TO_CART';
+  path?: string;
+  query?: string;
+  sku?: string;
+  quantity?: number;
+  rawText: string;
+}
+
 export interface ChatMessage {
   id: string;
   sender: 'user' | 'assistant' | 'system';
   text: string;
   timestamp: string;
   suggestedActions?: { label: string; actionType: string; payload?: any }[];
+  parsedActions?: BotParsedAction[];
+  productCards?: PaintProduct[];
 }

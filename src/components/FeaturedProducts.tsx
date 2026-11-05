@@ -239,14 +239,6 @@ export const FeaturedProducts: React.FC = () => {
             {/* Quick Actions */}
             <div className="flex flex-wrap items-center gap-2.5">
               <button
-                onClick={() => setActiveView('simulator')}
-                className="px-4 py-2.5 bg-gradient-to-r from-[#1B2A6B] to-[#142154] hover:from-[#142154] text-white rounded-xl font-bold text-xs sm:text-sm flex items-center gap-2 shadow-xs cursor-pointer transition-all"
-              >
-                <Sparkles className="w-4 h-4 text-emerald-400" />
-                <span>Simulador 3D en Fotos</span>
-              </button>
-
-              <button
                 onClick={() => setIsRequestModalOpen(true)}
                 className="px-4 py-2.5 bg-[#2FAE6D] hover:bg-[#27995f] text-white rounded-xl font-bold text-xs sm:text-sm flex items-center gap-2 shadow-xs cursor-pointer transition-all"
               >
@@ -532,27 +524,15 @@ export const FeaturedProducts: React.FC = () => {
                         <span>Abrir Producto (Colores & Cuidados)</span>
                       </button>
 
-                      <div className="grid grid-cols-2 gap-2">
-                        <button
-                          type="button"
-                          onClick={() => setActiveView('simulator')}
-                          className="py-2 bg-emerald-50 hover:bg-emerald-100 text-[#2FAE6D] rounded-xl font-bold text-xs flex items-center justify-center gap-1 transition-colors cursor-pointer border border-emerald-200"
-                          title="Simular en Fotografías"
-                        >
-                          <Sparkles className="w-3.5 h-3.5 text-[#2FAE6D]" />
-                          <span>Simular 3D</span>
-                        </button>
-
-                        <button
-                          id={`calc-prod-btn-${product.id}`}
-                          onClick={() => handleCalculateWithProduct(product)}
-                          className="py-2 bg-[#2FAE6D] hover:bg-[#27995f] text-white rounded-xl font-bold text-xs flex items-center justify-center gap-1 shadow-2xs transition-all cursor-pointer active:scale-95"
-                          title="Cotizar Proyecto por Metros Cuadrados"
-                        >
-                          <Calculator className="w-3.5 h-3.5" />
-                          <span>Cotizar m²</span>
-                        </button>
-                      </div>
+                      <button
+                        id={`calc-prod-btn-${product.id}`}
+                        onClick={() => handleCalculateWithProduct(product)}
+                        className="w-full py-2 bg-[#2FAE6D] hover:bg-[#27995f] text-white rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 shadow-2xs transition-all cursor-pointer active:scale-95"
+                        title="Cotizar Proyecto por Metros Cuadrados"
+                      >
+                        <Calculator className="w-3.5 h-3.5" />
+                        <span>Cotizar m²</span>
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -634,13 +614,6 @@ export const FeaturedProducts: React.FC = () => {
                             >
                               <Eye className="w-3.5 h-3.5 inline mr-1 text-[#1B2A6B]" />
                               <span>Abrir</span>
-                            </button>
-                            <button
-                              onClick={() => setActiveView('simulator')}
-                              className="p-1.5 text-emerald-700 hover:bg-emerald-50 rounded-lg transition-colors cursor-pointer border border-emerald-200"
-                              title="Simular en Fotos"
-                            >
-                              <Sparkles className="w-3.5 h-3.5" />
                             </button>
                             <button
                               onClick={() => handleCalculateWithProduct(p)}
@@ -782,16 +755,6 @@ export const FeaturedProducts: React.FC = () => {
                       />
                       <span className="font-bold text-slate-900">Tono Seleccionado: {selectedModalColor}</span>
                     </div>
-                    <button
-                      onClick={() => {
-                        setActiveProductModal(null);
-                        setActiveView('simulator');
-                      }}
-                      className="text-xs font-bold text-[#2FAE6D] hover:underline flex items-center gap-1 cursor-pointer"
-                    >
-                      <Sparkles className="w-3 h-3" />
-                      <span>Probar en simulador 3D</span>
-                    </button>
                   </div>
                 )}
               </div>
@@ -922,17 +885,6 @@ export const FeaturedProducts: React.FC = () => {
               </div>
 
               <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setActiveProductModal(null);
-                    setActiveView('simulator');
-                  }}
-                  className="px-4 py-2.5 bg-emerald-50 hover:bg-emerald-100 text-[#2FAE6D] rounded-xl font-bold text-xs sm:text-sm flex items-center gap-1.5 border border-emerald-200 cursor-pointer transition-colors"
-                >
-                  <Sparkles className="w-4 h-4" />
-                  <span>Simular en 3D</span>
-                </button>
                 <button
                   type="button"
                   onClick={() => handleCalculateWithProduct(activeProductModal)}
