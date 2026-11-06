@@ -1,0 +1,182 @@
+[
+  {
+    "id": "verde_menta_claro",
+    "name": "Verde Menta Luminoso",
+    "code": "PIN-V01",
+    "family": "Verdes & Frescura",
+    "hex": "#CEEDDC",
+    "image": "/assets/simulator/exterior_variations/verde_menta_claro.jpg",
+    "description": "Verde menta exterior fresco y luminoso; gran luminosidad diurna y realce arquitectónico."
+  },
+  {
+    "id": "verde_salvia",
+    "name": "Verde Salvia Nórdico",
+    "code": "PIN-V02",
+    "family": "Verdes & Frescura",
+    "hex": "#869B76",
+    "image": "/assets/simulator/exterior_variations/verde_salvia.jpg",
+    "description": "Verde salvia orgánico; armoniza perfectamente con jardines y vegetación frontal."
+  },
+  {
+    "id": "verde_bosque",
+    "name": "Verde Bosque Profundo",
+    "code": "PIN-V03",
+    "family": "Verdes & Frescura",
+    "hex": "#204530",
+    "image": "/assets/simulator/exterior_variations/verde_bosque.jpg",
+    "description": "Verde bosque intenso; volumen exterior contemporáneo de alto contraste."
+  },
+  {
+    "id": "verde_oliva",
+    "name": "Verde Oliva Elegante",
+    "code": "PIN-V04",
+    "family": "Verdes & Frescura",
+    "hex": "#4A502E",
+    "image": "/assets/simulator/exterior_variations/verde_oliva.jpg",
+    "description": "Verde oliva natural y sobrio; carácter artesanal y sofisticación exterior."
+  },
+  {
+    "id": "azul_celeste",
+    "name": "Azul Celeste Cielo",
+    "code": "PIN-A01",
+    "family": "Azules & Serenidad",
+    "hex": "#9CDBF1",
+    "image": "/assets/simulator/exterior_variations/azul_celeste.jpg",
+    "description": "Azul celeste costero; proyecta amplitud, frescura y estilo náutico moderno."
+  },
+  {
+    "id": "azul_lavanda_sereno",
+    "name": "Azul Lavanda Sereno",
+    "code": "PIN-A02",
+    "family": "Azules & Serenidad",
+    "hex": "#8D9AC6",
+    "image": "/assets/simulator/exterior_variations/azul_lavanda_sereno.jpg",
+    "description": "Azul lavanda suave; serenidad y distinción exterior sobria."
+  },
+  {
+    "id": "azul_rey_cobalto",
+    "name": "Azul Rey Cobalto",
+    "code": "PIN-A03",
+    "family": "Azules & Serenidad",
+    "hex": "#1B4778",
+    "image": "/assets/simulator/exterior_variations/azul_rey_cobalto.jpg",
+    "description": "Azul cobalto vivo; contraste enérgico y moderno con molduras blancas."
+  },
+  {
+    "id": "azul_marino_profundo",
+    "name": "Azul Marino Profundo",
+    "code": "PIN-A04",
+    "family": "Azules & Serenidad",
+    "hex": "#172131",
+    "image": "/assets/simulator/exterior_variations/azul_marino_profundo.jpg",
+    "description": "Azul marino profundo; elegancia atemporal de gran prestancia y sobriedad."
+  },
+  {
+    "id": "rosa_pastel",
+    "name": "Rosa Pastel Suave",
+    "code": "PIN-R01",
+    "family": "Rosas & Púrpuras",
+    "hex": "#F2CDCF",
+    "image": "/assets/simulator/exterior_variations/rosa_pastel.jpg",
+    "description": "Rosa pastel romántico; calidez luminosa y estética vintage contemporánea."
+  },
+  {
+    "id": "coral_romantico",
+    "name": "Coral Romántico",
+    "code": "PIN-R02",
+    "family": "Rosas & Púrpuras",
+    "hex": "#E2877C",
+    "image": "/assets/simulator/exterior_variations/coral_romantico.jpg",
+    "description": "Coral cálido vibrante; alegría y luminosidad mediterránea en fachada."
+  },
+  {
+    "id": "borgona_vino",
+    "name": "Borgoña Vino Tinto",
+    "code": "PIN-R03",
+    "family": "Rosas & Púrpuras",
+    "hex": "#592B33",
+    "image": "/assets/simulator/exterior_variations/borgona_vino.jpg",
+    "description": "Borgoña vino intenso; estética victoriana sobria y presencia arquitectónica fuerte."
+  },
+  {
+    "id": "purpura_amatista",
+    "name": "Púrpura Amatista",
+    "code": "PIN-R04",
+    "family": "Rosas & Púrpuras",
+    "hex": "#8E6A9A",
+    "image": "/assets/simulator/exterior_variations/purpura_amatista.jpg",
+    "description": "Púrpura amatista refinado; personalidad moderna y vanguardista en exteriores."
+  },
+  {
+    "id": "amarillo_mantequilla",
+    "name": "Amarillo Mantequilla Suave",
+    "code": "PIN-C01",
+    "family": "Cálidos & Tierras",
+    "hex": "#EFE3AF",
+    "image": "/assets/simulator/exterior_variations/amarillo_mantequilla.jpg",
+    "description": "Amarillo mantequilla cálido; invita a la bienvenida con luminosidad acogedora."
+  },
+  {
+    "id": "ocre_mostaza",
+    "name": "Ocre Mostaza Cálido",
+    "code": "PIN-C02",
+    "family": "Cálidos & Tierras",
+    "hex": "#C68832",
+    "image": "/assets/simulator/exterior_variations/ocre_mostaza.jpg",
+    "description": "Mostaza ocre colonial; solidez, tradición y calidez visual de gran personalidad."
+  },
+  {
+    "id": "rojo_colonial",
+    "name": "Rojo Colonial Profundo",
+    "code": "PIN-C03",
+    "family": "Cálidos & Tierras",
+    "hex": "#542B2F",
+    "image": "/assets/simulator/exterior_variations/rojo_colonial.jpg",
+    "description": "Rojo teja colonial; acento clásico y señorial de alta durabilidad visual."
+  },
+  {
+    "id": "terracota_arcilla",
+    "name": "Terracota Arcilla",
+    "code": "PIN-C04",
+    "family": "Cálidos & Tierras",
+    "hex": "#A15632",
+    "image": "/assets/simulator/exterior_variations/terracota_arcilla.jpg",
+    "description": "Terracota rústico y artesanal; textura terrosa que realza el entorno natural."
+  },
+  {
+    "id": "blanco_puro",
+    "name": "Blanco Puro Luminoso",
+    "code": "PIN-N01",
+    "family": "Blancos, Grises & Neutros",
+    "hex": "#EDEFEB",
+    "image": "/assets/simulator/exterior_variations/blanco_puro.jpg",
+    "description": "Blanco puro de alta reflectancia; máxima limpieza, amplitud y elegancia colonial."
+  },
+  {
+    "id": "gris_lino",
+    "name": "Gris Lino Claro",
+    "code": "PIN-N02",
+    "family": "Blancos, Grises & Neutros",
+    "hex": "#A5A5A5",
+    "image": "/assets/simulator/exterior_variations/gris_lino.jpg",
+    "description": "Gris perla lino; sobriedad contemporánea y fácil combinación de materiales."
+  },
+  {
+    "id": "gris_urbano",
+    "name": "Gris Urbano Contemporáneo",
+    "code": "PIN-N03",
+    "family": "Blancos, Grises & Neutros",
+    "hex": "#595D57",
+    "image": "/assets/simulator/exterior_variations/gris_urbano.jpg",
+    "description": "Gris carbón medio; neutralidad moderna ideal para arquitectura contemporánea."
+  },
+  {
+    "id": "negro_ebano",
+    "name": "Negro Ébano Grafito",
+    "code": "PIN-N04",
+    "family": "Blancos, Grises & Neutros",
+    "hex": "#282A24",
+    "image": "/assets/simulator/exterior_variations/negro_ebano.jpg",
+    "description": "Negro grafito y antracita; máxima sofisticación y contraste dramático con molduras."
+  }
+]

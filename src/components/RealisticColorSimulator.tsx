@@ -71,25 +71,25 @@ export const ROOM_SCENARIOS: RoomScenario[] = [
     id: 'exterior_casa',
     name: 'Exterior de Casa',
     category: 'Exterior',
-    description: 'Fachada frontal bicapa con volúmenes arquitectónicos y vanos de ventanería.',
+    description: 'Fachada frontal moderna con porche de columnas blancas, zócalo de ladrillo, ventanales y jardín exterior.',
     surfaceType: 'Fachada Exterior / Concreto y Pañete',
     recommendedProduct: 'Koraza 5® Máxima Protección Exterior',
     imageSrc: '/assets/simulator/exterior_casa.jpg',
     maskSrc: '/assets/simulator/exterior_casa_mask.png',
-    aspectRatio: '464 / 382',
-    accentTip: 'Excelente repelencia al agua de lluvia, rayos UV y polución urbana.',
+    aspectRatio: '702 / 382',
+    accentTip: '20 variaciones fotorrealistas con techo, columnas, ventanas, puerta, zócalo de ladrillo y jardín 100% aislados e intactos.',
   },
   {
     id: 'oficina',
     name: 'Oficina',
     category: 'Interior',
-    description: 'Muro posterior de trabajo y pared de acento junto a biblioteca y escritorio.',
+    description: 'Oficina ejecutiva con ventanales panorámicos de esquina, escritorio gerencial, biblioteca y sillón de cuero.',
     surfaceType: 'Muros / Yeso / Drywall',
-    recommendedProduct: 'Viniltex Satinado® o Mate Profesional',
+    recommendedProduct: 'Viniltex Avanzado® o Satinado Profesional',
     imageSrc: '/assets/simulator/oficina.jpg',
     maskSrc: '/assets/simulator/oficina_mask.png',
-    aspectRatio: '466 / 382',
-    accentTip: 'Ideal para fondos de videollamada profesionales con alta fidelidad cromática.',
+    aspectRatio: '702 / 382',
+    accentTip: '20 variaciones fotorrealistas con ventanales, escritorios, computadores, biblioteca, puertas y escultura 100% aislados e intactos.',
   },
 ];
 
@@ -114,7 +114,7 @@ export const SALA_WALL_COLORS: RealWallColor[] = [
     name: 'Verde Menta Luminoso',
     code: 'PIN-V01',
     family: 'Verdes & Frescura',
-    hex: '#DCF5EF',
+    hex: '#DDF4EC',
     image: '/assets/simulator/sala_variations/verde_menta_claro.jpg',
     description: 'Tono menta pastel muy luminoso y fresco; maximiza la entrada de luz natural.',
   },
@@ -123,7 +123,7 @@ export const SALA_WALL_COLORS: RealWallColor[] = [
     name: 'Verde Salvia Nórdico',
     code: 'PIN-V02',
     family: 'Verdes & Frescura',
-    hex: '#B1C5AC',
+    hex: '#B1C1A7',
     image: '/assets/simulator/sala_variations/verde_salvia.jpg',
     description: 'Verde salvia orgánico de tendencia; aporta serenidad, equilibrio y confort visual.',
   },
@@ -132,7 +132,7 @@ export const SALA_WALL_COLORS: RealWallColor[] = [
     name: 'Verde Bosque Profundo',
     code: 'PIN-V03',
     family: 'Verdes & Frescura',
-    hex: '#2F5442',
+    hex: '#2F5543',
     image: '/assets/simulator/sala_variations/verde_bosque.jpg',
     description: 'Verde esmeralda oscuro de acento arquitectónico; alto contraste con maderas claras.',
   },
@@ -141,7 +141,7 @@ export const SALA_WALL_COLORS: RealWallColor[] = [
     name: 'Verde Oliva Elegante',
     code: 'PIN-V04',
     family: 'Verdes & Frescura',
-    hex: '#444E35',
+    hex: '#424A33',
     image: '/assets/simulator/sala_variations/verde_oliva.jpg',
     description: 'Verde militar y oliva refinado con matices cálidos; sofisticado y contemporáneo.',
   },
@@ -152,7 +152,7 @@ export const SALA_WALL_COLORS: RealWallColor[] = [
     name: 'Azul Celeste Cielo',
     code: 'PIN-A01',
     family: 'Azules & Serenidad',
-    hex: '#A7DEFC',
+    hex: '#A7DFFA',
     image: '/assets/simulator/sala_variations/azul_celeste.jpg',
     description: 'Azul cielo limpio y vibrante; genera sensación de amplitud y cielo abierto.',
   },
@@ -161,16 +161,16 @@ export const SALA_WALL_COLORS: RealWallColor[] = [
     name: 'Azul Lavanda Sereno',
     code: 'PIN-A02',
     family: 'Azules & Serenidad',
-    hex: '#9FB3D6',
+    hex: '#9FB1D4',
     image: '/assets/simulator/sala_variations/azul_lavanda_sereno.jpg',
-    description: 'Azul lavanda grisáceo muy suave; perfecto para zonas de relajación y lectura.',
+    description: 'Azul lavanda suave y sereno; calma visual y relajación para zonas de estar.',
   },
   {
     id: 'azul_rey_cobalto',
     name: 'Azul Rey Cobalto',
     code: 'PIN-A03',
     family: 'Azules & Serenidad',
-    hex: '#254C83',
+    hex: '#255087',
     image: '/assets/simulator/sala_variations/azul_rey_cobalto.jpg',
     description: 'Azul cobalto intenso de gran carácter; resalta molduras y muebles neutros.',
   },
@@ -179,7 +179,7 @@ export const SALA_WALL_COLORS: RealWallColor[] = [
     name: 'Azul Marino Profundo',
     code: 'PIN-A04',
     family: 'Azules & Serenidad',
-    hex: '#1D2E48',
+    hex: '#1F314A',
     image: '/assets/simulator/sala_variations/azul_marino_profundo.jpg',
     description: 'Azul noche profundo; transmite elegancia sobria, lujo y profundidad espacial.',
   },
@@ -190,7 +190,7 @@ export const SALA_WALL_COLORS: RealWallColor[] = [
     name: 'Rosa Pastel Suave',
     code: 'PIN-R01',
     family: 'Rosas & Púrpuras',
-    hex: '#FDD9DD',
+    hex: '#FBD5D8',
     image: '/assets/simulator/sala_variations/rosa_pastel.jpg',
     description: 'Rosa pálido aterciopelado; aporta calidez delicada sin saturar el ambiente.',
   },
@@ -199,7 +199,7 @@ export const SALA_WALL_COLORS: RealWallColor[] = [
     name: 'Coral Romántico',
     code: 'PIN-R02',
     family: 'Rosas & Púrpuras',
-    hex: '#CF8181',
+    hex: '#D28083',
     image: '/assets/simulator/sala_variations/coral_romantico.jpg',
     description: 'Rosa terracota y coral suave; combina calidez moderna y luminosidad acogedora.',
   },
@@ -208,7 +208,7 @@ export const SALA_WALL_COLORS: RealWallColor[] = [
     name: 'Borgoña Vino Tinto',
     code: 'PIN-R03',
     family: 'Rosas & Púrpuras',
-    hex: '#532F3D',
+    hex: '#552D3E',
     image: '/assets/simulator/sala_variations/borgona_vino.jpg',
     description: 'Vino tinto profundo y suntuoso; ideal para muros de acento de alto impacto.',
   },
@@ -217,7 +217,7 @@ export const SALA_WALL_COLORS: RealWallColor[] = [
     name: 'Púrpura Amatista',
     code: 'PIN-R04',
     family: 'Rosas & Púrpuras',
-    hex: '#8A6994',
+    hex: '#8A6996',
     image: '/assets/simulator/sala_variations/purpura_amatista.jpg',
     description: 'Púrpura mineral equilibrado; estimula la creatividad y personalidad del espacio.',
   },
@@ -228,7 +228,7 @@ export const SALA_WALL_COLORS: RealWallColor[] = [
     name: 'Amarillo Mantequilla Suave',
     code: 'PIN-C01',
     family: 'Cálidos & Tierras',
-    hex: '#FFF6B1',
+    hex: '#FDF3A9',
     image: '/assets/simulator/sala_variations/amarillo_mantequilla.jpg',
     description: 'Amarillo suave y solar; ilumina espacios con poca entrada de luz exterior.',
   },
@@ -237,7 +237,7 @@ export const SALA_WALL_COLORS: RealWallColor[] = [
     name: 'Ocre Mostaza Cálido',
     code: 'PIN-C02',
     family: 'Cálidos & Tierras',
-    hex: '#F4B663',
+    hex: '#F5B45D',
     image: '/assets/simulator/sala_variations/ocre_mostaza.jpg',
     description: 'Ocre dorado energizante; calidez artesanal que resalta pisos de madera clara.',
   },
@@ -255,7 +255,7 @@ export const SALA_WALL_COLORS: RealWallColor[] = [
     name: 'Terracota Arcilla',
     code: 'PIN-C04',
     family: 'Cálidos & Tierras',
-    hex: '#90451D',
+    hex: '#8D451C',
     image: '/assets/simulator/sala_variations/terracota_arcilla.jpg',
     description: 'Tierra cocida mediterránea y artesanal; textura cálida de gran arraigo visual.',
   },
@@ -266,7 +266,7 @@ export const SALA_WALL_COLORS: RealWallColor[] = [
     name: 'Blanco Puro Luminoso',
     code: 'PIN-N01',
     family: 'Blancos, Grises & Neutros',
-    hex: '#F2F4F3',
+    hex: '#F3F3F3',
     image: '/assets/simulator/sala_variations/blanco_puro.jpg',
     description: 'Blanco arquitectónico neutro; máxima reflectancia lumínica y pureza visual.',
   },
@@ -275,7 +275,7 @@ export const SALA_WALL_COLORS: RealWallColor[] = [
     name: 'Gris Lino Claro',
     code: 'PIN-N02',
     family: 'Blancos, Grises & Neutros',
-    hex: '#C7C5C8',
+    hex: '#C8C8CA',
     image: '/assets/simulator/sala_variations/gris_lino.jpg',
     description: 'Gris muy claro con destellos cálidos; base neutral ideal para diseño escandinavo.',
   },
@@ -293,7 +293,7 @@ export const SALA_WALL_COLORS: RealWallColor[] = [
     name: 'Negro Ébano Grafito',
     code: 'PIN-N04',
     family: 'Blancos, Grises & Neutros',
-    hex: '#363636',
+    hex: '#3C3C3E',
     image: '/assets/simulator/sala_variations/negro_ebano.jpg',
     description: 'Grafito oscuro de estética industrial; drama visual y modernismo sobrio.',
   },
@@ -310,7 +310,7 @@ export const COCINA_WALL_COLORS: RealWallColor[] = [
     name: 'Verde Menta Luminoso',
     code: 'PIN-V01',
     family: 'Verdes & Frescura',
-    hex: '#D6F4EA',
+    hex: '#DDF0EA',
     image: '/assets/simulator/cocina_variations/verde_menta_claro.jpg',
     description: 'Tono menta fresco y luminoso; ideal para cocinas modernas con luz natural.',
   },
@@ -319,7 +319,7 @@ export const COCINA_WALL_COLORS: RealWallColor[] = [
     name: 'Verde Salvia Nórdico',
     code: 'PIN-V02',
     family: 'Verdes & Frescura',
-    hex: '#9FB495',
+    hex: '#A4B799',
     image: '/assets/simulator/cocina_variations/verde_salvia.jpg',
     description: 'Verde salvia orgánico; armoniza perfectamente con gabinetes blancos y madera.',
   },
@@ -328,7 +328,7 @@ export const COCINA_WALL_COLORS: RealWallColor[] = [
     name: 'Verde Bosque Profundo',
     code: 'PIN-V03',
     family: 'Verdes & Frescura',
-    hex: '#325444',
+    hex: '#2D5441',
     image: '/assets/simulator/cocina_variations/verde_bosque.jpg',
     description: 'Verde esmeralda profundo; contraste premium con mesones y electrodomésticos.',
   },
@@ -337,7 +337,7 @@ export const COCINA_WALL_COLORS: RealWallColor[] = [
     name: 'Verde Oliva Elegante',
     code: 'PIN-V04',
     family: 'Verdes & Frescura',
-    hex: '#455238',
+    hex: '#454D35',
     image: '/assets/simulator/cocina_variations/verde_oliva.jpg',
     description: 'Verde oliva contemporáneo con matices cálidos; sofisticado y acogedor.',
   },
@@ -348,7 +348,7 @@ export const COCINA_WALL_COLORS: RealWallColor[] = [
     name: 'Azul Celeste Cielo',
     code: 'PIN-A01',
     family: 'Azules & Serenidad',
-    hex: '#ABE3FE',
+    hex: '#AFE1F8',
     image: '/assets/simulator/cocina_variations/azul_celeste.jpg',
     description: 'Azul cielo limpio y vibrante; aporta frescura y sensación de amplitud.',
   },
@@ -357,7 +357,7 @@ export const COCINA_WALL_COLORS: RealWallColor[] = [
     name: 'Azul Lavanda Sereno',
     code: 'PIN-A02',
     family: 'Azules & Serenidad',
-    hex: '#95A9CC',
+    hex: '#9AACD2',
     image: '/assets/simulator/cocina_variations/azul_lavanda_sereno.jpg',
     description: 'Azul lavanda suave; serenidad y equilibrio para el corazón del hogar.',
   },
@@ -366,7 +366,7 @@ export const COCINA_WALL_COLORS: RealWallColor[] = [
     name: 'Azul Rey Cobalto',
     code: 'PIN-A03',
     family: 'Azules & Serenidad',
-    hex: '#254E84',
+    hex: '#234C84',
     image: '/assets/simulator/cocina_variations/azul_rey_cobalto.jpg',
     description: 'Azul cobalto intenso; gran impacto visual en muros de cocina.',
   },
@@ -375,7 +375,7 @@ export const COCINA_WALL_COLORS: RealWallColor[] = [
     name: 'Azul Marino Profundo',
     code: 'PIN-A04',
     family: 'Azules & Serenidad',
-    hex: '#213349',
+    hex: '#1D2E48',
     image: '/assets/simulator/cocina_variations/azul_marino_profundo.jpg',
     description: 'Azul noche sofisticado; lujo moderno con gabinetes y cuarzo blanco.',
   },
@@ -386,7 +386,7 @@ export const COCINA_WALL_COLORS: RealWallColor[] = [
     name: 'Rosa Pastel Suave',
     code: 'PIN-R01',
     family: 'Rosas & Púrpuras',
-    hex: '#F8D1D4',
+    hex: '#FBD7DB',
     image: '/assets/simulator/cocina_variations/rosa_pastel.jpg',
     description: 'Rosa suave y cálido; añade un toque de luminosidad pastel acogedora.',
   },
@@ -395,7 +395,7 @@ export const COCINA_WALL_COLORS: RealWallColor[] = [
     name: 'Coral Romántico',
     code: 'PIN-R02',
     family: 'Rosas & Púrpuras',
-    hex: '#D18683',
+    hex: '#D88985',
     image: '/assets/simulator/cocina_variations/coral_romantico.jpg',
     description: 'Coral terracota vibrante; estimula el apetito y la calidez familiar.',
   },
@@ -404,7 +404,7 @@ export const COCINA_WALL_COLORS: RealWallColor[] = [
     name: 'Borgoña Vino Tinto',
     code: 'PIN-R03',
     family: 'Rosas & Púrpuras',
-    hex: '#512F3F',
+    hex: '#502D41',
     image: '/assets/simulator/cocina_variations/borgona_vino.jpg',
     description: 'Vino tinto profundo; carácter gourmet de alta cocina europea.',
   },
@@ -413,7 +413,7 @@ export const COCINA_WALL_COLORS: RealWallColor[] = [
     name: 'Púrpura Amatista',
     code: 'PIN-R04',
     family: 'Rosas & Púrpuras',
-    hex: '#9372A1',
+    hex: '#936EA4',
     image: '/assets/simulator/cocina_variations/purpura_amatista.jpg',
     description: 'Púrpura amatista refinado; personalidad creativa y distinción culinaria.',
   },
@@ -424,7 +424,7 @@ export const COCINA_WALL_COLORS: RealWallColor[] = [
     name: 'Amarillo Mantequilla Suave',
     code: 'PIN-C01',
     family: 'Cálidos & Tierras',
-    hex: '#F9F0AF',
+    hex: '#FBEFBF',
     image: '/assets/simulator/cocina_variations/amarillo_mantequilla.jpg',
     description: 'Amarillo cálido y solar; maximiza la luz matutina en la cocina.',
   },
@@ -433,7 +433,7 @@ export const COCINA_WALL_COLORS: RealWallColor[] = [
     name: 'Ocre Mostaza Cálido',
     code: 'PIN-C02',
     family: 'Cálidos & Tierras',
-    hex: '#D29135',
+    hex: '#D78F2D',
     image: '/assets/simulator/cocina_variations/ocre_mostaza.jpg',
     description: 'Ocre dorado energizante; calidez artesanal y estilo rústico moderno.',
   },
@@ -442,7 +442,7 @@ export const COCINA_WALL_COLORS: RealWallColor[] = [
     name: 'Rojo Colonial Profundo',
     code: 'PIN-C03',
     family: 'Cálidos & Tierras',
-    hex: '#562B34',
+    hex: '#5C2A36',
     image: '/assets/simulator/cocina_variations/rojo_colonial.jpg',
     description: 'Rojo colonial clásico; tradición gastronómica y energía vibrante.',
   },
@@ -451,7 +451,7 @@ export const COCINA_WALL_COLORS: RealWallColor[] = [
     name: 'Terracota Arcilla',
     code: 'PIN-C04',
     family: 'Cálidos & Tierras',
-    hex: '#934F2C',
+    hex: '#924E2B',
     image: '/assets/simulator/cocina_variations/terracota_arcilla.jpg',
     description: 'Tierra cocida mediterránea; estilo toscano rústico y acogedor.',
   },
@@ -462,7 +462,7 @@ export const COCINA_WALL_COLORS: RealWallColor[] = [
     name: 'Blanco Puro Luminoso',
     code: 'PIN-N01',
     family: 'Blancos, Grises & Neutros',
-    hex: '#EFEFEF',
+    hex: '#F2F2F0',
     image: '/assets/simulator/cocina_variations/blanco_puro.jpg',
     description: 'Blanco arquitectónico puro; máxima higiene visual, amplitud y luminosidad.',
   },
@@ -471,7 +471,7 @@ export const COCINA_WALL_COLORS: RealWallColor[] = [
     name: 'Gris Lino Claro',
     code: 'PIN-N02',
     family: 'Blancos, Grises & Neutros',
-    hex: '#B7B9B8',
+    hex: '#B9B9BB',
     image: '/assets/simulator/cocina_variations/gris_lino.jpg',
     description: 'Gris neutro luminoso; base contemporánea perfecta para cocinas minimalistas.',
   },
@@ -480,7 +480,7 @@ export const COCINA_WALL_COLORS: RealWallColor[] = [
     name: 'Gris Urbano Contemporáneo',
     code: 'PIN-N03',
     family: 'Blancos, Grises & Neutros',
-    hex: '#535456',
+    hex: '#646263',
     image: '/assets/simulator/cocina_variations/gris_urbano.jpg',
     description: 'Gris medio de alta elegancia; contraste sobrio con blanco y madera clara.',
   },
@@ -489,7 +489,7 @@ export const COCINA_WALL_COLORS: RealWallColor[] = [
     name: 'Negro Ébano Grafito',
     code: 'PIN-N04',
     family: 'Blancos, Grises & Neutros',
-    hex: '#242323',
+    hex: '#2D2D2F',
     image: '/assets/simulator/cocina_variations/negro_ebano.jpg',
     description: 'Negro grafito de vanguardia; estética industrial moderna de alto nivel.',
   },
@@ -691,7 +691,401 @@ export const HABITACION_WALL_COLORS: RealWallColor[] = [
   },
 ];
 
+/**
+ * 20 COLORES REALES DE MURO DE LAS IMÁGENES PARA FACHADA / EXTERIOR DE CASA
+ * Cada color corresponde exactamente al color de la pared de cada imagen
+ */
+export const EXTERIOR_WALL_COLORS: RealWallColor[] = [
+  // 1. Verdes & Frescura
+  {
+    id: 'verde_menta_claro',
+    name: 'Verde Menta Luminoso',
+    code: 'PIN-V01',
+    family: 'Verdes & Frescura',
+    hex: '#CEEDDC',
+    image: '/assets/simulator/exterior_variations/verde_menta_claro.jpg',
+    description: 'Verde menta exterior fresco y luminoso; gran luminosidad diurna y realce arquitectónico.',
+  },
+  {
+    id: 'verde_salvia',
+    name: 'Verde Salvia Nórdico',
+    code: 'PIN-V02',
+    family: 'Verdes & Frescura',
+    hex: '#869B76',
+    image: '/assets/simulator/exterior_variations/verde_salvia.jpg',
+    description: 'Verde salvia orgánico; armoniza perfectamente con jardines y vegetación frontal.',
+  },
+  {
+    id: 'verde_bosque',
+    name: 'Verde Bosque Profundo',
+    code: 'PIN-V03',
+    family: 'Verdes & Frescura',
+    hex: '#204530',
+    image: '/assets/simulator/exterior_variations/verde_bosque.jpg',
+    description: 'Verde bosque intenso; volumen exterior contemporáneo de alto contraste.',
+  },
+  {
+    id: 'verde_oliva',
+    name: 'Verde Oliva Elegante',
+    code: 'PIN-V04',
+    family: 'Verdes & Frescura',
+    hex: '#4A502E',
+    image: '/assets/simulator/exterior_variations/verde_oliva.jpg',
+    description: 'Verde oliva natural y sobrio; carácter artesanal y sofisticación exterior.',
+  },
+
+  // 2. Azules & Serenidad
+  {
+    id: 'azul_celeste',
+    name: 'Azul Celeste Cielo',
+    code: 'PIN-A01',
+    family: 'Azules & Serenidad',
+    hex: '#9CDBF1',
+    image: '/assets/simulator/exterior_variations/azul_celeste.jpg',
+    description: 'Azul celeste costero; proyecta amplitud, frescura y estilo náutico moderno.',
+  },
+  {
+    id: 'azul_lavanda_sereno',
+    name: 'Azul Lavanda Sereno',
+    code: 'PIN-A02',
+    family: 'Azules & Serenidad',
+    hex: '#8D9AC6',
+    image: '/assets/simulator/exterior_variations/azul_lavanda_sereno.jpg',
+    description: 'Azul lavanda suave; serenidad y distinción exterior sobria.',
+  },
+  {
+    id: 'azul_rey_cobalto',
+    name: 'Azul Rey Cobalto',
+    code: 'PIN-A03',
+    family: 'Azules & Serenidad',
+    hex: '#1B4778',
+    image: '/assets/simulator/exterior_variations/azul_rey_cobalto.jpg',
+    description: 'Azul cobalto vivo; contraste enérgico y moderno con molduras blancas.',
+  },
+  {
+    id: 'azul_marino_profundo',
+    name: 'Azul Marino Profundo',
+    code: 'PIN-A04',
+    family: 'Azules & Serenidad',
+    hex: '#172131',
+    image: '/assets/simulator/exterior_variations/azul_marino_profundo.jpg',
+    description: 'Azul marino profundo; elegancia atemporal de gran prestancia y sobriedad.',
+  },
+
+  // 3. Rosas & Púrpuras
+  {
+    id: 'rosa_pastel',
+    name: 'Rosa Pastel Suave',
+    code: 'PIN-R01',
+    family: 'Rosas & Púrpuras',
+    hex: '#F2CDCF',
+    image: '/assets/simulator/exterior_variations/rosa_pastel.jpg',
+    description: 'Rosa pastel romántico; calidez luminosa y estética vintage contemporánea.',
+  },
+  {
+    id: 'coral_romantico',
+    name: 'Coral Romántico',
+    code: 'PIN-R02',
+    family: 'Rosas & Púrpuras',
+    hex: '#E2877C',
+    image: '/assets/simulator/exterior_variations/coral_romantico.jpg',
+    description: 'Coral cálido vibrante; alegría y luminosidad mediterránea en fachada.',
+  },
+  {
+    id: 'borgona_vino',
+    name: 'Borgoña Vino Tinto',
+    code: 'PIN-R03',
+    family: 'Rosas & Púrpuras',
+    hex: '#592B33',
+    image: '/assets/simulator/exterior_variations/borgona_vino.jpg',
+    description: 'Borgoña vino intenso; estética victoriana sobria y presencia arquitectónica fuerte.',
+  },
+  {
+    id: 'purpura_amatista',
+    name: 'Púrpura Amatista',
+    code: 'PIN-R04',
+    family: 'Rosas & Púrpuras',
+    hex: '#8E6A9A',
+    image: '/assets/simulator/exterior_variations/purpura_amatista.jpg',
+    description: 'Púrpura amatista refinado; personalidad moderna y vanguardista en exteriores.',
+  },
+
+  // 4. Cálidos & Tierras
+  {
+    id: 'amarillo_mantequilla',
+    name: 'Amarillo Mantequilla Suave',
+    code: 'PIN-C01',
+    family: 'Cálidos & Tierras',
+    hex: '#EFE3AF',
+    image: '/assets/simulator/exterior_variations/amarillo_mantequilla.jpg',
+    description: 'Amarillo mantequilla cálido; invita a la bienvenida con luminosidad acogedora.',
+  },
+  {
+    id: 'ocre_mostaza',
+    name: 'Ocre Mostaza Cálido',
+    code: 'PIN-C02',
+    family: 'Cálidos & Tierras',
+    hex: '#C68832',
+    image: '/assets/simulator/exterior_variations/ocre_mostaza.jpg',
+    description: 'Mostaza ocre colonial; solidez, tradición y calidez visual de gran personalidad.',
+  },
+  {
+    id: 'rojo_colonial',
+    name: 'Rojo Colonial Profundo',
+    code: 'PIN-C03',
+    family: 'Cálidos & Tierras',
+    hex: '#542B2F',
+    image: '/assets/simulator/exterior_variations/rojo_colonial.jpg',
+    description: 'Rojo teja colonial; acento clásico y señorial de alta durabilidad visual.',
+  },
+  {
+    id: 'terracota_arcilla',
+    name: 'Terracota Arcilla',
+    code: 'PIN-C04',
+    family: 'Cálidos & Tierras',
+    hex: '#A15632',
+    image: '/assets/simulator/exterior_variations/terracota_arcilla.jpg',
+    description: 'Terracota rústico y artesanal; textura terrosa que realza el entorno natural.',
+  },
+
+  // 5. Blancos, Grises & Neutros
+  {
+    id: 'blanco_puro',
+    name: 'Blanco Puro Luminoso',
+    code: 'PIN-N01',
+    family: 'Blancos, Grises & Neutros',
+    hex: '#EDEFEB',
+    image: '/assets/simulator/exterior_variations/blanco_puro.jpg',
+    description: 'Blanco puro de alta reflectancia; máxima limpieza, amplitud y elegancia colonial.',
+  },
+  {
+    id: 'gris_lino',
+    name: 'Gris Lino Claro',
+    code: 'PIN-N02',
+    family: 'Blancos, Grises & Neutros',
+    hex: '#A5A5A5',
+    image: '/assets/simulator/exterior_variations/gris_lino.jpg',
+    description: 'Gris perla lino; sobriedad contemporánea y fácil combinación de materiales.',
+  },
+  {
+    id: 'gris_urbano',
+    name: 'Gris Urbano Contemporáneo',
+    code: 'PIN-N03',
+    family: 'Blancos, Grises & Neutros',
+    hex: '#595D57',
+    image: '/assets/simulator/exterior_variations/gris_urbano.jpg',
+    description: 'Gris carbón medio; neutralidad moderna ideal para arquitectura contemporánea.',
+  },
+  {
+    id: 'negro_ebano',
+    name: 'Negro Ébano Grafito',
+    code: 'PIN-N04',
+    family: 'Blancos, Grises & Neutros',
+    hex: '#282A24',
+    image: '/assets/simulator/exterior_variations/negro_ebano.jpg',
+    description: 'Negro grafito y antracita; máxima sofisticación y contraste dramático con molduras.',
+  },
+];
+
+/**
+ * 20 COLORES REALES DE MURO DE LAS IMÁGENES PARA OFICINA
+ * Cada color corresponde exactamente al color de la pared de cada imagen
+ */
+export const OFICINA_WALL_COLORS: RealWallColor[] = [
+  // 1. Verdes & Frescura
+  {
+    id: 'verde_menta_claro',
+    name: 'Verde Menta Luminoso',
+    code: 'PIN-V01',
+    family: 'Verdes & Frescura',
+    hex: '#A9C7BD',
+    image: '/assets/simulator/oficina_variations/verde_menta_claro.jpg',
+    description: 'Verde menta corporativo fresco y luminoso; estimula la concentración y el bienestar laboral.',
+  },
+  {
+    id: 'verde_salvia',
+    name: 'Verde Salvia Nórdico',
+    code: 'PIN-V02',
+    family: 'Verdes & Frescura',
+    hex: '#8E9E84',
+    image: '/assets/simulator/oficina_variations/verde_salvia.jpg',
+    description: 'Verde salvia refinado; aporta calma visual y equilibrio en oficinas gerenciales.',
+  },
+  {
+    id: 'verde_bosque',
+    name: 'Verde Bosque Profundo',
+    code: 'PIN-V03',
+    family: 'Verdes & Frescura',
+    hex: '#1E504D',
+    image: '/assets/simulator/oficina_variations/verde_bosque.jpg',
+    description: 'Verde bosque imponente; muro de acento de alta jerarquía y distinción ejecutiva.',
+  },
+  {
+    id: 'verde_oliva',
+    name: 'Verde Oliva Elegante',
+    code: 'PIN-V04',
+    family: 'Verdes & Frescura',
+    hex: '#1E3B29',
+    image: '/assets/simulator/oficina_variations/verde_oliva.jpg',
+    description: 'Verde oliva contemporáneo; elegancia sobria que combina con maderas oscuras.',
+  },
+
+  // 2. Azules & Serenidad
+  {
+    id: 'azul_celeste',
+    name: 'Azul Celeste Cielo',
+    code: 'PIN-A01',
+    family: 'Azules & Serenidad',
+    hex: '#A7D9EA',
+    image: '/assets/simulator/oficina_variations/azul_celeste.jpg',
+    description: 'Azul celeste energizante; claridad mental y sensación de amplitud panorámica.',
+  },
+  {
+    id: 'azul_lavanda_sereno',
+    name: 'Azul Lavanda Sereno',
+    code: 'PIN-A02',
+    family: 'Azules & Serenidad',
+    hex: '#95A8D6',
+    image: '/assets/simulator/oficina_variations/azul_lavanda_sereno.jpg',
+    description: 'Azul lavanda balanceado; tranquilidad y enfoque analítico en jornadas intensas.',
+  },
+  {
+    id: 'azul_rey_cobalto',
+    name: 'Azul Rey Cobalto',
+    code: 'PIN-A03',
+    family: 'Azules & Serenidad',
+    hex: '#033F85',
+    image: '/assets/simulator/oficina_variations/azul_rey_cobalto.jpg',
+    description: 'Azul cobalto de alta energía; confianza corporativa, dinamismo y liderazgo.',
+  },
+  {
+    id: 'azul_marino_profundo',
+    name: 'Azul Marino Profundo',
+    code: 'PIN-A04',
+    family: 'Azules & Serenidad',
+    hex: '#38475A',
+    image: '/assets/simulator/oficina_variations/azul_marino_profundo.jpg',
+    description: 'Azul marino ejecutivo; sobriedad directiva, máxima elegancia y prestigio.',
+  },
+
+  // 3. Rosas & Púrpuras
+  {
+    id: 'rosa_pastel',
+    name: 'Rosa Pastel Suave',
+    code: 'PIN-R01',
+    family: 'Rosas & Púrpuras',
+    hex: '#DDB4BA',
+    image: '/assets/simulator/oficina_variations/rosa_pastel.jpg',
+    description: 'Rosa empolvado cálido; creatividad, diseño vanguardista y confort acústico-visual.',
+  },
+  {
+    id: 'coral_romantico',
+    name: 'Coral Romántico',
+    code: 'PIN-R02',
+    family: 'Rosas & Púrpuras',
+    hex: '#CE7267',
+    image: '/assets/simulator/oficina_variations/coral_romantico.jpg',
+    description: 'Coral estimulante; entusiasmo, dinamismo e innovación para espacios creativos.',
+  },
+  {
+    id: 'borgona_vino',
+    name: 'Borgoña Vino Tinto',
+    code: 'PIN-R03',
+    family: 'Rosas & Púrpuras',
+    hex: '#441923',
+    image: '/assets/simulator/oficina_variations/borgona_vino.jpg',
+    description: 'Borgoña señorial; presencia ejecutiva sólida con gran calidez premium.',
+  },
+  {
+    id: 'purpura_amatista',
+    name: 'Púrpura Amatista',
+    code: 'PIN-R04',
+    family: 'Rosas & Púrpuras',
+    hex: '#765987',
+    image: '/assets/simulator/oficina_variations/purpura_amatista.jpg',
+    description: 'Púrpura amatista creativo; distinción intelectual y carácter contemporáneo.',
+  },
+
+  // 4. Cálidos & Tierras
+  {
+    id: 'amarillo_mantequilla',
+    name: 'Amarillo Mantequilla Suave',
+    code: 'PIN-C01',
+    family: 'Cálidos & Tierras',
+    hex: '#E2D8A8',
+    image: '/assets/simulator/oficina_variations/amarillo_mantequilla.jpg',
+    description: 'Amarillo suave luminoso; optimismo diurno y claridad lumínica en oficinas.',
+  },
+  {
+    id: 'ocre_mostaza',
+    name: 'Ocre Mostaza Cálido',
+    code: 'PIN-C02',
+    family: 'Cálidos & Tierras',
+    hex: '#AD701F',
+    image: '/assets/simulator/oficina_variations/ocre_mostaza.jpg',
+    description: 'Ocre mostaza corporativo; calidez y solidez que destacan mobiliario ejecutivo.',
+  },
+  {
+    id: 'rojo_colonial',
+    name: 'Rojo Colonial Profundo',
+    code: 'PIN-C03',
+    family: 'Cálidos & Tierras',
+    hex: '#401820',
+    image: '/assets/simulator/oficina_variations/rojo_colonial.jpg',
+    description: 'Rojo terracota colonial; fuerza arquitectónica, dinamismo y decisión.',
+  },
+  {
+    id: 'terracota_arcilla',
+    name: 'Terracota Arcilla',
+    code: 'PIN-C04',
+    family: 'Cálidos & Tierras',
+    hex: '#96492B',
+    image: '/assets/simulator/oficina_variations/terracota_arcilla.jpg',
+    description: 'Terracota cálido artesanal; confort visual terroso para ambientes colaborativos.',
+  },
+
+  // 5. Blancos, Grises & Neutros
+  {
+    id: 'blanco_puro',
+    name: 'Blanco Puro Luminoso',
+    code: 'PIN-N01',
+    family: 'Blancos, Grises & Neutros',
+    hex: '#D1D4D3',
+    image: '/assets/simulator/oficina_variations/blanco_puro.jpg',
+    description: 'Blanco puro arquitectónico; máxima reflectancia de luz en oficinas ejecutivas.',
+  },
+  {
+    id: 'gris_lino',
+    name: 'Gris Lino Claro',
+    code: 'PIN-N02',
+    family: 'Blancos, Grises & Neutros',
+    hex: '#B6B9C0',
+    image: '/assets/simulator/oficina_variations/gris_lino.jpg',
+    description: 'Gris lino neutro; base atemporal que realza escritorios y ventanales.',
+  },
+  {
+    id: 'gris_urbano',
+    name: 'Gris Urbano Contemporáneo',
+    code: 'PIN-N03',
+    family: 'Blancos, Grises & Neutros',
+    hex: '#505251',
+    image: '/assets/simulator/oficina_variations/gris_urbano.jpg',
+    description: 'Gris urbano medio; sobriedad tecnológica y elegancia corporativa.',
+  },
+  {
+    id: 'negro_ebano',
+    name: 'Negro Ébano Grafito',
+    code: 'PIN-N04',
+    family: 'Blancos, Grises & Neutros',
+    hex: '#161F28',
+    image: '/assets/simulator/oficina_variations/negro_ebano.jpg',
+    description: 'Negro grafito ejecutivo; sofisticación máxima y contraste con ventanales.',
+  },
+];
+
 export const getScenarioWallColors = (scenarioId: string): RealWallColor[] => {
+  if (scenarioId === 'oficina') return OFICINA_WALL_COLORS;
+  if (scenarioId === 'exterior_casa') return EXTERIOR_WALL_COLORS;
   if (scenarioId === 'habitacion') return HABITACION_WALL_COLORS;
   if (scenarioId === 'cocina') return COCINA_WALL_COLORS;
   return SALA_WALL_COLORS;
@@ -759,10 +1153,16 @@ export const RealisticColorSimulator: React.FC = () => {
     const baseImg = new Image();
     baseImg.crossOrigin = 'anonymous';
 
-    // Para Sala de Estar, Cocina y Habitación:
+    // Para todos los escenarios (Sala de Estar, Cocina, Habitación, Exterior de Casa y Oficina):
     // Si showOriginal está activo, dibuja la foto base original blanca.
     // Si showOriginal es falso, dibuja la foto de alta fidelidad de la variación seleccionada.
-    if (selectedScenario.id === 'sala_de_estar' || selectedScenario.id === 'cocina' || selectedScenario.id === 'habitacion') {
+    if (
+      selectedScenario.id === 'sala_de_estar' ||
+      selectedScenario.id === 'cocina' ||
+      selectedScenario.id === 'habitacion' ||
+      selectedScenario.id === 'exterior_casa' ||
+      selectedScenario.id === 'oficina'
+    ) {
       baseImg.src = showOriginal ? selectedScenario.imageSrc : selectedColor.image;
 
       baseImg.onload = () => {
@@ -894,10 +1294,10 @@ export const RealisticColorSimulator: React.FC = () => {
               <span className="w-9 h-9 rounded-2xl bg-[#2FAE6D] text-white flex items-center justify-center shrink-0 shadow-xs">
                 <Sparkles className="w-5 h-5" />
               </span>
-              <span>Simulador Arquitectónico de Color Pintuco®</span>
+              <span>Simulador de Color</span>
             </h1>
             <p className="text-xs sm:text-sm text-slate-500 mt-1 max-w-2xl leading-relaxed">
-              Selecciona el color de pared que deseas probar. El sofá, mesa, tapete, pisos, ventanas y accesorios permanecen 100% intactos con sus sombras y luces originales.
+              Selecciona el espacio y el color de pared que deseas probar. Muebles, pisos, ventanas, electrodomésticos y techos permanecen 100% intactos con sus sombras y luces originales.
             </p>
           </div>
 
@@ -936,7 +1336,7 @@ export const RealisticColorSimulator: React.FC = () => {
                 <span>1. Espacio Seleccionado para Simulación</span>
               </h2>
               <p className="text-xs text-slate-600 mt-0.5">
-                En la <strong>Sala de Estar</strong>, <strong>Cocina</strong> y <strong>Habitación</strong> dispones de las <strong>20 imágenes fotorrealistas</strong> correspondientes a cada color exacto de pared.
+                En los 5 espacios (<strong>Sala de Estar</strong>, <strong>Cocina</strong>, <strong>Habitación</strong>, <strong>Exterior de Casa</strong> y <strong>Oficina</strong>) dispones de las <strong>20 imágenes fotorrealistas</strong> correspondientes a cada color exacto de pared.
               </p>
             </div>
             <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200">
@@ -968,7 +1368,9 @@ export const RealisticColorSimulator: React.FC = () => {
                           ? '/assets/simulator/cocina_variations/verde_menta_claro.jpg'
                           : scenario.id === 'habitacion'
                           ? '/assets/simulator/habitacion_variations/verde_menta_claro.jpg'
-                          : scenario.imageSrc
+                          : scenario.id === 'exterior_casa'
+                          ? '/assets/simulator/exterior_variations/verde_menta_claro.jpg'
+                          : '/assets/simulator/oficina_variations/verde_menta_claro.jpg'
                       }
                       alt={scenario.name}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
@@ -978,11 +1380,9 @@ export const RealisticColorSimulator: React.FC = () => {
                         <Check className="w-3.5 h-3.5 stroke-3" />
                       </div>
                     )}
-                    {(scenario.id === 'sala_de_estar' || scenario.id === 'cocina' || scenario.id === 'habitacion') && (
-                      <span className="absolute top-2 left-2 px-1.5 py-0.5 rounded text-[9px] font-black bg-emerald-600 text-white shadow-xs">
-                        20 Tonos Reales
-                      </span>
-                    )}
+                    <span className="absolute top-2 left-2 px-1.5 py-0.5 rounded text-[9px] font-black bg-emerald-600 text-white shadow-xs">
+                      20 Tonos Reales
+                    </span>
                     <span className="absolute bottom-2 left-2 px-2 py-0.5 rounded text-[10px] font-bold bg-slate-900/80 text-white backdrop-blur-xs">
                       {scenario.category}
                     </span>
@@ -1222,7 +1622,7 @@ export const RealisticColorSimulator: React.FC = () => {
               <h2 className="text-sm font-black text-slate-900 flex items-center gap-2">
                 <Palette className="w-4 h-4 text-[#2FAE6D]" />
                 <span>
-                  Catálogo Completo de las 5 Gamas de Color en {selectedScenario.id === 'cocina' ? 'Cocina' : selectedScenario.id === 'habitacion' ? 'Habitación' : 'Sala de Estar'}
+                  Catálogo Completo de las 5 Gamas de Color en {selectedScenario.id === 'oficina' ? 'Oficina' : selectedScenario.id === 'exterior_casa' ? 'Fachada Exterior' : selectedScenario.id === 'habitacion' ? 'Habitación' : selectedScenario.id === 'cocina' ? 'Cocina' : 'Sala de Estar'}
                 </span>
               </h2>
               <p className="text-xs text-slate-500 mt-0.5">
@@ -1235,7 +1635,73 @@ export const RealisticColorSimulator: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-            {(selectedScenario.id === 'habitacion'
+            {(selectedScenario.id === 'oficina'
+              ? [
+                  {
+                    title: 'Gama Verdes & Frescura',
+                    file: '/assets/aistudio/Gemini_Generated_Image_xsjt7vxsjt7vxsjt_da212566.jpeg',
+                    tones: ['Menta', 'Salvia', 'Bosque', 'Oliva'],
+                    firstColorId: 'verde_menta_claro',
+                  },
+                  {
+                    title: 'Gama Azules & Serenidad',
+                    file: '/assets/aistudio/Gemini_Generated_Image_qnwyslqnwyslqnwy_35c12f20.jpeg',
+                    tones: ['Celeste', 'Lavanda', 'Cobalto', 'Marino'],
+                    firstColorId: 'azul_marino_profundo',
+                  },
+                  {
+                    title: 'Gama Rosas & Púrpuras',
+                    file: '/assets/aistudio/Gemini_Generated_Image_v1rdtav1rdtav1rd_f57e1007.jpeg',
+                    tones: ['Pastel', 'Coral', 'Borgoña', 'Púrpura'],
+                    firstColorId: 'rosa_pastel',
+                  },
+                  {
+                    title: 'Gama Cálidos & Tierras',
+                    file: '/assets/aistudio/Gemini_Generated_Image_dj6pewdj6pewdj6p_19f16a58.jpeg',
+                    tones: ['Mantequilla', 'Mostaza', 'Colonial', 'Terracota'],
+                    firstColorId: 'terracota_arcilla',
+                  },
+                  {
+                    title: 'Gama Neutros & Grafito',
+                    file: '/assets/aistudio/Gemini_Generated_Image_y6wkvky6wkvky6wk_f33aa226.jpeg',
+                    tones: ['Blanco', 'Lino', 'Gris Urbano', 'Ébano'],
+                    firstColorId: 'gris_urbano',
+                  },
+                ]
+              : selectedScenario.id === 'exterior_casa'
+              ? [
+                  {
+                    title: 'Gama Verdes & Frescura',
+                    file: '/assets/aistudio/Gemini_Generated_Image_u3lr06u3lr06u3lr_f5cdabe7.jpeg',
+                    tones: ['Menta', 'Salvia', 'Bosque', 'Oliva'],
+                    firstColorId: 'verde_menta_claro',
+                  },
+                  {
+                    title: 'Gama Azules & Serenidad',
+                    file: '/assets/aistudio/Gemini_Generated_Image_8lci6z8lci6z8lci_af77c8d5.jpeg',
+                    tones: ['Celeste', 'Lavanda', 'Cobalto', 'Marino'],
+                    firstColorId: 'azul_marino_profundo',
+                  },
+                  {
+                    title: 'Gama Rosas & Púrpuras',
+                    file: '/assets/aistudio/Gemini_Generated_Image_2jx7hh2jx7hh2jx7_ae72945c.jpeg',
+                    tones: ['Pastel', 'Coral', 'Borgoña', 'Púrpura'],
+                    firstColorId: 'rosa_pastel',
+                  },
+                  {
+                    title: 'Gama Cálidos & Tierras',
+                    file: '/assets/aistudio/Gemini_Generated_Image_6fo31q6fo31q6fo3_c5a18de8.jpeg',
+                    tones: ['Mantequilla', 'Mostaza', 'Colonial', 'Terracota'],
+                    firstColorId: 'terracota_arcilla',
+                  },
+                  {
+                    title: 'Gama Neutros & Grafito',
+                    file: '/assets/aistudio/Gemini_Generated_Image_sq7geksq7geksq7g_d6124a83.jpeg',
+                    tones: ['Blanco', 'Lino', 'Gris Urbano', 'Ébano'],
+                    firstColorId: 'gris_urbano',
+                  },
+                ]
+              : selectedScenario.id === 'habitacion'
               ? [
                   {
                     title: 'Gama Verdes & Frescura',
@@ -1272,31 +1738,31 @@ export const RealisticColorSimulator: React.FC = () => {
               ? [
                   {
                     title: 'Gama Verdes & Menta',
-                    file: '/assets/aistudio/Gemini_Generated_Image_9pjd5s9pjd5s9pjd_ac7f1e98.jpeg',
+                    file: '/assets/aistudio/Gemini_Generated_Image_hzktafhzktafhzkt_71bbdca3.jpeg',
                     tones: ['Menta', 'Salvia', 'Bosque', 'Oliva'],
                     firstColorId: 'verde_menta_claro',
                   },
                   {
                     title: 'Gama Azules & Serenidad',
-                    file: '/assets/aistudio/Gemini_Generated_Image_390tpr390tpr390t_d8b232a3.jpeg',
+                    file: '/assets/aistudio/Gemini_Generated_Image_unvixyunvixyunvi_0d78985c.jpeg',
                     tones: ['Celeste', 'Lavanda', 'Cobalto', 'Marino'],
                     firstColorId: 'azul_marino_profundo',
                   },
                   {
                     title: 'Gama Rosas & Púrpuras',
-                    file: '/assets/aistudio/Gemini_Generated_Image_twhlr0twhlr0twhl_f49a80b7.jpeg',
+                    file: '/assets/aistudio/Gemini_Generated_Image_62b2bx62b2bx62b2_e6b6cb32.jpeg',
                     tones: ['Pastel', 'Coral', 'Borgoña', 'Púrpura'],
                     firstColorId: 'rosa_pastel',
                   },
                   {
                     title: 'Gama Cálidos & Tierras',
-                    file: '/assets/aistudio/Gemini_Generated_Image_gfffmjgfffmjgfff_addbaa80.jpeg',
+                    file: '/assets/aistudio/Gemini_Generated_Image_iw0j4miw0j4miw0j_d7eb36c5.jpeg',
                     tones: ['Mantequilla', 'Mostaza', 'Colonial', 'Terracota'],
                     firstColorId: 'terracota_arcilla',
                   },
                   {
                     title: 'Gama Neutros & Grafito',
-                    file: '/assets/aistudio/Gemini_Generated_Image_5dt0tg5dt0tg5dt0_241ef644.jpeg',
+                    file: '/assets/aistudio/Gemini_Generated_Image_w6eghew6eghew6eg_5e2289b6.jpeg',
                     tones: ['Blanco', 'Lino', 'Gris Urbano', 'Ébano'],
                     firstColorId: 'gris_urbano',
                   },
@@ -1304,31 +1770,31 @@ export const RealisticColorSimulator: React.FC = () => {
               : [
                   {
                     title: 'Gama Verdes & Menta',
-                    file: '/assets/aistudio/Gemini_Generated_Image_h0otsth0otsth0ot_03ec4492.jpeg',
+                    file: '/assets/aistudio/Gemini_Generated_Image_1kd07x1kd07x1kd0_88ab3e78.jpeg',
                     tones: ['Menta', 'Salvia', 'Bosque', 'Oliva'],
                     firstColorId: 'verde_menta_claro',
                   },
                   {
                     title: 'Gama Azules & Serenidad',
-                    file: '/assets/aistudio/Gemini_Generated_Image_c2py0xc2py0xc2py_7caccba0.jpeg',
+                    file: '/assets/aistudio/Gemini_Generated_Image_s9kefms9kefms9ke_114a0259.jpeg',
                     tones: ['Celeste', 'Lavanda', 'Cobalto', 'Marino'],
                     firstColorId: 'azul_marino_profundo',
                   },
                   {
                     title: 'Gama Rosas & Púrpuras',
-                    file: '/assets/aistudio/Gemini_Generated_Image_ega9ucega9ucega9_329437da.jpeg',
+                    file: '/assets/aistudio/Gemini_Generated_Image_uem4bguem4bguem4_1c43932c.jpeg',
                     tones: ['Pastel', 'Coral', 'Borgoña', 'Púrpura'],
                     firstColorId: 'rosa_pastel',
                   },
                   {
                     title: 'Gama Cálidos & Tierras',
-                    file: '/assets/aistudio/Gemini_Generated_Image_d4megfd4megfd4me_305142ee.jpeg',
+                    file: '/assets/aistudio/Gemini_Generated_Image_pfagxlpfagxlpfag_0dae9964.jpeg',
                     tones: ['Mantequilla', 'Mostaza', 'Colonial', 'Terracota'],
                     firstColorId: 'terracota_arcilla',
                   },
                   {
                     title: 'Gama Neutros & Grafito',
-                    file: '/assets/aistudio/Gemini_Generated_Image_nxwpdmnxwpdmnxwp_ba1ef253.jpeg',
+                    file: '/assets/aistudio/Gemini_Generated_Image_3dlm2i3dlm2i3dlm_7a95916b.jpeg',
                     tones: ['Blanco', 'Lino', 'Gris Urbano', 'Ébano'],
                     firstColorId: 'gris_urbano',
                   },

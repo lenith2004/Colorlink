@@ -232,9 +232,9 @@ export function processPintuBotMessage(userText: string): PintuBotResponse {
     } else if (spaceId === 'habitacion') {
       simulationImageUrl = `/assets/simulator/habitacion_variations/${colorFile}`;
     } else if (spaceId === 'exterior_casa') {
-      simulationImageUrl = '/assets/simulator/exterior_casa.jpg';
+      simulationImageUrl = `/assets/simulator/exterior_variations/${colorFile}`;
     } else if (spaceId === 'oficina') {
-      simulationImageUrl = '/assets/simulator/oficina.jpg';
+      simulationImageUrl = `/assets/simulator/oficina_variations/${colorFile}`;
     }
 
     const navAction = `[ACTION: NAVIGATE_TO("/simulador")]`;

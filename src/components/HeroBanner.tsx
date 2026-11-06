@@ -66,7 +66,7 @@ export const HeroBanner: React.FC = () => {
             className="bg-gradient-to-r from-blue-600 to-[#1B2A6B] hover:from-blue-500 hover:to-[#17245c] text-white px-7 py-3.5 rounded-2xl font-bold text-sm sm:text-base flex items-center gap-2.5 shadow-xl shadow-blue-950/40 border border-white/20 transition-all transform active:scale-98 cursor-pointer ring-2 ring-blue-400/40 hover:shadow-blue-500/25"
           >
             <Sparkles className="w-5 h-5 text-amber-300" />
-            <span>Simulador de Color en Fotos</span>
+            <span>Simulador de Color</span>
             <ArrowRight className="w-4 h-4 ml-0.5" />
           </button>
 

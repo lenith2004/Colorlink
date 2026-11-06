@@ -25,6 +25,7 @@ import {
   Wrench,
   Sparkle,
   Palette,
+  ShoppingCart,
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { PaintProduct } from '../types';
@@ -37,7 +38,7 @@ export interface PresentationPriceItem {
 }
 
 export const FeaturedProducts: React.FC = () => {
-  const { products, searchQuery, setSearchQuery, setIsRequestModalOpen, setActiveView } = useApp();
+  const { products, searchQuery, setSearchQuery, setIsRequestModalOpen, setActiveView, addToCart, setIsCartOpen } = useApp();
   
   const [selectedCategory, setSelectedCategory] = useState<string>('Todos');
   const [selectedSurfaceFilter, setSelectedSurfaceFilter] = useState<string>('all');
@@ -513,7 +514,7 @@ export const FeaturedProducts: React.FC = () => {
                       </div>
                     </div>
 
-                    {/* CARD FOOTER: ABRIR PRODUCTO, COTIZAR Y SIMULAR */}
+                    {/* CARD FOOTER: ABRIR PRODUCTO, COTIZAR Y AÑADIR AL CARRITO */}
                     <div className="pt-3 border-t border-slate-100 space-y-2">
                       <button
                         type="button"
@@ -524,15 +525,39 @@ export const FeaturedProducts: React.FC = () => {
                         <span>Abrir Producto (Colores & Cuidados)</span>
                       </button>
 
-                      <button
-                        id={`calc-prod-btn-${product.id}`}
-                        onClick={() => handleCalculateWithProduct(product)}
-                        className="w-full py-2 bg-[#2FAE6D] hover:bg-[#27995f] text-white rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 shadow-2xs transition-all cursor-pointer active:scale-95"
-                        title="Cotizar Proyecto por Metros Cuadrados"
-                      >
-                        <Calculator className="w-3.5 h-3.5" />
-                        <span>Cotizar m²</span>
-                      </button>
+                      <div className="grid grid-cols-2 gap-2">
+                        <button
+                          id={`calc-prod-btn-${product.id}`}
+                          onClick={() => handleCalculateWithProduct(product)}
+                          className="py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer border border-slate-200"
+                          title="Cotizar Proyecto por Metros Cuadrados"
+                        >
+                          <Calculator className="w-3.5 h-3.5 text-[#2FAE6D]" />
+                          <span>Cotizar m²</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            addToCart({
+                              sku: product.code,
+                              name: product.name,
+                              category: product.category,
+                              colorName: product.colors[0] || 'Blanco Almendra',
+                              presentation: 'Galón',
+                              pricePerUnitCOP: product.pricePerGallonCOP,
+                              quantity: 1,
+                              image: product.image,
+                            });
+                            setIsCartOpen(true);
+                          }}
+                          className="py-2 bg-[#2FAE6D] hover:bg-[#27995f] text-white rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 shadow-2xs transition-all cursor-pointer active:scale-95"
+                          title="Añadir 1 Galón al Carrito"
+                        >
+                          <ShoppingCart className="w-3.5 h-3.5" />
+                          <span>Al Carrito</span>
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -885,6 +910,29 @@ export const FeaturedProducts: React.FC = () => {
               </div>
 
               <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    addToCart({
+                      sku: activeProductModal.code,
+                      name: activeProductModal.name,
+                      category: activeProductModal.category,
+                      colorName: selectedModalColor || activeProductModal.colors[0] || 'Blanco Almendra',
+                      presentation: 'Galón',
+                      pricePerUnitCOP: activeProductModal.pricePerGallonCOP,
+                      quantity: 1,
+                      image: activeProductModal.image,
+                    });
+                    setActiveProductModal(null);
+                    setIsCartOpen(true);
+                  }}
+                  className="px-4 py-2.5 bg-indigo-50 hover:bg-indigo-100 text-[#1B2A6B] border border-indigo-200 rounded-xl font-bold text-xs sm:text-sm flex items-center gap-1.5 cursor-pointer transition-all active:scale-95"
+                  title="Añadir al Carrito"
+                >
+                  <ShoppingCart className="w-4 h-4 text-indigo-600" />
+                  <span>Añadir al Carrito</span>
+                </button>
+
                 <button
                   type="button"
                   onClick={() => handleCalculateWithProduct(activeProductModal)}

@@ -141,8 +141,8 @@ export const Header: React.FC = () => {
               <BrandLogo variant="full" theme="light" size="md" />
             </button>
 
-            {/* Direct Quick Links (Catálogo y Simulador) */}
-            <div className="hidden lg:flex items-center gap-1.5 ml-2">
+            {/* Direct Quick Links (Simulador de Color y Catálogo) */}
+            <div className="hidden md:flex items-center gap-1.5 ml-2">
               <button
                 id="header-simulator-btn"
                 onClick={() => setActiveView('simulator')}
@@ -408,10 +408,10 @@ export const Header: React.FC = () => {
         </button>
         <button
           onClick={() => setActiveView('simulator')}
-          className={`text-xs font-semibold px-2 py-1 rounded-lg flex items-center gap-1 ${activeView === 'simulator' ? 'text-[#1B2A6B] bg-blue-50 font-bold' : 'text-slate-600'}`}
+          className={`text-xs font-semibold px-2 py-1 rounded-lg flex items-center gap-1 shrink-0 ${activeView === 'simulator' ? 'text-[#1B2A6B] bg-blue-50 font-bold' : 'text-slate-600'}`}
         >
           <Sparkles className="w-3 h-3 text-[#2FAE6D]" />
-          <span>Simulador</span>
+          <span>Simulador de Color</span>
         </button>
         <button
           onClick={() => setActiveView('products')}

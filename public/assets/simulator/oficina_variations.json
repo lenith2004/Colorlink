@@ -1,0 +1,182 @@
+[
+  {
+    "id": "verde_menta_claro",
+    "name": "Verde Menta Luminoso",
+    "code": "PIN-V01",
+    "family": "Verdes & Frescura",
+    "hex": "#A9C7BD",
+    "image": "/assets/simulator/oficina_variations/verde_menta_claro.jpg",
+    "description": "Verde menta corporativo fresco y luminoso; estimula la concentración y el bienestar laboral."
+  },
+  {
+    "id": "verde_salvia",
+    "name": "Verde Salvia Nórdico",
+    "code": "PIN-V02",
+    "family": "Verdes & Frescura",
+    "hex": "#8E9E84",
+    "image": "/assets/simulator/oficina_variations/verde_salvia.jpg",
+    "description": "Verde salvia refinado; aporta calma visual y equilibrio en oficinas gerenciales."
+  },
+  {
+    "id": "verde_bosque",
+    "name": "Verde Bosque Profundo",
+    "code": "PIN-V03",
+    "family": "Verdes & Frescura",
+    "hex": "#1E504D",
+    "image": "/assets/simulator/oficina_variations/verde_bosque.jpg",
+    "description": "Verde bosque imponente; muro de acento de alta jerarquía y distinción ejecutiva."
+  },
+  {
+    "id": "verde_oliva",
+    "name": "Verde Oliva Elegante",
+    "code": "PIN-V04",
+    "family": "Verdes & Frescura",
+    "hex": "#1E3B29",
+    "image": "/assets/simulator/oficina_variations/verde_oliva.jpg",
+    "description": "Verde oliva contemporáneo; elegancia sobria que combina con maderas oscuras."
+  },
+  {
+    "id": "azul_celeste",
+    "name": "Azul Celeste Cielo",
+    "code": "PIN-A01",
+    "family": "Azules & Serenidad",
+    "hex": "#A7D9EA",
+    "image": "/assets/simulator/oficina_variations/azul_celeste.jpg",
+    "description": "Azul celeste energizante; claridad mental y sensación de amplitud panorámica."
+  },
+  {
+    "id": "azul_lavanda_sereno",
+    "name": "Azul Lavanda Sereno",
+    "code": "PIN-A02",
+    "family": "Azules & Serenidad",
+    "hex": "#95A8D6",
+    "image": "/assets/simulator/oficina_variations/azul_lavanda_sereno.jpg",
+    "description": "Azul lavanda balanceado; tranquilidad y enfoque analítico en jornadas intensas."
+  },
+  {
+    "id": "azul_rey_cobalto",
+    "name": "Azul Rey Cobalto",
+    "code": "PIN-A03",
+    "family": "Azules & Serenidad",
+    "hex": "#033F85",
+    "image": "/assets/simulator/oficina_variations/azul_rey_cobalto.jpg",
+    "description": "Azul cobalto de alta energía; confianza corporativa, dinamismo y liderazgo."
+  },
+  {
+    "id": "azul_marino_profundo",
+    "name": "Azul Marino Profundo",
+    "code": "PIN-A04",
+    "family": "Azules & Serenidad",
+    "hex": "#38475A",
+    "image": "/assets/simulator/oficina_variations/azul_marino_profundo.jpg",
+    "description": "Azul marino ejecutivo; sobriedad directiva, máxima elegancia y prestigio."
+  },
+  {
+    "id": "rosa_pastel",
+    "name": "Rosa Pastel Suave",
+    "code": "PIN-R01",
+    "family": "Rosas & Púrpuras",
+    "hex": "#DDB4BA",
+    "image": "/assets/simulator/oficina_variations/rosa_pastel.jpg",
+    "description": "Rosa empolvado cálido; creatividad, diseño vanguardista y confort acústico-visual."
+  },
+  {
+    "id": "coral_romantico",
+    "name": "Coral Romántico",
+    "code": "PIN-R02",
+    "family": "Rosas & Púrpuras",
+    "hex": "#CE7267",
+    "image": "/assets/simulator/oficina_variations/coral_romantico.jpg",
+    "description": "Coral estimulante; entusiasmo, dinamismo e innovación para espacios creativos."
+  },
+  {
+    "id": "borgona_vino",
+    "name": "Borgoña Vino Tinto",
+    "code": "PIN-R03",
+    "family": "Rosas & Púrpuras",
+    "hex": "#441923",
+    "image": "/assets/simulator/oficina_variations/borgona_vino.jpg",
+    "description": "Borgoña señorial; presencia ejecutiva sólida con gran calidez premium."
+  },
+  {
+    "id": "purpura_amatista",
+    "name": "Púrpura Amatista",
+    "code": "PIN-R04",
+    "family": "Rosas & Púrpuras",
+    "hex": "#765987",
+    "image": "/assets/simulator/oficina_variations/purpura_amatista.jpg",
+    "description": "Púrpura amatista creativo; distinción intelectual y carácter contemporáneo."
+  },
+  {
+    "id": "amarillo_mantequilla",
+    "name": "Amarillo Mantequilla Suave",
+    "code": "PIN-C01",
+    "family": "Cálidos & Tierras",
+    "hex": "#E2D8A8",
+    "image": "/assets/simulator/oficina_variations/amarillo_mantequilla.jpg",
+    "description": "Amarillo suave luminoso; optimismo diurno y claridad lumínica en oficinas."
+  },
+  {
+    "id": "ocre_mostaza",
+    "name": "Ocre Mostaza Cálido",
+    "code": "PIN-C02",
+    "family": "Cálidos & Tierras",
+    "hex": "#AD701F",
+    "image": "/assets/simulator/oficina_variations/ocre_mostaza.jpg",
+    "description": "Ocre mostaza corporativo; calidez y solidez que destacan mobiliario ejecutivo."
+  },
+  {
+    "id": "rojo_colonial",
+    "name": "Rojo Colonial Profundo",
+    "code": "PIN-C03",
+    "family": "Cálidos & Tierras",
+    "hex": "#401820",
+    "image": "/assets/simulator/oficina_variations/rojo_colonial.jpg",
+    "description": "Rojo terracota colonial; fuerza arquitectónica, dinamismo y decisión."
+  },
+  {
+    "id": "terracota_arcilla",
+    "name": "Terracota Arcilla",
+    "code": "PIN-C04",
+    "family": "Cálidos & Tierras",
+    "hex": "#96492B",
+    "image": "/assets/simulator/oficina_variations/terracota_arcilla.jpg",
+    "description": "Terracota cálido artesanal; confort visual terroso para ambientes colaborativos."
+  },
+  {
+    "id": "blanco_puro",
+    "name": "Blanco Puro Luminoso",
+    "code": "PIN-N01",
+    "family": "Blancos, Grises & Neutros",
+    "hex": "#D1D4D3",
+    "image": "/assets/simulator/oficina_variations/blanco_puro.jpg",
+    "description": "Blanco puro arquitectónico; máxima reflectancia de luz en oficinas ejecutivas."
+  },
+  {
+    "id": "gris_lino",
+    "name": "Gris Lino Claro",
+    "code": "PIN-N02",
+    "family": "Blancos, Grises & Neutros",
+    "hex": "#B6B9C0",
+    "image": "/assets/simulator/oficina_variations/gris_lino.jpg",
+    "description": "Gris lino neutro; base atemporal que realza escritorios y ventanales."
+  },
+  {
+    "id": "gris_urbano",
+    "name": "Gris Urbano Contemporáneo",
+    "code": "PIN-N03",
+    "family": "Blancos, Grises & Neutros",
+    "hex": "#505251",
+    "image": "/assets/simulator/oficina_variations/gris_urbano.jpg",
+    "description": "Gris urbano medio; sobriedad tecnológica y elegancia corporativa."
+  },
+  {
+    "id": "negro_ebano",
+    "name": "Negro Ébano Grafito",
+    "code": "PIN-N04",
+    "family": "Blancos, Grises & Neutros",
+    "hex": "#161F28",
+    "image": "/assets/simulator/oficina_variations/negro_ebano.jpg",
+    "description": "Negro grafito ejecutivo; sofisticación máxima y contraste con ventanales."
+  }
+]

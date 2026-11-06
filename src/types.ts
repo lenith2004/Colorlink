@@ -12,6 +12,7 @@ export interface UserProfile {
   docNumber?: string;
   company?: string;
   phone?: string;
+  address?: string;
   avatarUrl?: string;
   city?: string;
   registeredAt?: string;

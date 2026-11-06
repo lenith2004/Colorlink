@@ -15,13 +15,16 @@ import {
   ExternalLink,
   ChevronDown,
   ChevronUp,
+  ShoppingCart,
 } from 'lucide-react';
+import { useApp } from '../context/AppContext';
 
 export interface SupabaseProductoItem {
   [key: string]: any;
 }
 
 export const SupabaseProductsList: React.FC = () => {
+  const { addToCart, setIsCartOpen } = useApp();
   const [products, setProducts] = useState<SupabaseProductoItem[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<{
@@ -426,6 +429,7 @@ export const SupabaseProductsList: React.FC = () => {
                     </div>
                   </th>
                   <th className="py-3 px-3.5 hidden sm:table-cell">Unidad</th>
+                  <th className="py-3 px-3.5 text-right">Comprar</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200/80 bg-white">
@@ -493,6 +497,29 @@ export const SupabaseProductsList: React.FC = () => {
                       {/* Unidad */}
                       <td className="py-3 px-3.5 hidden sm:table-cell text-slate-600 text-xs">
                         {unidad}
+                      </td>
+
+                      {/* Acción: Añadir al Carrito */}
+                      <td className="py-3 px-3.5 text-right">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            addToCart({
+                              sku: String(sku),
+                              name: nombre,
+                              category: tipo,
+                              presentation: unidad,
+                              pricePerUnitCOP: precio || 94900,
+                              quantity: 1,
+                            });
+                            setIsCartOpen(true);
+                          }}
+                          className="px-3 py-1.5 bg-[#2FAE6D] hover:bg-[#27995f] text-white rounded-xl text-xs font-bold inline-flex items-center gap-1.5 shadow-2xs transition-all cursor-pointer active:scale-95"
+                          title="Añadir producto al carrito"
+                        >
+                          <ShoppingCart className="w-3.5 h-3.5" />
+                          <span>Al Carrito</span>
+                        </button>
                       </td>
                     </tr>
                   );

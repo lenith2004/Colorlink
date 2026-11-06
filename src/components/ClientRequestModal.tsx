@@ -1,11 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import {
   X,
-  User,
   Building2,
-  Mail,
-  Phone,
-  CreditCard,
   MapPin,
   Calendar,
   Layers,
@@ -16,7 +12,6 @@ import {
   Database,
   RefreshCw,
   Sparkles,
-  FileCheck2,
   Check,
   Plus,
   Trash2,
@@ -26,6 +21,9 @@ import {
   DollarSign,
   Package,
   ShieldCheck,
+  Copy,
+  FileText,
+  UserCheck,
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import {
@@ -78,135 +76,123 @@ export const ClientRequestModal: React.FC = () => {
     isLoggedIn,
     selectedCity,
     refreshFromSupabase,
-    setSelectedRequestForDetail,
+    addToCart,
+    setIsCartOpen,
+    products: catalogProducts,
   } = useApp();
 
-  // Active step:
-  // 1: Formulario de Cliente (USUARIO)
-  // 2: Formulario de Proyecto (PROYECTO)
-  // 3: Diagnóstico Técnico y Áreas (ESPECIFICACION_TECNICA y AREA)
-  // 4: Cotización de Productos (COTIZACION_DETALLE)
-  // 5: Resumen y Éxito Total
-  const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4 | 5>(1);
+  // NUEVO FLUJO SIN BARRERA DE REGISTRO PREVIO:
+  // Paso 1: Diagnóstico Técnico, Áreas y m² (Cálculo instantáneo de galones)
+  // Paso 2: Selección de Productos & Costos en Vivo (Precios unitarios, subtotal e IVA)
+  // Paso 3: Resumen de Cotización & Acciones (Añadir al Carrito, Proceder a Compra, Copiar, o Guardar en Supabase)
+  const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1);
 
   // --------------------------------------------------------------------------
-  // PASO 1: CLIENTE (USUARIO)
+  // DATOS DEL PROYECTO & ÁREAS (PASO 1)
   // --------------------------------------------------------------------------
-  const [nombre, setNombre] = useState<string>('');
-  const [identificacion, setIdentificacion] = useState<string>('');
-  const [correo, setCorreo] = useState<string>('');
-  const [telefono, setTelefono] = useState<string>('');
-  const [tipoCliente, setTipoCliente] = useState<string>('Constructora');
-  const [clientResult, setClientResult] = useState<SolicitudClienteResult | null>(null);
-  const [isProcessingClient, setIsProcessingClient] = useState<boolean>(false);
-  const [clientStepMessage, setClientStepMessage] = useState<string | null>(null);
-
-  // --------------------------------------------------------------------------
-  // PASO 2: PROYECTO (PROYECTO)
-  // --------------------------------------------------------------------------
-  const [ciudad, setCiudad] = useState<string>(selectedCity || 'Bogotá');
+  const [ciudad, setCiudad] = useState<string>(selectedCity || 'Bogotá D.C.');
   const [tipoProyecto, setTipoProyecto] = useState<string>('Residencial');
-  const [areaM2, setAreaM2] = useState<number | string>(140);
+  const [tipoSuperficie, setTipoSuperficie] = useState<string>('Mampostería / Muros');
+  const [ambiente, setAmbiente] = useState<string>('Interior');
+  const [condicion, setCondicion] = useState<string>('Buena (Repinte Estándar)');
+  const [color, setColor] = useState<string>('Blanco Almendra');
   const [fechaRequerida, setFechaRequerida] = useState<string>(() => {
     const d = new Date();
     d.setDate(d.getDate() + 15);
     return d.toISOString().split('T')[0];
   });
-  const estadoProyecto = 'Nuevo';
-  const [projectResult, setProjectResult] = useState<SolicitudProyectoResult | null>(null);
-  const [isProcessingProject, setIsProcessingProject] = useState<boolean>(false);
 
-  // --------------------------------------------------------------------------
-  // PASO 3: DIAGNÓSTICO TÉCNICO & ÁREAS (ESPECIFICACION_TECNICA y AREA)
-  // --------------------------------------------------------------------------
-  const [tipoSuperficie, setTipoSuperficie] = useState<string>('Mampostería / Muros');
-  const [ambiente, setAmbiente] = useState<string>('Interior');
-  const [condicion, setCondicion] = useState<string>('Buena');
-  const [color, setColor] = useState<string>('Blanco Almendra');
   const [areas, setAreas] = useState<AreaRowState[]>([
-    { id: 'area-1', Descripcion: 'Muros Sala y Comedor', Medida_m2: 95 },
-    { id: 'area-2', Descripcion: 'Habitaciones y Corredores', Medida_m2: 45 },
+    { id: 'area-1', Descripcion: 'Muros Sala y Comedor', Medida_m2: 85 },
+    { id: 'area-2', Descripcion: 'Habitaciones y Pasillos', Medida_m2: 45 },
   ]);
   const [galonesEstimados, setGalonesEstimados] = useState<number | string>(4);
   const [isGalonesManuallyEdited, setIsGalonesManuallyEdited] = useState<boolean>(false);
-  const [specResult, setSpecResult] = useState<SolicitudEspecificacionResult | null>(null);
-  const [isProcessingSpec, setIsProcessingSpec] = useState<boolean>(false);
 
   // --------------------------------------------------------------------------
-  // PASO 4: COTIZACIÓN (COTIZACION_DETALLE, PRODUCTO e INVENTARIO)
+  // PRODUCTOS Y COTIZACIÓN (PASO 2)
   // --------------------------------------------------------------------------
   const [availableProducts, setAvailableProducts] = useState<SupabaseProductItem[]>([]);
   const [inventoryItems, setInventoryItems] = useState<any[]>([]);
   const [isLoadingProducts, setIsLoadingProducts] = useState<boolean>(false);
   const [cotizacionLines, setCotizacionLines] = useState<CotizacionRowState[]>([]);
-  const [cotizacionResult, setCotizacionResult] = useState<SolicitudCotizacionResult | null>(null);
-  const [isProcessingCotizacion, setIsProcessingCotizacion] = useState<boolean>(false);
 
   // --------------------------------------------------------------------------
-  // ERRORES EN PANTALLA
+  // ACCIONES Y RESULTADOS (PASO 3)
   // --------------------------------------------------------------------------
+  const [quotationCode, setQuotationCode] = useState<string>(() => `COT-${Math.floor(100000 + Math.random() * 900000)}`);
+  const [copiedSuccess, setCopiedSuccess] = useState<boolean>(false);
+  const [cartAddedSuccess, setCartAddedSuccess] = useState<boolean>(false);
+
+  // Opcional: Registro formal en Supabase
+  const [isSavingToSupabase, setIsSavingToSupabase] = useState<boolean>(false);
+  const [supabaseSaveSuccess, setSupabaseSaveSuccess] = useState<string | null>(null);
+  const [optionalClientName, setOptionalClientName] = useState<string>(currentUser?.name || '');
+  const [optionalClientDoc, setOptionalClientDoc] = useState<string>(currentUser?.docNumber || '');
+  const [optionalClientEmail, setOptionalClientEmail] = useState<string>(currentUser?.email || '');
+  const [optionalClientPhone, setOptionalClientPhone] = useState<string>(currentUser?.phone || '');
+
+  // Errores
   const [screenError, setScreenError] = useState<{
     step: string;
     message: string;
     details?: string;
-    code?: string;
   } | null>(null);
 
-  // Sincronizar datos de usuario logueado al abrir
+  // Sincronizar ciudad y datos si el usuario ya está logueado
   useEffect(() => {
     if (isRequestModalOpen) {
+      if (selectedCity) setCiudad(selectedCity);
       if (isLoggedIn && currentUser) {
-        if (!nombre) setNombre(currentUser.name || '');
-        if (!correo) setCorreo(currentUser.email || '');
-        if (!telefono && currentUser.phone) setTelefono(currentUser.phone);
-        if (!identificacion && currentUser.idNumber) setIdentificacion(currentUser.idNumber);
-      }
-      if (selectedCity) {
-        setCiudad(selectedCity);
+        if (!optionalClientName) setOptionalClientName(currentUser.name || '');
+        if (!optionalClientDoc) setOptionalClientDoc(currentUser.docNumber || '');
+        if (!optionalClientEmail) setOptionalClientEmail(currentUser.email || '');
+        if (!optionalClientPhone && currentUser.phone) setOptionalClientPhone(currentUser.phone);
       }
     }
   }, [isRequestModalOpen, currentUser, isLoggedIn, selectedCity]);
 
-  // Consultar productos de la tabla PRODUCTO e inventario de INVENTARIO en Supabase
+  // Consultar productos de la tabla PRODUCTO en Supabase
   useEffect(() => {
     if (isRequestModalOpen) {
-      const loadProductsAndInventory = async () => {
+      const loadProducts = async () => {
         setIsLoadingProducts(true);
         try {
           const [prodRes, invRes] = await Promise.all([
             supabase.from('PRODUCTO').select('*'),
             supabase.from('INVENTARIO').select('*'),
           ]);
-          if (!prodRes.error && prodRes.data) {
-            setAvailableProducts(prodRes.data);
+
+          let prods: SupabaseProductItem[] = [];
+          if (!prodRes.error && prodRes.data && prodRes.data.length > 0) {
+            prods = prodRes.data;
+          } else {
+            // Fallback con los productos de catálogo si la tabla estuviese vacía
+            prods = catalogProducts.map((p, idx) => ({
+              ID_DE_PRODUCTO: idx + 1,
+              Nombre_producto: p.name,
+              Precio_unitario: p.pricePerGallonCOP,
+              Tipo_producto: p.category,
+              Unidad_medida: 'Galón',
+              SKU: p.code,
+            }));
           }
+
+          setAvailableProducts(prods);
           if (!invRes.error && invRes.data) {
             setInventoryItems(invRes.data);
           }
         } catch (e) {
-          console.warn('[Error cargando productos o inventario]', e);
+          console.warn('[Error cargando productos]', e);
         } finally {
           setIsLoadingProducts(false);
         }
       };
-      loadProductsAndInventory();
+      loadProducts();
     }
-  }, [isRequestModalOpen]);
+  }, [isRequestModalOpen, catalogProducts]);
 
-  // Helper para obtener Stock_disponible de cada producto desde la tabla INVENTARIO
-  const getStockInfo = (idProducto: number): { stock: number; centro: string } => {
-    const inv = inventoryItems.find((i) => Number(i.ID_de_producto) === Number(idProducto));
-    if (!inv) return { stock: 0, centro: 'Bodega Principal' };
-    const val = Number(inv.Stock_disponible ?? inv.STOCK_DISPONIBLE ?? inv.stock_disponible);
-    return {
-      stock: isNaN(val) ? 0 : val,
-      centro: inv.Centro_distribucion || inv.CENTRO_DISTRIBUCION || 'Bodega Principal',
-    };
-  };
-
-  // --------------------------------------------------------------------------
-  // CÁLCULO DE GALONES ESTIMADOS (35 m² por galón a dos manos)
-  // --------------------------------------------------------------------------
+  // Cálculo de m² totales (suma de áreas)
   const sumaMedidaM2Areas = useMemo(() => {
     return areas.reduce((sum, a) => {
       const val = Number(a.Medida_m2);
@@ -214,31 +200,27 @@ export const ClientRequestModal: React.FC = () => {
     }, 0);
   }, [areas]);
 
-  // Actualizar automáticamente galones_estimados si el usuario no ha forzado edición manual
+  // Actualizar galones estimados automáticamente (35 m² por galón a 2 manos)
   useEffect(() => {
     if (!isGalonesManuallyEdited) {
       if (sumaMedidaM2Areas > 0) {
-        // 35 m² por galón a dos manos
         const calc = Math.round((sumaMedidaM2Areas / 35) * 10) / 10;
         setGalonesEstimados(calc || 1);
       } else {
         setGalonesEstimados(0);
       }
     }
-    // Sincronizar también el área del proyecto si cambia
-    setAreaM2(sumaMedidaM2Areas || 1);
   }, [sumaMedidaM2Areas, isGalonesManuallyEdited]);
 
-  // Preparar líneas iniciales de cotización cuando se pasa al Paso 4
+  // Inicializar líneas de cotización con la cantidad de galones estimados
   useEffect(() => {
-    if (currentStep === 4 && cotizacionLines.length === 0 && availableProducts.length > 0) {
-      // Elegir por defecto el primer producto con la cantidad calculada en galones
-      const defaultProductId = availableProducts[0].ID_DE_PRODUCTO;
+    if (currentStep >= 2 && cotizacionLines.length === 0 && availableProducts.length > 0) {
+      const defaultProdId = availableProducts[0].ID_DE_PRODUCTO;
       const cant = Math.ceil(Number(galonesEstimados) || 1);
       setCotizacionLines([
         {
-          id: 'cot-line-1',
-          ID_de_producto: defaultProductId,
+          id: `cot-line-${Date.now()}`,
+          ID_de_producto: defaultProdId,
           Cantidad_requerida: cant,
         },
       ]);
@@ -261,117 +243,18 @@ export const ClientRequestModal: React.FC = () => {
     return p.Tipo_producto || p.TIPO_PRODUCTO || p.tipo_producto || 'Recubrimiento';
   };
 
-  // Cálculo total de cotización en tiempo real
-  const totalCotizacionCalculado = cotizacionLines.reduce((acc, line) => {
-    const prod = availableProducts.find((p) => p.ID_DE_PRODUCTO === line.ID_de_producto);
+  // Cálculo financiero en tiempo real
+  const subtotalCOP = cotizacionLines.reduce((acc, line) => {
+    const prod = availableProducts.find((p) => p.ID_DE_PRODUCTO === Number(line.ID_de_producto));
     const precio = prod ? getProdPrecio(prod) : 0;
     const cant = Number(line.Cantidad_requerida) || 0;
     return acc + precio * cant;
   }, 0);
 
-  // Reiniciar todo el formulario
-  const handleResetAll = () => {
-    setCurrentStep(1);
-    setClientResult(null);
-    setProjectResult(null);
-    setSpecResult(null);
-    setCotizacionResult(null);
-    setScreenError(null);
-    setClientStepMessage(null);
-    setAreas([
-      { id: 'area-1', Descripcion: 'Muros Sala y Comedor', Medida_m2: 95 },
-      { id: 'area-2', Descripcion: 'Habitaciones y Corredores', Medida_m2: 45 },
-    ]);
-    setIsGalonesManuallyEdited(false);
-    setCotizacionLines([]);
-  };
+  const ivaCOP = Math.round(subtotalCOP * 0.19);
+  const totalCotizacionCOP = subtotalCOP + ivaCOP;
 
-  // --------------------------------------------------------------------------
-  // SUBMIT PASO 1: CLIENTE (USUARIO)
-  // --------------------------------------------------------------------------
-  const handleSubmitClient = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setScreenError(null);
-
-    if (!nombre.trim() || !identificacion.trim() || !correo.trim()) {
-      setScreenError({
-        step: 'USUARIO',
-        message: 'Nombre, Identificación y Correo son obligatorios.',
-      });
-      return;
-    }
-
-    setIsProcessingClient(true);
-    try {
-      const res = await procesarClienteEnSupabase({
-        nombre: nombre.trim(),
-        identificacion: identificacion.trim(),
-        correo: correo.trim(),
-        telefono: telefono.trim(),
-        tipo_cliente: tipoCliente.trim(),
-      });
-
-      setClientResult(res);
-      setClientStepMessage(
-        res.reutilizado
-          ? `✓ Cliente existente reutilizado (Usuario_ID: ${res.usuarioId}).`
-          : `✓ Nuevo cliente guardado en USUARIO (Usuario_ID: ${res.usuarioId}).`
-      );
-      setCurrentStep(2);
-    } catch (err: any) {
-      setScreenError({
-        step: 'USUARIO',
-        message: err?.message || 'Error al procesar cliente en USUARIO',
-        code: err?.code,
-      });
-    } finally {
-      setIsProcessingClient(false);
-    }
-  };
-
-  // --------------------------------------------------------------------------
-  // SUBMIT PASO 2: PROYECTO (PROYECTO)
-  // --------------------------------------------------------------------------
-  const handleSubmitProject = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setScreenError(null);
-
-    if (!clientResult?.usuarioId) {
-      setScreenError({
-        step: 'PROYECTO',
-        message: 'Falta el Usuario_ID del cliente. Regresa al Paso 1.',
-      });
-      return;
-    }
-
-    setIsProcessingProject(true);
-    try {
-      const res = await crearProyectoEnSupabase({
-        Ciudad: ciudad.trim(),
-        Tipo_proyecto: tipoProyecto.trim(),
-        Area_m2: Number(areaM2) || 1,
-        Fecha_requerida: fechaRequerida,
-        Usuario_ID: clientResult.usuarioId,
-        Estado_proyecto: 'Nuevo',
-      });
-
-      setProjectResult(res);
-      // Avanzar al Paso 3: Diagnóstico Técnico
-      setCurrentStep(3);
-    } catch (err: any) {
-      setScreenError({
-        step: 'PROYECTO',
-        message: err?.message || 'Error al guardar en tabla PROYECTO',
-        code: err?.code,
-      });
-    } finally {
-      setIsProcessingProject(false);
-    }
-  };
-
-  // --------------------------------------------------------------------------
-  // MANIPULACIÓN DE ÁREAS (PASO 3)
-  // --------------------------------------------------------------------------
+  // Acciones de áreas
   const handleAddArea = () => {
     const newIdx = areas.length + 1;
     setAreas([
@@ -400,61 +283,7 @@ export const ClientRequestModal: React.FC = () => {
     );
   };
 
-  // --------------------------------------------------------------------------
-  // SUBMIT PASO 3: DIAGNÓSTICO TÉCNICO & ÁREAS (ESPECIFICACION_TECNICA y AREA)
-  // --------------------------------------------------------------------------
-  const handleSubmitSpecification = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setScreenError(null);
-
-    if (!projectResult?.proyectoId) {
-      setScreenError({
-        step: 'ESPECIFICACION_TECNICA',
-        message: 'No hay un Proyecto_ID creado. Regresa al paso anterior.',
-      });
-      return;
-    }
-
-    if (areas.length === 0) {
-      setScreenError({
-        step: 'AREA',
-        message: 'Debes registrar al menos una área a recubrir.',
-      });
-      return;
-    }
-
-    setIsProcessingSpec(true);
-    try {
-      const res = await guardarEspecificacionTecnicaYAreasEnSupabase({
-        Proyecto_ID: projectResult.proyectoId,
-        Tipo_superficie: tipoSuperficie.trim(),
-        Ambiente: ambiente.trim(),
-        Condicion: condicion.trim(),
-        Color: color.trim(),
-        Galones_estimados: Number(galonesEstimados) || 0,
-        areas: areas.map((a) => ({
-          Descripcion: a.Descripcion.trim(),
-          Medida_m2: Number(a.Medida_m2) || 0,
-        })),
-      });
-
-      setSpecResult(res);
-      // Avanzar al Paso 4: Cotización
-      setCurrentStep(4);
-    } catch (err: any) {
-      setScreenError({
-        step: 'ESPECIFICACION_TECNICA',
-        message: err?.message || 'Error al guardar el diagnóstico técnico en Supabase',
-        code: err?.code,
-      });
-    } finally {
-      setIsProcessingSpec(false);
-    }
-  };
-
-  // --------------------------------------------------------------------------
-  // MANIPULACIÓN DE LÍNEAS DE COTIZACIÓN (PASO 4)
-  // --------------------------------------------------------------------------
+  // Acciones de líneas de cotización
   const handleAddCotizacionLine = () => {
     const firstProd = availableProducts[0];
     if (!firstProd) return;
@@ -488,93 +317,165 @@ export const ClientRequestModal: React.FC = () => {
     );
   };
 
-  // --------------------------------------------------------------------------
-  // SUBMIT PASO 4: COTIZACIÓN (COTIZACION_DETALLE)
-  // --------------------------------------------------------------------------
-  const handleSubmitCotizacion = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // Añadir la cotización completa al carrito
+  const handleAddQuoteToCart = (openCartDirectly: boolean = false) => {
+    cotizacionLines.forEach((line) => {
+      const prod = availableProducts.find((p) => p.ID_DE_PRODUCTO === Number(line.ID_de_producto));
+      const cant = Number(line.Cantidad_requerida) || 1;
+      const precio = prod ? getProdPrecio(prod) : 94900;
+      const nombreProd = prod ? getProdNombre(prod) : 'Pintura Pintuco Oficial';
+
+      addToCart({
+        sku: prod?.SKU || `PIN-${line.ID_de_producto}`,
+        name: nombreProd,
+        category: prod ? getProdTipo(prod) : 'Arquitectónica',
+        colorName: color,
+        presentation: 'Galón',
+        pricePerUnitCOP: precio,
+        quantity: cant,
+      });
+    });
+
+    setCartAddedSuccess(true);
+    if (openCartDirectly) {
+      setIsRequestModalOpen(false);
+      setIsCartOpen(true);
+    } else {
+      setTimeout(() => setCartAddedSuccess(false), 4000);
+    }
+  };
+
+  // Copiar resumen al portapapeles
+  const handleCopySummary = () => {
+    const linesSummary = cotizacionLines
+      .map((l) => {
+        const prod = availableProducts.find((p) => p.ID_DE_PRODUCTO === Number(l.ID_de_producto));
+        const nombreProd = prod ? getProdNombre(prod) : `Producto #${l.ID_de_producto}`;
+        const precio = prod ? getProdPrecio(prod) : 0;
+        const cant = Number(l.Cantidad_requerida) || 1;
+        return `• ${cant}x ${nombreProd} (Galón) - $${(precio * cant).toLocaleString('es-CO')} COP`;
+      })
+      .join('\n');
+
+    const text =
+      `📋 *COTIZACIÓN DE PROYECTO - PINTUCO COLORLINK*\n` +
+      `Código: ${quotationCode}\n` +
+      `Proyecto: ${tipoProyecto} en ${ciudad}\n` +
+      `Área Total: ${sumaMedidaM2Areas} m² (${galonesEstimados} Gal estimados)\n` +
+      `Superficie: ${tipoSuperficie} • Color: ${color}\n\n` +
+      `*DETALLE DE PRODUCTOS:*\n${linesSummary}\n\n` +
+      `*Subtotal:* $${subtotalCOP.toLocaleString('es-CO')} COP\n` +
+      `*IVA (19%):* $${ivaCOP.toLocaleString('es-CO')} COP\n` +
+      `*TOTAL COTIZADO:* $${totalCotizacionCOP.toLocaleString('es-CO')} COP\n\n` +
+      `_Cotización generada de forma libre en el portal oficial Pintuco ColorLink._`;
+
+    navigator.clipboard.writeText(text);
+    setCopiedSuccess(true);
+    setTimeout(() => setCopiedSuccess(false), 3000);
+  };
+
+  // Opcional: Guardar en Supabase para usuarios que quieran registrarlo
+  const handleOptionalSaveSupabase = async () => {
+    if (!optionalClientName.trim() || !optionalClientDoc.trim()) {
+      setScreenError({
+        step: 'REGISTRO_OPCIONAL',
+        message: 'Para guardar en la base de datos, ingresa Nombre y Documento.',
+      });
+      return;
+    }
+
+    setIsSavingToSupabase(true);
     setScreenError(null);
-
-    if (!projectResult?.proyectoId) {
-      setScreenError({
-        step: 'COTIZACION_DETALLE',
-        message: 'No hay un Proyecto_ID creado. Regresa al paso anterior.',
-      });
-      return;
-    }
-
-    if (cotizacionLines.length === 0) {
-      setScreenError({
-        step: 'COTIZACION_DETALLE',
-        message: 'Debes agregar al menos un producto a la cotización.',
-      });
-      return;
-    }
-
-    setIsProcessingCotizacion(true);
     try {
+      // 1. Guardar o verificar usuario
+      const clientRes = await procesarClienteEnSupabase({
+        nombre: optionalClientName.trim(),
+        identificacion: optionalClientDoc.trim(),
+        correo: optionalClientEmail.trim() || `cliente.${optionalClientDoc.trim()}@colorlink.pintuco.com`,
+        telefono: optionalClientPhone.trim() || '+57 300 000 0000',
+        tipo_cliente: 'Cliente Web',
+      });
+
+      // 2. Crear proyecto
+      const projRes = await crearProyectoEnSupabase({
+        Ciudad: ciudad.trim(),
+        Tipo_proyecto: tipoProyecto.trim(),
+        Area_m2: Number(sumaMedidaM2Areas) || 1,
+        Fecha_requerida: fechaRequerida,
+        Usuario_ID: clientRes.usuarioId,
+        Estado_proyecto: 'En cotización',
+      });
+
+      // 3. Especificación técnica y áreas
+      await guardarEspecificacionTecnicaYAreasEnSupabase({
+        Proyecto_ID: projRes.proyectoId,
+        Tipo_superficie: tipoSuperficie.trim(),
+        Ambiente: ambiente.trim(),
+        Condicion: condicion.trim(),
+        Color: color.trim(),
+        Galones_estimados: Number(galonesEstimados) || 0,
+        areas: areas.map((a) => ({
+          Descripcion: a.Descripcion.trim(),
+          Medida_m2: Number(a.Medida_m2) || 0,
+        })),
+      });
+
+      // 4. Cotización detalle
       const itemsPayload = cotizacionLines.map((line) => {
         const prod = availableProducts.find((p) => p.ID_DE_PRODUCTO === Number(line.ID_de_producto));
         const precioUnitario = prod ? getProdPrecio(prod) : 0;
         const cant = Number(line.Cantidad_requerida) || 1;
-        const subtotal = cant * precioUnitario;
         return {
           ID_de_producto: Number(line.ID_de_producto),
           Cantidad_requerida: cant,
-          Subtotal_de_costo: subtotal,
+          Subtotal_de_costo: cant * precioUnitario,
           Nombre_producto: prod ? getProdNombre(prod) : undefined,
           Precio_unitario: precioUnitario,
         };
       });
 
-      const res = await guardarCotizacionDetalleEnSupabase({
-        Proyecto_ID: projectResult.proyectoId,
+      await guardarCotizacionDetalleEnSupabase({
+        Proyecto_ID: projRes.proyectoId,
         items: itemsPayload,
       });
 
-      // Requirement 4: Actualizar Estado_proyecto en PROYECTO a 'En cotización'
-      await updateEstadoProyectoEnSupabase(projectResult.proyectoId, 'En cotización');
-
-      setCotizacionResult(res);
-      // Avanzar al Paso 5: Resumen final
-      setCurrentStep(5);
+      setSupabaseSaveSuccess(`✓ Proyecto registrado exitosamente en Supabase (Proyecto #${projRes.proyectoId})`);
       refreshFromSupabase();
     } catch (err: any) {
       setScreenError({
-        step: 'COTIZACION_DETALLE',
-        message: err?.message || 'Error al guardar la cotización en Supabase',
-        code: err?.code,
+        step: 'SUPABASE_SAVE',
+        message: err?.message || 'Error guardando en Supabase',
       });
     } finally {
-      setIsProcessingCotizacion(false);
+      setIsSavingToSupabase(false);
     }
   };
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/65 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 text-left">
       <div className="bg-white w-full max-w-3xl rounded-3xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[92vh] animate-in fade-in zoom-in-95 relative">
+        
         {/* Header */}
-        <div className="bg-[#142154] text-white p-5 sm:px-6 flex items-center justify-between shrink-0 border-b border-[#1f3074]">
+        <div className="bg-gradient-to-r from-[#142154] via-[#1B2A6B] to-[#142154] text-white p-5 sm:px-6 flex items-center justify-between shrink-0 border-b border-[#1f3074]">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-2xl bg-[#2FAE6D] text-white flex items-center justify-center shadow-md shrink-0">
-              <Database className="w-5 h-5 text-white" />
+              <Calculator className="w-5 h-5 text-white" />
             </div>
             <div>
               <div className="flex items-center gap-2 flex-wrap">
                 <h2 className="text-base sm:text-lg font-black text-white">
-                  Nueva Solicitud & Cotización Integral
+                  Cotizador de Proyectos & Pinturas
                 </h2>
                 <span className="text-[10px] bg-emerald-500/20 text-emerald-300 font-bold px-2.5 py-0.5 rounded-full border border-emerald-400/40">
-                  Supabase Live
+                  Acceso Libre • Sin Registro
                 </span>
               </div>
               <p className="text-xs text-slate-300 mt-0.5">
-                Flujo completo en base de datos: USUARIO → PROYECTO → ESPECIFICACION_TECNICA → AREA → COTIZACION_DETALLE
+                Calcula tus metros cuadrados, galones requeridos y presupuesto en tiempo real.
               </p>
             </div>
           </div>
           <button
-            id="close-request-modal-btn"
             onClick={() => setIsRequestModalOpen(false)}
             className="text-slate-400 hover:text-white p-2 rounded-xl hover:bg-white/10 transition-colors cursor-pointer"
             aria-label="Cerrar modal"
@@ -583,14 +484,12 @@ export const ClientRequestModal: React.FC = () => {
           </button>
         </div>
 
-        {/* Stepper Bar (5 Pasos) */}
+        {/* Stepper Bar (3 Pasos Directos) */}
         <div className="bg-slate-50 border-b border-slate-200 px-4 sm:px-6 py-2.5 flex items-center justify-between overflow-x-auto text-[11px]">
           {[
-            { num: 1, label: 'Cliente', sub: 'USUARIO' },
-            { num: 2, label: 'Proyecto', sub: 'PROYECTO' },
-            { num: 3, label: 'Diagnóstico', sub: 'ESPECIFICACIÓN' },
-            { num: 4, label: 'Cotización', sub: 'PRODUCTOS' },
-            { num: 5, label: 'Resumen', sub: 'ÉXITO' },
+            { num: 1, label: '1. Diagnóstico & m²', sub: 'Medidas & Superficies' },
+            { num: 2, label: '2. Selección de Pinturas', sub: 'Productos & Costos' },
+            { num: 3, label: '3. Resumen & Carrito', sub: 'Cotización Inmediata' },
           ].map((s, idx, arr) => {
             const isCompleted = currentStep > s.num;
             const isCurrent = currentStep === s.num;
@@ -608,16 +507,16 @@ export const ClientRequestModal: React.FC = () => {
                   >
                     {isCompleted ? <Check className="w-3.5 h-3.5" /> : s.num}
                   </div>
-                  <div className="hidden sm:block">
+                  <div>
                     <span className={`block leading-tight font-bold ${isCurrent ? 'text-indigo-950' : 'text-slate-700'}`}>
                       {s.label}
                     </span>
-                    <span className="text-[9px] text-slate-400 font-mono block">{s.sub}</span>
+                    <span className="text-[9px] text-slate-400 block">{s.sub}</span>
                   </div>
                 </div>
                 {idx < arr.length - 1 && (
                   <div
-                    className={`flex-1 min-w-3 h-0.5 mx-2 transition-colors ${
+                    className={`flex-1 min-w-4 h-0.5 mx-2 transition-colors ${
                       currentStep > s.num ? 'bg-emerald-500' : 'bg-slate-200'
                     }`}
                   />
@@ -629,949 +528,587 @@ export const ClientRequestModal: React.FC = () => {
 
         {/* Modal Body */}
         <div className="p-5 sm:p-6 overflow-y-auto flex-1">
+          {/* Notification: Added to Cart */}
+          {cartAddedSuccess && (
+            <div className="mb-4 p-3.5 rounded-2xl bg-emerald-50 border border-emerald-300 text-emerald-900 text-xs flex items-center justify-between animate-in fade-in">
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                <span><strong>¡Cotización agregada al carrito con éxito!</strong> Puedes proceder al pago cuando desees.</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsRequestModalOpen(false);
+                  setIsCartOpen(true);
+                }}
+                className="px-3 py-1 bg-[#2FAE6D] hover:bg-[#27995f] text-white font-bold rounded-lg text-[11px] shrink-0 cursor-pointer"
+              >
+                Abrir Carrito
+              </button>
+            </div>
+          )}
+
           {/* Error Banner */}
           {screenError && (
-            <div className="mb-5 p-4 rounded-2xl bg-rose-50 border-2 border-rose-300 text-rose-950 animate-in fade-in duration-200">
-              <div className="flex items-start gap-3">
-                <AlertTriangle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between gap-2 flex-wrap">
-                    <h3 className="font-bold text-sm text-rose-950">
-                      Error en Supabase ({screenError.step})
-                    </h3>
-                    {screenError.code && (
-                      <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-rose-200 text-rose-800">
-                        {screenError.code}
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-xs font-semibold text-rose-900 mt-1 break-words">
-                    {screenError.message}
-                  </p>
-                </div>
+            <div className="mb-4 p-3.5 rounded-2xl bg-rose-50 border border-rose-300 text-rose-900 text-xs flex items-center gap-2.5">
+              <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
+              <div className="flex-1 min-w-0">
+                <span className="font-bold">{screenError.step}: </span>
+                <span>{screenError.message}</span>
               </div>
+              <button onClick={() => setScreenError(null)} className="text-slate-400 hover:text-slate-600">
+                <X className="w-3.5 h-3.5" />
+              </button>
             </div>
           )}
 
           {/* =========================================================================
-              PASO 1: CLIENTE (USUARIO)
+              PASO 1: DIAGNÓSTICO TÉCNICO & ÁREAS (m² Y GALONES ESTIMADOS)
               ========================================================================= */}
           {currentStep === 1 && (
-            <form onSubmit={handleSubmitClient} className="space-y-4">
-              <div className="p-3.5 rounded-2xl bg-indigo-50/70 border border-indigo-100 flex items-start gap-2.5">
-                <User className="w-4 h-4 text-indigo-600 shrink-0 mt-0.5" />
-                <div className="text-xs text-indigo-900">
-                  <span className="font-bold block">Paso 1: Identificación y Registro del Cliente</span>
-                  <span>
-                    Buscamos en la tabla <strong className="font-semibold">USUARIO</strong> por{' '}
-                    <strong className="font-semibold">identificacion</strong>. Si ya existe, se reutiliza su{' '}
-                    <strong className="font-semibold">Usuario_ID</strong>. Si no, se crea automáticamente.
-                  </span>
+            <div className="space-y-5 text-xs text-slate-800">
+              {/* Info banner */}
+              <div className="p-3.5 rounded-2xl bg-blue-50/70 border border-blue-200 flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2.5">
+                  <Sparkles className="w-4 h-4 text-blue-600 shrink-0" />
+                  <div>
+                    <h4 className="font-bold text-blue-950">
+                      Calculadora de Pintura por Metros Cuadrados
+                    </h4>
+                    <p className="text-[11px] text-blue-800">
+                      Ingresa tus áreas y el sistema calculará automáticamente los galones según la norma oficial de 35 m²/gal a 2 manos.
+                    </p>
+                  </div>
                 </div>
               </div>
 
-              <div>
-                <label className="block text-xs font-bold text-slate-800 mb-1">
-                  Nombre Completo o Razón Social <span className="text-rose-500">*</span>
-                </label>
-                <div className="relative">
-                  <User className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                  <input
-                    type="text"
-                    required
-                    value={nombre}
-                    onChange={(e) => setNombre(e.target.value)}
-                    placeholder="Ej. Juan Pérez o Constructora Bolívar SAS"
-                    className="w-full pl-9 pr-3 py-2.5 text-xs rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 bg-white"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-800 mb-1">
-                  Número de Identificación (Cédula o NIT) <span className="text-rose-500">*</span>
-                </label>
-                <div className="relative">
-                  <CreditCard className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                  <input
-                    type="text"
-                    required
-                    value={identificacion}
-                    onChange={(e) => setIdentificacion(e.target.value)}
-                    placeholder="Ej. 1000000001"
-                    className="w-full pl-9 pr-3 py-2.5 text-xs rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 bg-white font-mono"
-                  />
-                </div>
-                <span className="text-[10px] text-slate-400 mt-0.5 block">
-                  Columna: identificacion (Se reutilizará si ya existe en Supabase)
-                </span>
-              </div>
-
+              {/* General Project Settings */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-slate-800 mb-1">
-                    Correo Electrónico <span className="text-rose-500">*</span>
+                  <label className="block font-bold text-slate-700 mb-1">
+                    Ciudad del Proyecto
                   </label>
                   <div className="relative">
-                    <Mail className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <MapPin className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
                     <input
-                      type="email"
-                      required
-                      value={correo}
-                      onChange={(e) => setCorreo(e.target.value)}
-                      placeholder="correo@empresa.com"
-                      className="w-full pl-9 pr-3 py-2.5 text-xs rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 bg-white"
+                      type="text"
+                      value={ciudad}
+                      onChange={(e) => setCiudad(e.target.value)}
+                      placeholder="Ej. Bogotá D.C., Medellín..."
+                      className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-300 bg-white font-medium"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-800 mb-1">Teléfono / Celular</label>
-                  <div className="relative">
-                    <Phone className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                    <input
-                      type="tel"
-                      value={telefono}
-                      onChange={(e) => setTelefono(e.target.value)}
-                      placeholder="3001234567"
-                      className="w-full pl-9 pr-3 py-2.5 text-xs rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 bg-white"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-800 mb-1">Tipo de Cliente (tipo_cliente)</label>
-                <select
-                  value={tipoCliente}
-                  onChange={(e) => setTipoCliente(e.target.value)}
-                  className="w-full px-3 py-2.5 text-xs rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 bg-white cursor-pointer"
-                >
-                  <option value="Constructora">Constructora</option>
-                  <option value="Contratista">Contratista</option>
-                  <option value="Pintor Profesional">Pintor Profesional</option>
-                  <option value="Particular / Residencial">Particular / Residencial</option>
-                  <option value="Comercial / Empresa">Comercial / Empresa</option>
-                  <option value="Interventoría">Interventoría</option>
-                </select>
-              </div>
-
-              <div className="pt-3 border-t border-slate-100 flex items-center justify-between gap-3">
-                <button
-                  type="button"
-                  onClick={() => setIsRequestModalOpen(false)}
-                  className="px-4 py-2 text-slate-600 hover:text-slate-800 text-xs font-semibold rounded-xl hover:bg-slate-100 cursor-pointer"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  disabled={isProcessingClient}
-                  className="px-5 py-2.5 bg-[#142154] hover:bg-[#1a2b6d] text-white rounded-xl text-xs font-bold flex items-center gap-2 cursor-pointer shadow-md transition-all active:scale-95"
-                >
-                  {isProcessingClient ? (
-                    <>
-                      <RefreshCw className="w-4 h-4 animate-spin text-emerald-400" />
-                      <span>Validando en Supabase...</span>
-                    </>
-                  ) : (
-                    <>
-                      <span>Continuar al Proyecto</span>
-                      <ArrowRight className="w-4 h-4" />
-                    </>
-                  )}
-                </button>
-              </div>
-            </form>
-          )}
-
-          {/* =========================================================================
-              PASO 2: PROYECTO (PROYECTO)
-              ========================================================================= */}
-          {currentStep === 2 && clientResult && (
-            <form onSubmit={handleSubmitProject} className="space-y-4">
-              <div className="p-3 rounded-2xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-950 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <div>
-                    <span className="font-bold">Cliente vinculado:</span> {nombre} (
-                    <strong className="font-mono">Usuario_ID: {clientResult.usuarioId}</strong>)
-                    <span className="ml-2 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-200 text-emerald-900">
-                      {clientResult.reutilizado ? 'Reutilizado' : 'Nuevo'}
-                    </span>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setCurrentStep(1)}
-                  className="text-emerald-700 hover:text-emerald-950 text-[11px] font-bold underline cursor-pointer"
-                >
-                  Cambiar
-                </button>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-800 mb-1">
-                  Ciudad del Proyecto (Ciudad) <span className="text-rose-500">*</span>
-                </label>
-                <div className="relative">
-                  <MapPin className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                  <select
-                    value={ciudad}
-                    onChange={(e) => setCiudad(e.target.value)}
-                    className="w-full pl-9 pr-3 py-2.5 text-xs rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 bg-white cursor-pointer"
-                  >
-                    <option value="Bogotá">Bogotá D.C.</option>
-                    <option value="Medellín">Medellín</option>
-                    <option value="Cali">Cali</option>
-                    <option value="Barranquilla">Barranquilla</option>
-                    <option value="Cartagena">Cartagena</option>
-                    <option value="Bucaramanga">Bucaramanga</option>
-                    <option value="Pereira">Pereira</option>
-                    <option value="Manizales">Manizales</option>
-                  </select>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-800 mb-1">
-                  Tipo de Proyecto (Tipo_proyecto) <span className="text-rose-500">*</span>
-                </label>
-                <div className="relative">
-                  <Building2 className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <label className="block font-bold text-slate-700 mb-1">
+                    Tipo de Proyecto
+                  </label>
                   <select
                     value={tipoProyecto}
                     onChange={(e) => setTipoProyecto(e.target.value)}
-                    className="w-full pl-9 pr-3 py-2.5 text-xs rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 bg-white cursor-pointer"
+                    className="w-full px-3 py-2.5 rounded-xl border border-slate-300 bg-white font-medium cursor-pointer"
                   >
-                    <option value="Residencial">Residencial (Apartamentos / Casas)</option>
-                    <option value="Comercial">Comercial (Oficinas / Locales)</option>
-                    <option value="Industrial">Industrial (Plantas / Bodegas)</option>
-                    <option value="Fachadas">Fachadas y Alturas</option>
-                    <option value="Institucional">Institucional (Hospitales / Colegios)</option>
+                    <option value="Residencial">Residencial (Apartamento / Casa)</option>
+                    <option value="Comercial">Comercial (Local / Oficina)</option>
+                    <option value="Institucional">Institucional (Colegio / Clínica)</option>
+                    <option value="Industrial">Industrial (Bodega / Planta)</option>
                   </select>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {/* Technical Specifications */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 pt-1">
                 <div>
-                  <label className="block text-xs font-bold text-slate-800 mb-1">
-                    Área Estimada Inicial (Area_m2) <span className="text-rose-500">*</span>
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="number"
-                      required
-                      min={1}
-                      value={areaM2}
-                      onChange={(e) => setAreaM2(e.target.value)}
-                      className="w-full px-3 py-2.5 text-xs rounded-xl border border-slate-300 font-mono font-bold"
-                    />
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">m²</span>
-                  </div>
-                  <span className="text-[10px] text-slate-400 mt-0.5 block">Se detallará por áreas en el paso siguiente</span>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-800 mb-1">
-                    Fecha Requerida (Fecha_requerida) <span className="text-rose-500">*</span>
-                  </label>
-                  <div className="relative">
-                    <Calendar className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                    <input
-                      type="date"
-                      required
-                      value={fechaRequerida}
-                      onChange={(e) => setFechaRequerida(e.target.value)}
-                      className="w-full pl-9 pr-3 py-2.5 text-xs rounded-xl border border-slate-300"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between text-xs">
-                <div>
-                  <span className="font-bold text-slate-800 block">Estado del Proyecto (Estado_proyecto)</span>
-                  <span className="text-[10px] text-slate-400">Se registrará automáticamente con valor fijo</span>
-                </div>
-                <span className="px-3 py-1 rounded-full text-xs font-black bg-blue-100 text-[#142154] border border-blue-200">
-                  ‘{estadoProyecto}’
-                </span>
-              </div>
-
-              <div className="pt-3 border-t border-slate-100 flex items-center justify-between gap-3">
-                <button
-                  type="button"
-                  onClick={() => setCurrentStep(1)}
-                  className="px-4 py-2.5 text-slate-600 hover:text-slate-800 text-xs font-semibold rounded-xl hover:bg-slate-100 flex items-center gap-1.5 cursor-pointer"
-                >
-                  <ArrowLeft className="w-4 h-4" />
-                  <span>Volver al Cliente</span>
-                </button>
-
-                <button
-                  type="submit"
-                  disabled={isProcessingProject}
-                  className="px-5 py-2.5 bg-[#142154] hover:bg-[#1a2b6d] text-white rounded-xl text-xs font-bold flex items-center gap-2 cursor-pointer shadow-md transition-all active:scale-95"
-                >
-                  {isProcessingProject ? (
-                    <>
-                      <RefreshCw className="w-4 h-4 animate-spin text-white" />
-                      <span>Guardando Proyecto en Supabase...</span>
-                    </>
-                  ) : (
-                    <>
-                      <span>Crear Proyecto & Diagnóstico</span>
-                      <ArrowRight className="w-4 h-4" />
-                    </>
-                  )}
-                </button>
-              </div>
-            </form>
-          )}
-
-          {/* =========================================================================
-              PASO 3: DIAGNÓSTICO TÉCNICO & ÁREAS (ESPECIFICACION_TECNICA y AREA)
-              ========================================================================= */}
-          {currentStep === 3 && projectResult && (
-            <form onSubmit={handleSubmitSpecification} className="space-y-5">
-              {/* Project banner */}
-              <div className="p-3.5 rounded-2xl bg-indigo-50/70 border border-indigo-200 text-xs text-indigo-950 flex items-center justify-between">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <Layers className="w-4 h-4 text-indigo-600 shrink-0" />
-                    <span className="font-extrabold text-indigo-950">
-                      Paso 3: Diagnóstico Técnico para Proyecto #{projectResult.proyectoId}
-                    </span>
-                  </div>
-                  <p className="text-[11px] text-indigo-800 mt-0.5 ml-6">
-                    Ciudad: <strong>{ciudad}</strong> • Tipo: <strong>{tipoProyecto}</strong> • Cliente:{' '}
-                    <strong>{nombre}</strong>
-                  </p>
-                </div>
-                <span className="px-2.5 py-1 rounded-full text-[10px] font-mono font-bold bg-indigo-200 text-indigo-900">
-                  PROYECTO_ID: {projectResult.proyectoId}
-                </span>
-              </div>
-
-              {/* Technical Spec Fields */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                <div>
-                  <label className="block font-bold text-slate-800 mb-1">
-                    Tipo de Superficie (Tipo_superficie) <span className="text-rose-500">*</span>
-                  </label>
+                  <label className="block font-bold text-slate-700 mb-1">Tipo de Superficie</label>
                   <select
                     value={tipoSuperficie}
                     onChange={(e) => setTipoSuperficie(e.target.value)}
-                    className="w-full px-3 py-2.5 rounded-xl border border-slate-300 bg-white cursor-pointer font-medium"
+                    className="w-full px-2.5 py-2 rounded-xl border border-slate-300 bg-white cursor-pointer"
                   >
                     <option value="Mampostería / Muros">Mampostería / Muros</option>
                     <option value="Drywall / Yeso">Drywall / Yeso</option>
                     <option value="Fachada Exterior">Fachada Exterior</option>
                     <option value="Pisos / Alto Tráfico">Pisos / Alto Tráfico</option>
-                    <option value="Concreto Visto">Concreto Visto</option>
                     <option value="Madera Natural">Madera Natural</option>
                     <option value="Metal / Estructura Acero">Metal / Estructura Acero</option>
                   </select>
                 </div>
 
                 <div>
-                  <label className="block font-bold text-slate-800 mb-1">
-                    Ambiente (Ambiente) <span className="text-rose-500">*</span>
-                  </label>
+                  <label className="block font-bold text-slate-700 mb-1">Ambiente</label>
                   <select
                     value={ambiente}
                     onChange={(e) => setAmbiente(e.target.value)}
-                    className="w-full px-3 py-2.5 rounded-xl border border-slate-300 bg-white cursor-pointer font-medium"
+                    className="w-full px-2.5 py-2 rounded-xl border border-slate-300 bg-white cursor-pointer"
                   >
                     <option value="Interior">Interior</option>
                     <option value="Exterior">Exterior</option>
                     <option value="Zona Húmeda / Baños">Zona Húmeda / Baños</option>
-                    <option value="Tráfico Pesado / Comercial">Tráfico Pesado / Comercial</option>
+                    <option value="Tráfico Pesado">Tráfico Pesado</option>
                   </select>
                 </div>
 
                 <div>
-                  <label className="block font-bold text-slate-800 mb-1">
-                    Condición del Sustrato (Condicion) <span className="text-rose-500">*</span>
-                  </label>
+                  <label className="block font-bold text-slate-700 mb-1">Condición del Muro</label>
                   <select
                     value={condicion}
                     onChange={(e) => setCondicion(e.target.value)}
-                    className="w-full px-3 py-2.5 rounded-xl border border-slate-300 bg-white cursor-pointer font-medium"
+                    className="w-full px-2.5 py-2 rounded-xl border border-slate-300 bg-white cursor-pointer"
                   >
-                    <option value="Nueva (Obra Gris / Pañete)">Nueva (Obra Gris / Pañete)</option>
                     <option value="Buena (Repinte Estándar)">Buena (Repinte Estándar)</option>
-                    <option value="Con Humedad o Eflorescencia">Con Humedad o Eflorescencia</option>
-                    <option value="Deteriorada / Con Fisuras">Deteriorada / Con Fisuras</option>
+                    <option value="Nueva (Obra Gris / Pañete)">Nueva (Obra Gris / Pañete)</option>
+                    <option value="Con Humedad o Salitre">Con Humedad o Salitre</option>
+                    <option value="Con Fisuras o Desprendimiento">Con Fisuras</option>
                   </select>
                 </div>
 
                 <div>
-                  <label className="block font-bold text-slate-800 mb-1">
-                    Color Deseado (Color) <span className="text-rose-500">*</span>
-                  </label>
+                  <label className="block font-bold text-slate-700 mb-1">Color Deseado</label>
                   <div className="relative">
-                    <Palette className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <Palette className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
                     <input
                       type="text"
-                      required
                       value={color}
                       onChange={(e) => setColor(e.target.value)}
-                      placeholder="Ej. Blanco Almendra, Gris Niebla"
-                      className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-300 bg-white"
+                      placeholder="Ej. Blanco Almendra"
+                      className="w-full pl-8 pr-2.5 py-2 rounded-xl border border-slate-300 bg-white"
                     />
                   </div>
                 </div>
               </div>
 
-              {/* SECCIÓN DE ÁREAS (Tabla AREA) */}
+              {/* Áreas Dinámicas (m²) */}
               <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-3">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h4 className="text-xs font-black text-slate-900 flex items-center gap-1.5 uppercase tracking-wide">
+                    <h4 className="font-extrabold text-slate-900 flex items-center gap-1.5 uppercase tracking-wide">
                       <Layers className="w-4 h-4 text-indigo-600" />
-                      <span>Áreas a Recubrir (Tabla AREA)</span>
+                      <span>Áreas o Estancias a Pintar</span>
                     </h4>
                     <p className="text-[11px] text-slate-500 mt-0.5">
-                      Ingresa una o varias áreas. Se guardarán vinculadas al ID_ESPECIFICADO.
+                      Especifica las medidas de tus paredes (ej. ancho × alto).
                     </p>
                   </div>
                   <button
                     type="button"
                     onClick={handleAddArea}
-                    className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold inline-flex items-center gap-1 cursor-pointer transition-all shadow-xs active:scale-95"
+                    className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold inline-flex items-center gap-1 cursor-pointer transition-all shadow-xs"
                   >
                     <Plus className="w-3.5 h-3.5" />
                     <span>Agregar Área</span>
                   </button>
                 </div>
 
-                {/* Lista de áreas dinámicas */}
                 <div className="space-y-2">
-                  {areas.map((a, idx) => (
+                  {areas.map((area, idx) => (
                     <div
-                      key={a.id}
-                      className="flex items-center gap-2 p-2.5 rounded-xl bg-white border border-slate-200 text-xs shadow-2xs"
+                      key={area.id}
+                      className="flex items-center gap-2 p-2.5 rounded-xl bg-white border border-slate-200"
                     >
-                      <span className="w-6 h-6 rounded-lg bg-indigo-50 text-indigo-700 font-bold flex items-center justify-center shrink-0 text-[11px]">
+                      <span className="w-5 text-center text-slate-400 font-mono font-bold text-[11px]">
                         {idx + 1}
                       </span>
-                      <div className="flex-1 min-w-0">
-                        <input
-                          type="text"
-                          required
-                          value={a.Descripcion}
-                          onChange={(e) => handleUpdateArea(a.id, 'Descripcion', e.target.value)}
-                          placeholder="Descripción (ej. Sala, Fachada, Cuarto 1)"
-                          className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs focus:outline-none focus:border-indigo-500"
-                        />
-                      </div>
-                      <div className="w-32 relative">
+                      <input
+                        type="text"
+                        value={area.Descripcion}
+                        onChange={(e) => handleUpdateArea(area.id, 'Descripcion', e.target.value)}
+                        placeholder="Descripción (ej. Sala, Cuarto principal...)"
+                        className="flex-1 px-3 py-1.5 rounded-lg border border-slate-200 bg-slate-50/50"
+                      />
+                      <div className="flex items-center gap-1 w-28 shrink-0">
                         <input
                           type="number"
-                          required
-                          min={1}
-                          value={a.Medida_m2}
-                          onChange={(e) => handleUpdateArea(a.id, 'Medida_m2', e.target.value)}
-                          placeholder="m²"
-                          className="w-full px-2.5 py-1.5 pr-8 rounded-lg border border-slate-200 text-xs font-mono font-bold text-slate-800"
+                          min="1"
+                          step="0.5"
+                          value={area.Medida_m2}
+                          onChange={(e) => handleUpdateArea(area.id, 'Medida_m2', e.target.value)}
+                          className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50/50 text-right font-mono font-bold"
                         />
-                        <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400">
-                          m²
-                        </span>
+                        <span className="text-slate-500 font-bold text-[11px]">m²</span>
                       </div>
-                      {areas.length > 1 && (
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveArea(a.id)}
-                          className="text-slate-400 hover:text-rose-600 p-1.5 rounded-lg hover:bg-rose-50 transition-colors cursor-pointer"
-                          title="Eliminar esta área"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      )}
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveArea(area.id)}
+                        disabled={areas.length <= 1}
+                        className="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg disabled:opacity-30 cursor-pointer"
+                        title="Eliminar área"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
                     </div>
                   ))}
                 </div>
 
-                {/* Resumen de Área y Cálculo de Galones */}
-                <div className="pt-3 border-t border-slate-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-                  <div className="flex items-center gap-2 text-slate-700">
-                    <span className="font-bold">Total Áreas Sumadas:</span>
-                    <span className="px-2.5 py-0.5 rounded-lg bg-white border border-slate-200 font-mono font-extrabold text-indigo-950">
-                      {sumaMedidaM2Areas} m²
-                    </span>
+                {/* Resumen de Cálculo en vivo */}
+                <div className="p-3 bg-indigo-50/80 rounded-xl border border-indigo-200/80 flex flex-wrap items-center justify-between gap-3 text-xs">
+                  <div>
+                    <span className="text-slate-600">Área Total Calculada: </span>
+                    <strong className="text-indigo-950 font-black text-sm">{sumaMedidaM2Areas} m²</strong>
+                    <span className="text-slate-500 text-[11px] ml-2">(Rendimiento oficial: 35 m²/gal a 2 manos)</span>
                   </div>
-
-                  {/* Campo Editable de Galones Estimados */}
                   <div className="flex items-center gap-2">
-                    <label className="font-bold text-slate-800 whitespace-nowrap">
-                      Galones Estimados (Galones_estimados):
-                    </label>
-                    <div className="relative w-28">
+                    <span className="font-bold text-slate-700">Pintura Necesaria:</span>
+                    <div className="flex items-center gap-1 bg-white px-2.5 py-1 rounded-lg border border-indigo-300">
                       <input
                         type="number"
-                        step="0.1"
-                        min={0.1}
-                        required
+                        min="0.5"
+                        step="0.5"
                         value={galonesEstimados}
                         onChange={(e) => {
                           setIsGalonesManuallyEdited(true);
                           setGalonesEstimados(e.target.value);
                         }}
-                        className="w-full px-2.5 py-1.5 pr-8 rounded-xl border-2 border-indigo-300 font-mono font-black text-indigo-950 bg-indigo-50/50 text-right text-xs"
+                        className="w-16 text-right font-black text-indigo-900 font-mono text-xs outline-hidden"
                       />
-                      <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[11px] font-bold text-indigo-500">
-                        Gal
-                      </span>
+                      <span className="font-black text-indigo-900 text-xs">Gal</span>
                     </div>
                   </div>
                 </div>
-
-                <div className="p-2.5 rounded-xl bg-blue-50/70 border border-blue-200 text-[11px] text-blue-900 flex items-center justify-between gap-2">
-                  <span>
-                    💡 <strong>Fórmula aplicada:</strong> Asume un rendimiento estándar de{' '}
-                    <strong className="font-bold">35 m² por galón a dos manos</strong> ({sumaMedidaM2Areas} m² ÷ 35 ={' '}
-                    {Math.round((sumaMedidaM2Areas / 35) * 10) / 10} Gal). El valor es{' '}
-                    <strong className="underline">editable</strong> si requieres más o menos manos.
-                  </span>
-                  {isGalonesManuallyEdited && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsGalonesManuallyEdited(false);
-                        const c = Math.round((sumaMedidaM2Areas / 35) * 10) / 10;
-                        setGalonesEstimados(c || 1);
-                      }}
-                      className="text-indigo-700 hover:text-indigo-900 font-bold underline whitespace-nowrap cursor-pointer text-[10px]"
-                    >
-                      Recalcular a 35 m²/gal
-                    </button>
-                  )}
-                </div>
               </div>
 
-              {/* Botones Paso 3 */}
-              <div className="pt-3 border-t border-slate-100 flex items-center justify-between gap-3">
+              {/* Botón de Siguiente Paso */}
+              <div className="pt-3 border-t border-slate-200 flex justify-end">
                 <button
                   type="button"
                   onClick={() => setCurrentStep(2)}
-                  className="px-4 py-2.5 text-slate-600 hover:text-slate-800 text-xs font-semibold rounded-xl hover:bg-slate-100 flex items-center gap-1.5 cursor-pointer"
+                  className="px-6 py-3 bg-[#142154] hover:bg-[#1a2b6d] text-white rounded-xl font-extrabold text-xs flex items-center gap-2 cursor-pointer shadow-md transition-all active:scale-95"
                 >
-                  <ArrowLeft className="w-4 h-4" />
-                  <span>Volver al Proyecto</span>
-                </button>
-
-                <button
-                  type="submit"
-                  disabled={isProcessingSpec}
-                  className="px-5 py-2.5 bg-[#142154] hover:bg-[#1a2b6d] text-white rounded-xl text-xs font-bold flex items-center gap-2 cursor-pointer shadow-md transition-all active:scale-95"
-                >
-                  {isProcessingSpec ? (
-                    <>
-                      <RefreshCw className="w-4 h-4 animate-spin text-white" />
-                      <span>Guardando Diagnóstico en Supabase...</span>
-                    </>
-                  ) : (
-                    <>
-                      <span>Continuar a la Cotización</span>
-                      <ArrowRight className="w-4 h-4" />
-                    </>
-                  )}
+                  <span>Continuar a Selección de Pinturas & Precios</span>
+                  <ArrowRight className="w-4 h-4" />
                 </button>
               </div>
-            </form>
+            </div>
           )}
 
           {/* =========================================================================
-              PASO 4: COTIZACIÓN (COTIZACION_DETALLE y PRODUCTO)
+              PASO 2: SELECCIÓN DE PRODUCTOS & COSTOS EN VIVO
               ========================================================================= */}
-          {currentStep === 4 && projectResult && (
-            <form onSubmit={handleSubmitCotizacion} className="space-y-5">
-              <div className="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-950 flex items-center justify-between">
+          {currentStep === 2 && (
+            <div className="space-y-5 text-xs text-slate-800">
+              <div className="p-3.5 rounded-2xl bg-indigo-50/70 border border-indigo-200 flex items-center justify-between gap-2">
                 <div>
-                  <div className="flex items-center gap-2">
-                    <ShoppingCart className="w-4 h-4 text-emerald-600 shrink-0" />
-                    <span className="font-extrabold text-emerald-950">
-                      Paso 4: Cotización de Productos (Tabla COTIZACION_DETALLE)
-                    </span>
-                  </div>
-                  <p className="text-[11px] text-emerald-800 mt-0.5 ml-6">
-                    Proyecto #{projectResult.proyectoId} • Necesidad técnica estimada:{' '}
-                    <strong>{galonesEstimados} Galones</strong> de pintura.
+                  <h4 className="font-bold text-indigo-950">
+                    Paso 2: Productos Homologados & Cantidades en Galones
+                  </h4>
+                  <p className="text-[11px] text-indigo-800">
+                    Total área: <strong>{sumaMedidaM2Areas} m²</strong> • Galones sugeridos: <strong>{galonesEstimados} Gal</strong> • Tono: <strong>{color}</strong>
                   </p>
                 </div>
                 <button
                   type="button"
                   onClick={handleAddCotizacionLine}
-                  className="px-3 py-1.5 bg-[#2FAE6D] hover:bg-[#27995f] text-white rounded-xl text-xs font-bold inline-flex items-center gap-1 cursor-pointer transition-all shadow-xs active:scale-95"
+                  className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold inline-flex items-center gap-1 cursor-pointer shadow-xs"
                 >
                   <Plus className="w-3.5 h-3.5" />
                   <span>Agregar Producto</span>
                 </button>
               </div>
 
-              {/* Tabla de Productos de la Cotización */}
-              <div className="border border-slate-200 rounded-2xl overflow-hidden bg-white">
-                <table className="w-full text-left border-collapse text-xs">
-                  <thead className="bg-slate-100/80 border-b border-slate-200 text-slate-700 font-bold">
-                    <tr>
-                      <th className="py-2.5 px-3">Producto (de tabla PRODUCTO)</th>
-                      <th className="py-2.5 px-3 w-28">Precio Unit.</th>
-                      <th className="py-2.5 px-3 w-28">Cantidad</th>
-                      <th className="py-2.5 px-3 w-32 text-right">Subtotal</th>
-                      <th className="py-2.5 px-2 w-10 text-center"></th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {cotizacionLines.map((line, idx) => {
-                      const selectedProd = availableProducts.find(
-                        (p) => p.ID_DE_PRODUCTO === Number(line.ID_de_producto)
-                      );
-                      const unitPrice = selectedProd ? getProdPrecio(selectedProd) : 0;
-                      const cant = Number(line.Cantidad_requerida) || 0;
-                      const subtotal = cant * unitPrice;
-                      const stockInfo = getStockInfo(line.ID_de_producto);
-                      const isOverStock = cant > stockInfo.stock;
+              {/* Tabla de Productos seleccionados */}
+              <div className="space-y-2.5">
+                {cotizacionLines.map((line, idx) => {
+                  const prod = availableProducts.find((p) => p.ID_DE_PRODUCTO === Number(line.ID_de_producto));
+                  const precio = prod ? getProdPrecio(prod) : 0;
+                  const cant = Number(line.Cantidad_requerida) || 1;
+                  const lineSubtotal = precio * cant;
 
-                      return (
-                        <tr key={line.id} className="hover:bg-slate-50/50">
-                          {/* Producto select */}
-                          <td className="py-3 px-3">
-                            <select
-                              value={line.ID_de_producto}
-                              onChange={(e) =>
-                                handleUpdateCotizacionLine(line.id, 'ID_de_producto', Number(e.target.value))
-                              }
-                              className="w-full px-2.5 py-1.5 rounded-xl border border-slate-300 text-xs font-bold text-slate-900 bg-white focus:outline-none focus:border-indigo-500 cursor-pointer"
-                            >
-                              {availableProducts.map((p) => (
-                                <option key={p.ID_DE_PRODUCTO} value={p.ID_DE_PRODUCTO}>
-                                  {getProdNombre(p)} ({getProdTipo(p)}) - ${getProdPrecio(p).toLocaleString('es-CO')}
-                                </option>
-                              ))}
-                            </select>
-                            {selectedProd && (
-                              <div className="text-[10px] text-slate-500 mt-1 space-y-1">
-                                <div className="flex items-center gap-2 flex-wrap">
-                                  <span>ID_de_producto: {selectedProd.ID_DE_PRODUCTO}</span>
-                                  <span>•</span>
-                                  <span>Tipo: {getProdTipo(selectedProd)}</span>
-                                  <span>•</span>
-                                  <span
-                                    className={`inline-flex items-center gap-1 font-bold px-2 py-0.5 rounded-md ${
-                                      stockInfo.stock > 0
-                                        ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
-                                        : 'bg-rose-50 text-rose-800 border border-rose-200'
-                                    }`}
-                                  >
-                                    <Package className="w-3 h-3 text-emerald-600" />
-                                    <span>
-                                      Stock disponible: <strong className="font-mono">{stockInfo.stock}</strong> ({stockInfo.centro})
-                                    </span>
-                                  </span>
-                                </div>
+                  return (
+                    <div
+                      key={line.id}
+                      className="p-3.5 rounded-2xl bg-white border border-slate-200 space-y-2.5 shadow-2xs"
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-bold text-slate-500 text-[11px]">Línea #{idx + 1}</span>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveCotizacionLine(line.id)}
+                          disabled={cotizacionLines.length <= 1}
+                          className="text-slate-400 hover:text-rose-600 p-1 disabled:opacity-30 cursor-pointer"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
 
-                                {isOverStock && (
-                                  <div className="p-2 rounded-xl bg-amber-50 border border-amber-300 text-amber-950 flex items-start gap-1.5 font-medium animate-in fade-in">
-                                    <AlertTriangle className="w-3.5 h-3.5 text-amber-600 shrink-0 mt-0.5" />
-                                    <span>
-                                      ⚠️ <strong>¡Alerta de Inventario!</strong> La cantidad pedida ({cant}) supera el Stock_disponible ({stockInfo.stock} en {stockInfo.centro}). Se requerirá reposición o traslado.
-                                    </span>
-                                  </div>
-                                )}
-                              </div>
-                            )}
-                          </td>
+                      <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
+                        <div className="sm:col-span-7">
+                          <label className="block text-[10px] font-bold text-slate-500 mb-1">
+                            Pintura / Recubrimiento Pintuco
+                          </label>
+                          <select
+                            value={line.ID_de_producto}
+                            onChange={(e) =>
+                              handleUpdateCotizacionLine(line.id, 'ID_de_producto', Number(e.target.value))
+                            }
+                            className="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white font-medium cursor-pointer"
+                          >
+                            {availableProducts.map((p) => (
+                              <option key={p.ID_DE_PRODUCTO} value={p.ID_DE_PRODUCTO}>
+                                {getProdNombre(p)} — ${getProdPrecio(p).toLocaleString('es-CO')} COP / Gal
+                              </option>
+                            ))}
+                          </select>
+                        </div>
 
-                          {/* Precio unitario */}
-                          <td className="py-3 px-3 font-mono font-semibold text-slate-700">
-                            ${unitPrice.toLocaleString('es-CO')}
-                          </td>
+                        <div className="sm:col-span-2">
+                          <label className="block text-[10px] font-bold text-slate-500 mb-1">
+                            Cantidad (Gal)
+                          </label>
+                          <input
+                            type="number"
+                            min="1"
+                            value={line.Cantidad_requerida}
+                            onChange={(e) =>
+                              handleUpdateCotizacionLine(line.id, 'Cantidad_requerida', e.target.value)
+                            }
+                            className="w-full px-2.5 py-2 rounded-xl border border-slate-300 bg-white font-mono font-bold text-center"
+                          />
+                        </div>
 
-                          {/* Cantidad requerida */}
-                          <td className="py-3 px-3">
-                            <input
-                              type="number"
-                              min={1}
-                              value={line.Cantidad_requerida}
-                              onChange={(e) =>
-                                handleUpdateCotizacionLine(line.id, 'Cantidad_requerida', e.target.value)
-                              }
-                              className="w-20 px-2.5 py-1.5 rounded-lg border border-slate-300 font-mono font-bold text-slate-900 text-xs text-center"
-                            />
-                          </td>
-
-                          {/* Subtotal de costo */}
-                          <td className="py-3 px-3 text-right font-mono font-black text-emerald-700">
-                            ${subtotal.toLocaleString('es-CO')} COP
-                          </td>
-
-                          {/* Eliminar */}
-                          <td className="py-3 px-2 text-center">
-                            {cotizacionLines.length > 1 && (
-                              <button
-                                type="button"
-                                onClick={() => handleRemoveCotizacionLine(line.id)}
-                                className="text-slate-400 hover:text-rose-600 p-1.5 rounded-lg hover:bg-rose-50 cursor-pointer"
-                                title="Eliminar ítem"
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </button>
-                            )}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
+                        <div className="sm:col-span-3 text-right">
+                          <span className="block text-[10px] font-bold text-slate-500 mb-1">
+                            Subtotal Línea
+                          </span>
+                          <span className="font-mono font-black text-sm text-slate-900">
+                            ${lineSubtotal.toLocaleString('es-CO')} <span className="text-[10px] text-slate-400">COP</span>
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
 
-              {/* Total de la Cotización */}
-              <div className="p-4 rounded-2xl bg-gradient-to-r from-emerald-50 via-slate-50 to-emerald-50 border-2 border-emerald-300/80 flex items-center justify-between text-xs shadow-xs">
-                <div>
-                  <span className="font-black text-slate-900 text-sm block">Total General de la Cotización:</span>
-                  <span className="text-[11px] text-slate-500">
-                    Suma de cada fila: Subtotal_de_costo = Cantidad_requerida × Precio_unitario
-                  </span>
+              {/* Total Card */}
+              <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-2">
+                <div className="flex justify-between text-slate-600">
+                  <span>Subtotal:</span>
+                  <span className="font-mono font-bold">${subtotalCOP.toLocaleString('es-CO')} COP</span>
                 </div>
-                <div className="text-right">
-                  <span className="text-xl sm:text-2xl font-black text-emerald-700 font-mono block">
-                    ${totalCotizacionCalculado.toLocaleString('es-CO')} COP
-                  </span>
-                  <span className="text-[10px] text-slate-400">
-                    {cotizacionLines.length} {cotizacionLines.length === 1 ? 'producto' : 'productos'} en la lista
-                  </span>
+                <div className="flex justify-between text-slate-600">
+                  <span>IVA Estimado (19%):</span>
+                  <span className="font-mono font-bold">${ivaCOP.toLocaleString('es-CO')} COP</span>
+                </div>
+                <div className="flex justify-between text-base font-black text-slate-900 pt-2 border-t border-slate-200">
+                  <span>Total Cotizado:</span>
+                  <span className="text-[#2FAE6D] font-mono">${totalCotizacionCOP.toLocaleString('es-CO')} COP</span>
                 </div>
               </div>
 
-              {/* Botones Paso 4 */}
-              <div className="pt-3 border-t border-slate-100 flex items-center justify-between gap-3">
+              {/* Buttons */}
+              <div className="pt-3 border-t border-slate-200 flex items-center justify-between gap-3">
                 <button
                   type="button"
-                  onClick={() => setCurrentStep(3)}
+                  onClick={() => setCurrentStep(1)}
                   className="px-4 py-2.5 text-slate-600 hover:text-slate-800 text-xs font-semibold rounded-xl hover:bg-slate-100 flex items-center gap-1.5 cursor-pointer"
                 >
                   <ArrowLeft className="w-4 h-4" />
-                  <span>Volver a Áreas</span>
+                  <span>Modificar Áreas</span>
                 </button>
 
-                <button
-                  type="submit"
-                  disabled={isProcessingCotizacion}
-                  className="px-6 py-2.5 bg-[#2FAE6D] hover:bg-[#27995f] text-white rounded-xl text-xs font-bold flex items-center gap-2 cursor-pointer shadow-md hover:shadow-lg transition-all active:scale-95"
-                >
-                  {isProcessingCotizacion ? (
-                    <>
-                      <RefreshCw className="w-4 h-4 animate-spin text-white" />
-                      <span>Guardando Cotización en Supabase...</span>
-                    </>
-                  ) : (
-                    <>
-                      <FileCheck2 className="w-4 h-4" />
-                      <span>Guardar Cotización y Finalizar</span>
-                    </>
-                  )}
-                </button>
-              </div>
-            </form>
-          )}
-
-          {/* =========================================================================
-              PASO 5: RESUMEN Y ÉXITO TOTAL (SIN CUADRO AMARILLO DE IDs)
-              ========================================================================= */}
-          {currentStep === 5 && projectResult && clientResult && (
-            <div className="space-y-5 animate-in fade-in zoom-in-95 duration-300">
-              {/* Headline */}
-              <div className="text-center py-2">
-                <div className="w-16 h-16 rounded-3xl bg-emerald-100 text-emerald-600 mx-auto flex items-center justify-center shadow-inner mb-3 border border-emerald-200">
-                  <CheckCircle2 className="w-9 h-9 text-emerald-600" />
-                </div>
-                <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200 mb-1.5">
-                  <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
-                  <span>¡Solicitud y Cotización Registradas en Supabase!</span>
-                </span>
-                <h3 className="text-xl sm:text-2xl font-black text-slate-900">
-                  Cadena de Proyecto Creada con Éxito
-                </h3>
-                <p className="text-xs text-slate-500 mt-1">
-                  Se insertaron y vincularon los registros en USUARIO, PROYECTO, ESPECIFICACION_TECNICA, AREA y COTIZACION_DETALLE.
-                </p>
-              </div>
-
-              {/* Big Highlight: Proyecto_ID y Total Cotizado */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="p-4 sm:p-5 rounded-3xl bg-gradient-to-br from-[#142154] to-[#1e347e] text-white shadow-lg">
-                  <span className="text-[11px] font-mono text-emerald-300 font-bold uppercase tracking-wider block">
-                    ID Generado en tabla PROYECTO
-                  </span>
-                  <div className="flex items-baseline gap-2 mt-1">
-                    <span className="text-xs text-slate-300">Proyecto_ID:</span>
-                    <span className="text-3xl sm:text-4xl font-black text-emerald-400 font-mono">
-                      #{projectResult.proyectoId}
-                    </span>
-                  </div>
-                  <div className="mt-2 text-xs text-slate-300 flex items-center justify-between border-t border-white/10 pt-2">
-                    <span>Usuario_ID: <strong className="text-white font-mono">#{clientResult.usuarioId}</strong></span>
-                    <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500 text-white">
-                      Estado: Nuevo
-                    </span>
-                  </div>
-                </div>
-
-                <div className="p-4 sm:p-5 rounded-3xl bg-gradient-to-br from-emerald-700 to-emerald-900 text-white shadow-lg flex flex-col justify-between">
-                  <div>
-                    <span className="text-[11px] font-mono text-emerald-200 font-bold uppercase tracking-wider block">
-                      Total Guardado en COTIZACION_DETALLE
-                    </span>
-                    <div className="text-2xl sm:text-3xl font-black text-white font-mono mt-1">
-                      ${totalCotizacionCalculado.toLocaleString('es-CO')} COP
-                    </div>
-                  </div>
-                  <div className="text-xs text-emerald-100 flex items-center justify-between border-t border-emerald-600/50 pt-2 mt-2">
-                    <span>Ítems cotizados: <strong>{cotizacionLines.length}</strong></span>
-                    <span>Pintura: <strong>{galonesEstimados} Gal</strong></span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Resumen Detallado */}
-              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-xs space-y-3">
-                <h4 className="font-bold text-slate-900 border-b border-slate-200 pb-2">
-                  Detalle de la Solicitud Guardada
-                </h4>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-slate-700">
-                  <div>
-                    <span className="text-slate-400 block text-[11px]">Cliente / Solicitante:</span>
-                    <span className="font-bold text-slate-900">{nombre}</span>
-                    <span className="text-slate-500 text-[11px] block">Identificación: {identificacion} ({tipoCliente})</span>
-                  </div>
-
-                  <div>
-                    <span className="text-slate-400 block text-[11px]">Ubicación y Tipo:</span>
-                    <span className="font-bold text-slate-900">{ciudad} • {tipoProyecto}</span>
-                    <span className="text-slate-500 text-[11px] block">Fecha Requerida: {fechaRequerida}</span>
-                  </div>
-
-                  <div>
-                    <span className="text-slate-400 block text-[11px]">Especificación Técnica:</span>
-                    <span className="font-bold text-slate-900">{tipoSuperficie} • {ambiente}</span>
-                    <span className="text-slate-500 text-[11px] block">
-                      Color: {color} | Condición: {condicion}
-                    </span>
-                  </div>
-
-                  <div>
-                    <span className="text-slate-400 block text-[11px]">Áreas ({sumaMedidaM2Areas} m² en total):</span>
-                    <div className="space-y-0.5 mt-0.5">
-                      {areas.map((a, i) => (
-                        <span key={a.id} className="inline-block mr-2 text-[11px] text-slate-800 bg-white px-2 py-0.5 rounded border border-slate-200">
-                          {a.Descripcion}: <strong>{a.Medida_m2} m²</strong>
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Resumen de Cotización */}
-                <div className="pt-2 border-t border-slate-200">
-                  <span className="text-slate-400 block text-[11px] mb-1">Productos Cotizados en COTIZACION_DETALLE:</span>
-                  <div className="space-y-1">
-                    {cotizacionLines.map((line) => {
-                      const prod = availableProducts.find((p) => p.ID_DE_PRODUCTO === Number(line.ID_de_producto));
-                      const unit = prod ? getProdPrecio(prod) : 0;
-                      const sub = Number(line.Cantidad_requerida) * unit;
-                      return (
-                        <div key={line.id} className="flex justify-between items-center text-[11px] bg-white p-2 rounded-xl border border-slate-200/80">
-                          <span className="font-medium text-slate-800">
-                            {prod ? getProdNombre(prod) : `Producto #${line.ID_de_producto}`} × {line.Cantidad_requerida} {prod?.Unidad_medida || 'Gal'}
-                          </span>
-                          <span className="font-mono font-bold text-emerald-700">
-                            ${sub.toLocaleString('es-CO')} COP
-                          </span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
-
-              {/* Botones de Cierre */}
-              <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-3">
                 <button
                   type="button"
-                  onClick={handleResetAll}
-                  className="w-full sm:w-auto px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-colors cursor-pointer"
+                  onClick={() => setCurrentStep(3)}
+                  className="px-6 py-3 bg-[#142154] hover:bg-[#1a2b6d] text-white rounded-xl font-extrabold text-xs flex items-center gap-2 cursor-pointer shadow-md transition-all active:scale-95"
                 >
-                  Crear Otra Solicitud
+                  <span>Ver Resumen & Acciones</span>
+                  <ArrowRight className="w-4 h-4" />
                 </button>
-
-                <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-end">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsRequestModalOpen(false);
-                      setSelectedRequestForDetail({
-                        id: `PROJ-${projectResult.proyectoId}`,
-                        dbProjectId: projectResult.proyectoId,
-                        requestNumber: `PROY-${projectResult.proyectoId}`,
-                        projectName: `Proyecto #${projectResult.proyectoId} - ${ciudad} (${tipoProyecto})`,
-                        createdAt: new Date().toLocaleDateString('es-CO'),
-                        clientName: nombre,
-                        clientEmail: correo,
-                        clientPhone: telefono,
-                        city: ciudad,
-                        channel: 'web',
-                        surfaceType: 'mamposteria',
-                        areaSqMeters: Number(areaM2) || 140,
-                        environment: 'interior',
-                        finish: 'mate',
-                        selectedColorName: color,
-                        selectedColorHex: '#1B2A6B',
-                        urgencyDays: 5,
-                        recommendedProductId: 'prod-1',
-                        recommendedProductName: availableProducts[0] ? getProdNombre(availableProducts[0]) : 'Pintura Pintuco',
-                        recommendedCoats: 2,
-                        coveragePerGallon: 35,
-                        gallonsNeeded: Number(galonesEstimados) || 4,
-                        suggestedBuckets: 1,
-                        suggestedIndividualGallons: 0,
-                        primerRequiredGallons: 0,
-                        estimatedPriceCOP: totalCotizacionCalculado,
-                        status: 'servicio',
-                      });
-                    }}
-                    className="w-full sm:w-auto px-4 py-2.5 bg-[#2FAE6D] hover:bg-[#27995f] text-white rounded-xl text-xs font-bold transition-all cursor-pointer shadow-md flex items-center justify-center gap-1.5 active:scale-95"
-                  >
-                    <ShieldCheck className="w-4 h-4" />
-                    <span>Gestionar Servicio & Evidencias</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsRequestModalOpen(false);
-                      const el = document.getElementById('supabase-products-section');
-                      if (el) el.scrollIntoView({ behavior: 'smooth' });
-                    }}
-                    className="w-full sm:w-auto px-4 py-2.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-xl text-xs font-bold transition-colors cursor-pointer border border-indigo-200"
-                  >
-                    Ver Tabla PRODUCTO
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setIsRequestModalOpen(false)}
-                    className="w-full sm:w-auto px-6 py-2.5 bg-[#142154] hover:bg-[#1a2b6d] text-white rounded-xl text-xs font-bold transition-colors cursor-pointer shadow-md"
-                  >
-                    Cerrar
-                  </button>
-                </div>
               </div>
             </div>
           )}
+
+          {/* =========================================================================
+              PASO 3: RESUMEN DE COTIZACIÓN & ACCIONES
+              ========================================================================= */}
+          {currentStep === 3 && (
+            <div className="space-y-5 text-xs text-slate-800">
+              {/* Success Badge */}
+              <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-300 flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-[#2FAE6D] text-white flex items-center justify-center shrink-0">
+                    <CheckCircle2 className="w-6 h-6 stroke-3" />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-black text-slate-900">
+                      ¡Tu Cotización Está Lista!
+                    </h3>
+                    <p className="text-[11px] text-slate-600">
+                      Presupuesto calculado al 100% sin necesidad de registro ni inicio de sesión.
+                    </p>
+                  </div>
+                </div>
+                <span className="font-mono font-black text-xs text-[#1B2A6B] bg-white px-3 py-1 rounded-xl border border-indigo-200">
+                  {quotationCode}
+                </span>
+              </div>
+
+              {/* Breakdown Card */}
+              <div className="bg-slate-50 rounded-2xl border border-slate-200 p-4 space-y-3">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px]">
+                  <div className="p-2 bg-white rounded-xl border border-slate-200">
+                    <span className="text-slate-400 block font-bold text-[10px]">Ciudad:</span>
+                    <strong className="text-slate-800">{ciudad}</strong>
+                  </div>
+                  <div className="p-2 bg-white rounded-xl border border-slate-200">
+                    <span className="text-slate-400 block font-bold text-[10px]">Área Total:</span>
+                    <strong className="text-slate-800">{sumaMedidaM2Areas} m²</strong>
+                  </div>
+                  <div className="p-2 bg-white rounded-xl border border-slate-200">
+                    <span className="text-slate-400 block font-bold text-[10px]">Pintura Estimada:</span>
+                    <strong className="text-indigo-950">{galonesEstimados} Gal</strong>
+                  </div>
+                  <div className="p-2 bg-white rounded-xl border border-slate-200">
+                    <span className="text-slate-400 block font-bold text-[10px]">Tono Deseado:</span>
+                    <strong className="text-slate-800">{color}</strong>
+                  </div>
+                </div>
+
+                {/* Items */}
+                <div className="p-3 bg-white rounded-xl border border-slate-200 space-y-1.5">
+                  <span className="text-[10px] font-extrabold uppercase text-slate-400 block tracking-wider">
+                    Pinturas Cotizadas:
+                  </span>
+                  {cotizacionLines.map((l) => {
+                    const prod = availableProducts.find((p) => p.ID_DE_PRODUCTO === Number(l.ID_de_producto));
+                    const nombreProd = prod ? getProdNombre(prod) : `Producto #${l.ID_de_producto}`;
+                    const precio = prod ? getProdPrecio(prod) : 0;
+                    const cant = Number(l.Cantidad_requerida) || 1;
+                    return (
+                      <div key={l.id} className="flex justify-between items-center py-1 border-b border-slate-100 last:border-b-0 text-xs">
+                        <span className="text-slate-800 font-medium">
+                          {cant}x {nombreProd} (Galón, Tono: {color})
+                        </span>
+                        <span className="font-mono font-bold text-slate-900">
+                          ${(precio * cant).toLocaleString('es-CO')} COP
+                        </span>
+                      </div>
+                    );
+                  })}
+                  <div className="flex justify-between items-center pt-2 text-sm font-black text-slate-900">
+                    <span>Total Presupuestado (IVA Inc.):</span>
+                    <span className="text-[#2FAE6D] font-mono">${totalCotizacionCOP.toLocaleString('es-CO')} COP</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* ACTION BUTTONS (DIRECT ACCESS & PURCHASE) */}
+              <div className="space-y-2.5 pt-1">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  {/* Action 1: Add to cart and continue browsing */}
+                  <button
+                    type="button"
+                    onClick={() => handleAddQuoteToCart(false)}
+                    className="py-3 px-4 bg-indigo-50 hover:bg-indigo-100 text-[#1B2A6B] border border-indigo-200 rounded-xl font-extrabold text-xs flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-98"
+                  >
+                    <ShoppingCart className="w-4 h-4 text-indigo-600" />
+                    <span>Añadir al Carrito</span>
+                  </button>
+
+                  {/* Action 2: Add and go to checkout (purchase gate) */}
+                  <button
+                    type="button"
+                    onClick={() => handleAddQuoteToCart(true)}
+                    className="py-3 px-4 bg-[#2FAE6D] hover:bg-[#27995f] text-white rounded-xl font-extrabold text-xs flex items-center justify-center gap-2 shadow-md hover:shadow-lg cursor-pointer transition-all active:scale-98"
+                  >
+                    <ArrowRight className="w-4 h-4" />
+                    <span>Completar Compra de esta Cotización</span>
+                  </button>
+                </div>
+
+                <div className="flex items-center justify-between gap-2 pt-1">
+                  <button
+                    type="button"
+                    onClick={handleCopySummary}
+                    className="px-3.5 py-2 text-slate-600 hover:text-slate-900 text-xs font-semibold rounded-xl hover:bg-slate-100 flex items-center gap-1.5 cursor-pointer border border-slate-200"
+                  >
+                    <Copy className="w-3.5 h-3.5 text-slate-400" />
+                    <span>{copiedSuccess ? '✓ Copiado al portapapeles' : 'Copiar Resumen'}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setCurrentStep(2)}
+                    className="px-3.5 py-2 text-slate-600 hover:text-slate-900 text-xs font-semibold rounded-xl hover:bg-slate-100 flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <ArrowLeft className="w-3.5 h-3.5" />
+                    <span>Ajustar Cantidades</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Opcional: Guardado Formal en Supabase */}
+              <div className="pt-3 border-t border-slate-200">
+                <details className="group rounded-2xl bg-slate-50 border border-slate-200 p-3.5 text-xs">
+                  <summary className="font-bold text-slate-700 cursor-pointer flex items-center justify-between list-none">
+                    <span className="flex items-center gap-2">
+                      <Database className="w-4 h-4 text-indigo-600" />
+                      <span>¿Deseas registrar este proyecto formalmente en Supabase? (Opcional)</span>
+                    </span>
+                    <span className="text-[10px] text-indigo-600 font-bold group-open:rotate-180 transition-transform">
+                      ▼
+                    </span>
+                  </summary>
+
+                  <div className="pt-3 space-y-3">
+                    <p className="text-[11px] text-slate-500">
+                      Si eres contratista o deseas consultar este proyecto después en la tabla de Supabase, puedes ingresar tus datos opcionales a continuación:
+                    </p>
+
+                    {supabaseSaveSuccess && (
+                      <div className="p-2.5 bg-emerald-50 text-emerald-900 border border-emerald-300 rounded-xl text-xs font-bold">
+                        {supabaseSaveSuccess}
+                      </div>
+                    )}
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-500 mb-0.5">Nombre / Empresa</label>
+                        <input
+                          type="text"
+                          value={optionalClientName}
+                          onChange={(e) => setOptionalClientName(e.target.value)}
+                          placeholder="Tu nombre o empresa"
+                          className="w-full p-2 bg-white border border-slate-300 rounded-xl text-xs"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-500 mb-0.5">Identificación / NIT</label>
+                        <input
+                          type="text"
+                          value={optionalClientDoc}
+                          onChange={(e) => setOptionalClientDoc(e.target.value)}
+                          placeholder="Cédula o NIT"
+                          className="w-full p-2 bg-white border border-slate-300 rounded-xl text-xs"
+                        />
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      disabled={isSavingToSupabase}
+                      onClick={handleOptionalSaveSupabase}
+                      className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-xs flex items-center gap-2 cursor-pointer shadow-xs disabled:opacity-50"
+                    >
+                      {isSavingToSupabase ? (
+                        <>
+                          <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                          <span>Guardando en Supabase...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Database className="w-3.5 h-3.5" />
+                          <span>Guardar en PROYECTO & USUARIO</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </details>
+              </div>
+
+            </div>
+          )}
+
         </div>
       </div>
     </div>
