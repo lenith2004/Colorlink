@@ -230,4 +230,7 @@ export interface ChatMessage {
   suggestedActions?: { label: string; actionType: string; payload?: any }[];
   parsedActions?: BotParsedAction[];
   productCards?: PaintProduct[];
+  simulationImageUrl?: string;
+  simulationSpace?: string;
+  simulationColor?: string;
 }

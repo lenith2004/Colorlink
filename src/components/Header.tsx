@@ -13,6 +13,7 @@ import {
   User,
   ShieldCheck,
   Database,
+  ShoppingBag,
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { BrandLogo } from './BrandLogo';
@@ -38,6 +39,8 @@ export const Header: React.FC = () => {
     whatsAppCommercialNumber,
     supabaseStatus,
     refreshFromSupabase,
+    cartItemsCount,
+    setIsCartOpen,
   } = useApp();
 
   const [isCityDropdownOpen, setIsCityDropdownOpen] = useState(false);
@@ -248,6 +251,21 @@ export const Header: React.FC = () => {
               )}
             </div>
 
+            {/* Shopping Cart button with badge */}
+            <button
+              id="header-cart-btn"
+              onClick={() => setIsCartOpen(true)}
+              className="relative p-2.5 rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 hover:text-[#1B2A6B] transition-all cursor-pointer"
+              title="Ver Carrito de Compras"
+            >
+              <ShoppingBag className="w-4 h-4" />
+              {cartItemsCount > 0 && (
+                <span className="absolute -top-1 -right-1 w-4 h-4 bg-[#2FAE6D] text-white text-[10px] font-bold rounded-full flex items-center justify-center shadow-xs">
+                  {cartItemsCount}
+                </span>
+              )}
+            </button>
+
             {/* Dashboard / Requests button with badge */}
             <button
               id="nav-dashboard-btn"
@@ -402,8 +420,20 @@ export const Header: React.FC = () => {
           Catálogo
         </button>
         <button
+          onClick={() => setIsCartOpen(true)}
+          className="text-xs font-semibold px-2 py-1 rounded-lg flex items-center gap-1 text-slate-600 hover:text-[#1B2A6B] relative"
+        >
+          <ShoppingBag className="w-3.5 h-3.5 text-[#1B2A6B]" />
+          <span>Carrito</span>
+          {cartItemsCount > 0 && (
+            <span className="w-3.5 h-3.5 rounded-full bg-[#2FAE6D] text-white text-[9px] font-bold flex items-center justify-center">
+              {cartItemsCount}
+            </span>
+          )}
+        </button>
+        <button
           onClick={() => setActiveView('dashboard')}
-          className={`text-xs font-semibold px-3 py-1 rounded-lg flex items-center gap-1 ${activeView === 'dashboard' ? 'text-[#1B2A6B] bg-blue-50' : 'text-slate-600'}`}
+          className={`text-xs font-semibold px-2.5 py-1 rounded-lg flex items-center gap-1 ${activeView === 'dashboard' ? 'text-[#1B2A6B] bg-blue-50' : 'text-slate-600'}`}
         >
           <span>Panel</span>
           {pendingRequestsCount > 0 && (

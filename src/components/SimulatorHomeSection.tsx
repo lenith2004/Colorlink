@@ -89,7 +89,15 @@ export const SimulatorHomeSection: React.FC = () => {
                 {/* Photo Thumbnail */}
                 <div className="relative aspect-4/3 overflow-hidden bg-slate-900">
                   <img
-                    src={room.imageSrc}
+                    src={
+                      room.id === 'sala_de_estar'
+                        ? '/assets/simulator/sala_variations/verde_menta_claro.jpg'
+                        : room.id === 'cocina'
+                        ? '/assets/simulator/cocina_variations/verde_menta_claro.jpg'
+                        : room.id === 'habitacion'
+                        ? '/assets/simulator/habitacion_variations/verde_menta_claro.jpg'
+                        : room.imageSrc
+                    }
                     alt={room.name}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   />
@@ -100,11 +108,18 @@ export const SimulatorHomeSection: React.FC = () => {
                     {room.category}
                   </span>
 
-                  {/* Mask isolation pill indicator */}
-                  <span className="absolute top-2.5 right-2.5 px-2 py-0.5 rounded-md text-[9px] font-bold bg-emerald-500/90 text-white backdrop-blur-xs flex items-center gap-1">
-                    <ShieldCheck className="w-2.5 h-2.5" />
-                    Muebles Aislados
-                  </span>
+                  {/* Mask isolation pill indicator or 20 Tonos Reales */}
+                  {room.id === 'sala_de_estar' || room.id === 'cocina' || room.id === 'habitacion' ? (
+                    <span className="absolute top-2.5 right-2.5 px-2 py-0.5 rounded-md text-[9px] font-bold bg-emerald-500 text-white backdrop-blur-xs flex items-center gap-1 shadow-xs">
+                      <Sparkles className="w-2.5 h-2.5 text-amber-300" />
+                      20 Tonos Reales
+                    </span>
+                  ) : (
+                    <span className="absolute top-2.5 right-2.5 px-2 py-0.5 rounded-md text-[9px] font-bold bg-emerald-500/90 text-white backdrop-blur-xs flex items-center gap-1">
+                      <ShieldCheck className="w-2.5 h-2.5" />
+                      Muebles Aislados
+                    </span>
+                  )}
 
                   {/* Room name on thumbnail bottom */}
                   <div className="absolute bottom-2 left-2.5 right-2.5">

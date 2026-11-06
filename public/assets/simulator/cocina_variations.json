@@ -1,0 +1,182 @@
+[
+  {
+    "id": "verde_menta_claro",
+    "name": "Verde Menta Luminoso",
+    "code": "PIN-V01",
+    "family": "Verdes & Frescura",
+    "hex": "#D6F4EA",
+    "image": "/assets/simulator/cocina_variations/verde_menta_claro.jpg",
+    "description": "Tono menta fresco y luminoso; ideal para cocinas modernas con luz natural."
+  },
+  {
+    "id": "verde_salvia",
+    "name": "Verde Salvia N\u00f3rdico",
+    "code": "PIN-V02",
+    "family": "Verdes & Frescura",
+    "hex": "#9FB495",
+    "image": "/assets/simulator/cocina_variations/verde_salvia.jpg",
+    "description": "Verde salvia org\u00e1nico; armoniza perfectamente con gabinetes blancos y madera."
+  },
+  {
+    "id": "verde_bosque",
+    "name": "Verde Bosque Profundo",
+    "code": "PIN-V03",
+    "family": "Verdes & Frescura",
+    "hex": "#325444",
+    "image": "/assets/simulator/cocina_variations/verde_bosque.jpg",
+    "description": "Verde esmeralda profundo; contraste premium con mesones y electrodom\u00e9sticos."
+  },
+  {
+    "id": "verde_oliva",
+    "name": "Verde Oliva Elegante",
+    "code": "PIN-V04",
+    "family": "Verdes & Frescura",
+    "hex": "#455238",
+    "image": "/assets/simulator/cocina_variations/verde_oliva.jpg",
+    "description": "Verde oliva contempor\u00e1neo con matices c\u00e1lidos; sofisticado y acogedor."
+  },
+  {
+    "id": "azul_celeste",
+    "name": "Azul Celeste Cielo",
+    "code": "PIN-A01",
+    "family": "Azules & Serenidad",
+    "hex": "#ABE3FE",
+    "image": "/assets/simulator/cocina_variations/azul_celeste.jpg",
+    "description": "Azul cielo limpio y vibrante; aporta frescura y sensaci\u00f3n de amplitud."
+  },
+  {
+    "id": "azul_lavanda_sereno",
+    "name": "Azul Lavanda Sereno",
+    "code": "PIN-A02",
+    "family": "Azules & Serenidad",
+    "hex": "#95A9CC",
+    "image": "/assets/simulator/cocina_variations/azul_lavanda_sereno.jpg",
+    "description": "Azul lavanda suave; serenidad y equilibrio para el coraz\u00f3n del hogar."
+  },
+  {
+    "id": "azul_rey_cobalto",
+    "name": "Azul Rey Cobalto",
+    "code": "PIN-A03",
+    "family": "Azules & Serenidad",
+    "hex": "#254E84",
+    "image": "/assets/simulator/cocina_variations/azul_rey_cobalto.jpg",
+    "description": "Azul cobalto intenso; gran impacto visual en muros de cocina."
+  },
+  {
+    "id": "azul_marino_profundo",
+    "name": "Azul Marino Profundo",
+    "code": "PIN-A04",
+    "family": "Azules & Serenidad",
+    "hex": "#213349",
+    "image": "/assets/simulator/cocina_variations/azul_marino_profundo.jpg",
+    "description": "Azul noche sofisticado; lujo moderno con gabinetes y cuarzo blanco."
+  },
+  {
+    "id": "rosa_pastel",
+    "name": "Rosa Pastel Suave",
+    "code": "PIN-R01",
+    "family": "Rosas & P\u00farpuras",
+    "hex": "#F8D1D4",
+    "image": "/assets/simulator/cocina_variations/rosa_pastel.jpg",
+    "description": "Rosa suave y c\u00e1lido; a\u00f1ade un toque de luminosidad pastel acogedora."
+  },
+  {
+    "id": "coral_romantico",
+    "name": "Coral Rom\u00e1ntico",
+    "code": "PIN-R02",
+    "family": "Rosas & P\u00farpuras",
+    "hex": "#D18683",
+    "image": "/assets/simulator/cocina_variations/coral_romantico.jpg",
+    "description": "Coral terracota vibrante; estimula el apetito y la calidez familiar."
+  },
+  {
+    "id": "borgona_vino",
+    "name": "Borgo\u00f1a Vino Tinto",
+    "code": "PIN-R03",
+    "family": "Rosas & P\u00farpuras",
+    "hex": "#512F3F",
+    "image": "/assets/simulator/cocina_variations/borgona_vino.jpg",
+    "description": "Vino tinto profundo; car\u00e1cter gourmet de alta cocina europea."
+  },
+  {
+    "id": "purpura_amatista",
+    "name": "P\u00farpura Amatista",
+    "code": "PIN-R04",
+    "family": "Rosas & P\u00farpuras",
+    "hex": "#9372A1",
+    "image": "/assets/simulator/cocina_variations/purpura_amatista.jpg",
+    "description": "P\u00farpura amatista refinado; personalidad creativa y distinci\u00f3n culinaria."
+  },
+  {
+    "id": "amarillo_mantequilla",
+    "name": "Amarillo Mantequilla Suave",
+    "code": "PIN-C01",
+    "family": "C\u00e1lidos & Tierras",
+    "hex": "#F9F0AF",
+    "image": "/assets/simulator/cocina_variations/amarillo_mantequilla.jpg",
+    "description": "Amarillo c\u00e1lido y solar; maximiza la luz matutina en la cocina."
+  },
+  {
+    "id": "ocre_mostaza",
+    "name": "Ocre Mostaza C\u00e1lido",
+    "code": "PIN-C02",
+    "family": "C\u00e1lidos & Tierras",
+    "hex": "#D29135",
+    "image": "/assets/simulator/cocina_variations/ocre_mostaza.jpg",
+    "description": "Ocre dorado energizante; calidez artesanal y estilo r\u00fastico moderno."
+  },
+  {
+    "id": "rojo_colonial",
+    "name": "Rojo Colonial Profundo",
+    "code": "PIN-C03",
+    "family": "C\u00e1lidos & Tierras",
+    "hex": "#562B34",
+    "image": "/assets/simulator/cocina_variations/rojo_colonial.jpg",
+    "description": "Rojo colonial cl\u00e1sico; tradici\u00f3n gastron\u00f3mica y energ\u00eda vibrante."
+  },
+  {
+    "id": "terracota_arcilla",
+    "name": "Terracota Arcilla",
+    "code": "PIN-C04",
+    "family": "C\u00e1lidos & Tierras",
+    "hex": "#934F2C",
+    "image": "/assets/simulator/cocina_variations/terracota_arcilla.jpg",
+    "description": "Tierra cocida mediterr\u00e1nea; estilo toscano r\u00fastico y acogedor."
+  },
+  {
+    "id": "blanco_puro",
+    "name": "Blanco Puro Luminoso",
+    "code": "PIN-N01",
+    "family": "Blancos, Grises & Neutros",
+    "hex": "#EFEFEF",
+    "image": "/assets/simulator/cocina_variations/blanco_puro.jpg",
+    "description": "Blanco arquitect\u00f3nico puro; m\u00e1xima higiene visual, amplitud y luminosidad."
+  },
+  {
+    "id": "gris_lino",
+    "name": "Gris Lino Claro",
+    "code": "PIN-N02",
+    "family": "Blancos, Grises & Neutros",
+    "hex": "#B7B9B8",
+    "image": "/assets/simulator/cocina_variations/gris_lino.jpg",
+    "description": "Gris neutro luminoso; base contempor\u00e1nea perfecta para cocinas minimalistas."
+  },
+  {
+    "id": "gris_urbano",
+    "name": "Gris Urbano Contempor\u00e1neo",
+    "code": "PIN-N03",
+    "family": "Blancos, Grises & Neutros",
+    "hex": "#666769",
+    "image": "/assets/simulator/cocina_variations/gris_urbano.jpg",
+    "description": "Gris medio de alta elegancia; contraste sobrio con blanco y madera clara."
+  },
+  {
+    "id": "negro_ebano",
+    "name": "Negro \u00c9bano Grafito",
+    "code": "PIN-N04",
+    "family": "Blancos, Grises & Neutros",
+    "hex": "#303032",
+    "image": "/assets/simulator/cocina_variations/negro_ebano.jpg",
+    "description": "Negro grafito de vanguardia; est\u00e9tica industrial moderna de alto nivel."
+  }
+]

@@ -98,6 +98,28 @@ interface AppContextType {
   isChatOpen: boolean;
   setIsChatOpen: (open: boolean) => void;
   
+  // Shopping Cart
+  cart: CartItem[];
+  addToCart: (itemData: {
+    productId?: string;
+    sku?: string;
+    name?: string;
+    category?: string;
+    colorName?: string;
+    colorHex?: string;
+    presentation?: 'Cuarto (1/4 Gal)' | 'Galón' | 'Cuñete (5 Gal)';
+    pricePerUnitCOP?: number;
+    quantity?: number;
+    image?: string;
+  }) => void;
+  removeFromCart: (itemId: string) => void;
+  updateCartQuantity: (itemId: string, quantity: number) => void;
+  clearCart: () => void;
+  isCartOpen: boolean;
+  setIsCartOpen: (open: boolean) => void;
+  cartTotalCOP: number;
+  cartItemsCount: number;
+
   // AI Advisor Chat
   chatMessages: ChatMessage[];
   sendChatMessage: (text: string) => void;
@@ -307,19 +329,122 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
   const [isChatOpen, setIsChatOpen] = useState<boolean>(false);
 
-  // Chat messages
+  // Shopping Cart State
+  const [cart, setCart] = useState<CartItem[]>(() => {
+    try {
+      const saved = localStorage.getItem('pintubot_cart');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [isCartOpen, setIsCartOpen] = useState<boolean>(false);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('pintubot_cart', JSON.stringify(cart));
+    } catch {}
+  }, [cart]);
+
+  const addToCart = (itemData: {
+    productId?: string;
+    sku?: string;
+    name?: string;
+    category?: string;
+    colorName?: string;
+    colorHex?: string;
+    presentation?: 'Cuarto (1/4 Gal)' | 'Galón' | 'Cuñete (5 Gal)';
+    pricePerUnitCOP?: number;
+    quantity?: number;
+    image?: string;
+  }) => {
+    let productMatch = PRODUCTS_CATALOG.find(
+      (p) =>
+        (itemData.sku && p.code.toUpperCase() === itemData.sku.toUpperCase()) ||
+        (itemData.productId && p.id === itemData.productId)
+    );
+
+    const sku = itemData.sku || productMatch?.code || 'PNT-GEN';
+    const name = itemData.name || productMatch?.name || 'Pintura Pintuco®';
+    const category = itemData.category || productMatch?.category || 'Arquitectónica';
+    const colorName = itemData.colorName || 'Blanco Puro';
+    const colorHex = itemData.colorHex || '#F9FAFB';
+    const presentation = itemData.presentation || 'Galón';
+    const gallonsPerUnit = presentation === 'Cuñete (5 Gal)' ? 5 : presentation === 'Cuarto (1/4 Gal)' ? 0.25 : 1;
+    const basePrice = itemData.pricePerUnitCOP || productMatch?.pricePerGallonCOP || 89900;
+    const pricePerUnitCOP =
+      presentation === 'Cuñete (5 Gal)'
+        ? Math.round(basePrice * 4.6)
+        : presentation === 'Cuarto (1/4 Gal)'
+        ? Math.round(basePrice * 0.32)
+        : basePrice;
+    const qtyToAdd = itemData.quantity && itemData.quantity > 0 ? itemData.quantity : 1;
+    const image = itemData.image || productMatch?.image;
+
+    setCart((prev) => {
+      const existingIdx = prev.findIndex(
+        (i) => i.sku === sku && i.colorName === colorName && i.presentation === presentation
+      );
+      if (existingIdx >= 0) {
+        const updated = [...prev];
+        updated[existingIdx] = {
+          ...updated[existingIdx],
+          quantity: updated[existingIdx].quantity + qtyToAdd,
+        };
+        return updated;
+      } else {
+        const newItem: CartItem = {
+          id: `cart-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+          productId: productMatch?.id || 'prod-custom',
+          sku,
+          name,
+          category,
+          colorName,
+          colorHex,
+          presentation,
+          gallonsPerUnit,
+          pricePerUnitCOP,
+          quantity: qtyToAdd,
+          image,
+        };
+        return [...prev, newItem];
+      }
+    });
+  };
+
+  const removeFromCart = (itemId: string) => {
+    setCart((prev) => prev.filter((i) => i.id !== itemId));
+  };
+
+  const updateCartQuantity = (itemId: string, quantity: number) => {
+    if (quantity <= 0) {
+      removeFromCart(itemId);
+    } else {
+      setCart((prev) => prev.map((i) => (i.id === itemId ? { ...i, quantity } : i)));
+    }
+  };
+
+  const clearCart = () => {
+    setCart([]);
+  };
+
+  const cartTotalCOP = cart.reduce((acc, item) => acc + item.pricePerUnitCOP * item.quantity, 0);
+  const cartItemsCount = cart.reduce((acc, item) => acc + item.quantity, 0);
+
+  // Chat messages with PintuBot
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>(() => {
     return [
       {
         id: 'msg-init',
         sender: 'assistant',
-        text: '¡Hola! Soy tu Asesor Inteligente ColorLink de Pintuco. 🎨 Puedo calcular los galones de pintura para tu proyecto, recomendarte la mejor formulación técnica (Koraza, Viniltex, Epóxico) o darte el estado en tiempo real de tu solicitud (#SOL-101 a #SOL-105). ¿En qué te ayudo hoy?',
+        text: '¡Hola! Soy **PintuBot**, tu experto técnico en pinturas y asesor virtual de compras en Pintuco®.\n\nTe puedo asesorar en:\n• 🎨 **Simulador Visual:** He identificado 5 espacios de tu imagen (Sala, Cocina, Habitación, Exterior y Oficina). ¿Cuál deseas pintar?\n• 🛠️ **Diagnóstico de humedad:** Filtración, capilaridad o condensación en 4 pasos técnicos.\n• 📐 **Calculadora de m²:** Dime el ancho y alto de tu pared y te calculo los galones exactos a 2 manos.\n• 🛒 **Compras online:** Pídeme cualquier producto y lo añado directo a tu carrito.',
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         suggestedActions: [
-          { label: '📐 Calcular galones para 50m²', actionType: 'calc_sample' },
-          { label: '🛡️ ¿Qué pintura uso para humedad?', actionType: 'recommend_moisture' },
-          { label: '📦 Rastrear solicitud #SOL-102', actionType: 'track_sol_102' },
-          { label: '✨ Ver catálogo más vendidos', actionType: 'view_catalog' },
+          { label: '🛋️ Pintar Sala de Estar en Verde Menta', actionType: 'sim_sala_verde_menta' },
+          { label: '🛏️ Pintar Habitación en Azul Marino', actionType: 'sim_habitacion_azul' },
+          { label: '📐 Calcular pintura para 4m x 2.5m', actionType: 'calc_sample_4x26' },
+          { label: '💧 Solución para humedad y hongos', actionType: 'moisture_prompt' },
+          { label: '🛒 Añadir 2 galones Viniltex', actionType: 'buy_viniltex_sample' },
         ],
       },
     ];
@@ -1175,7 +1300,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return `https://wa.me/${targetPhone}?text=${encodeURIComponent(message)}`;
   };
 
-  // AI Chat Assistant
+  // AI Chat Assistant (PintuBot)
   const sendChatMessage = (userText: string) => {
     const nowTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     const userMsg: ChatMessage = {
@@ -1188,71 +1313,31 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setChatMessages((prev) => [...prev, userMsg]);
 
     setTimeout(() => {
-      let replyText = '';
-      let actions: { label: string; actionType: string; payload?: any }[] | undefined = undefined;
+      // 1. Procesar mediante motor PintuBot
+      const botResponse = processPintuBotMessage(userText);
 
-      const lower = userText.toLowerCase();
-
-      const solMatch = lower.match(/sol[- ]?(\d+)/);
-      if (solMatch) {
-        const num = `SOL-${solMatch[1]}`;
-        const found = requests.find((r) => r.requestNumber.toLowerCase() === num.toLowerCase());
-        if (found) {
-          const statusLabels: Record<RequestStatus, string> = {
-            necesidad: '1️⃣ En espera de Solución Técnica',
-            solucion_tecnica: '2️⃣ En Evaluación Técnica / Cotización',
-            abastecimiento: '3️⃣ En Asignación de Stock y Lote en Bodega',
-            calidad: '4️⃣ En Inspección de Calidad de Laboratorio',
-            servicio: '5️⃣ En Logística de Despacho y Acompañamiento Técnico',
-            completado: '✅ Entregado y Certificado con Garantía Pintuco',
-          };
-          replyText = `🔍 Encontré la solicitud **${found.requestNumber}**:\n\n• **Proyecto:** ${found.projectName}\n• **Cliente:** ${found.clientName}\n• **Producto:** ${found.recommendedProductName} (${found.gallonsNeeded} Galones)\n• **Estado actual:** ${statusLabels[found.status]}\n• **Ciudad:** ${found.city}`;
-          actions = [
-            { label: `Ver ficha de ${found.requestNumber}`, actionType: 'open_request', payload: found },
-          ];
-        } else {
-          replyText = `No encontré una solicitud con el código ${num.toUpperCase()}. Las solicitudes activas son: ${requests.map((r) => r.requestNumber).join(', ')}.`;
+      // 2. Ejecutar acciones automáticas si aplica (ej. ADD_TO_CART)
+      botResponse.parsedActions.forEach((act) => {
+        if (act.type === 'ADD_TO_CART' && act.sku) {
+          addToCart({ sku: act.sku, quantity: act.quantity || 1 });
         }
-      } else if (lower.includes('humedad') || lower.includes('terraza') || lower.includes('filtracion') || lower.includes('filtración')) {
-        replyText = `🛡️ Para problemas de humedad y cubiertas expuestas te recomiendo **Aquatec® Impermeabilizante Fibratado** (garantía de hasta 10 años) o **Koraza® Máxima Protección** para fachadas con repelencia al agua. ¿Deseas cotizar los m² de tu superficie?`;
-        actions = [
-          { label: '📐 Cotizar impermeabilización', actionType: 'open_request_modal' },
-        ];
-      } else if (lower.includes('m2') || lower.includes('m²') || lower.includes('cuanto') || lower.includes('cuánto') || lower.includes('galon') || lower.includes('galón') || lower.includes('calcular')) {
-        replyText = `📐 **Regla Técnica Pintuco:**\n• **Viniltex Avanzado:** rinde ~40 m²/gal a 2 manos.\n• **Koraza Exteriores:** rinde ~32 m²/gal a 2 manos.\n• **Epóxico Pisos:** rinde ~25 m²/gal a 2 manos.\n\nPara un área de 50 m², por ejemplo, requieres aproximadamente **2 a 3 galones** según la porosidad de la pared.`;
-        actions = [
-          { label: 'Abrir Calculadora Automática', actionType: 'open_request_modal' },
-        ];
-      } else if (lower.includes('epox') || lower.includes('piso') || lower.includes('clinica') || lower.includes('hospital')) {
-        replyText = `🏥 Para pisos industriales, bodegas y clínicas, la solución ideal es **Pintuco Epóxico Pisos 100% Sólidos**, acabado monolítico de alta resistencia mecánica a montacargas y desinfectantes hospitalarios.`;
-        actions = [
-          { label: 'Ver Ficha Epóxico', actionType: 'filter_catalog', payload: 'epoxico' },
-          { label: 'Crear Solicitud de Piso', actionType: 'open_request_modal' },
-        ];
-      } else if (lower.includes('catalogo') || lower.includes('catálogo') || lower.includes('productos') || lower.includes('precio')) {
-        replyText = `🎨 Disponemos de las líneas líderes de Pintuco:\n1. **Viniltex Avanzado®** (Interiores / Antibacterial)\n2. **Koraza®** (Fachadas y Exteriores)\n3. **Pintulux®** (Esmalte Sintético Anticorrosivo)\n4. **Epóxico Pisos 100% Sólidos**\n5. **Aquatec® Impermeabilizante**\n6. **Pintuco Tráfico Pesado**`;
-        actions = [
-          { label: 'Explorar Catálogo', actionType: 'view_catalog' },
-          { label: 'Nueva Solicitud', actionType: 'open_request_modal' },
-        ];
-      } else {
-        replyText = `Gracias por tu consulta. ColorLink conecta en segundos tu requerimiento con nuestro laboratorio técnico, centro de distribución y control de calidad. Puedes crear una nueva solicitud con cálculo de m² o consultar el estado de cualquier orden.`;
-        actions = [
-          { label: 'Crear Solicitud de Material', actionType: 'open_request_modal' },
-          { label: 'Ver Estado de Inventario', actionType: 'view_inventory' },
-        ];
-      }
+      });
 
       const botMsg: ChatMessage = {
         id: `msg-${Date.now() + 1}`,
         sender: 'assistant',
-        text: replyText,
+        text: botResponse.replyText,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        suggestedActions: actions,
+        suggestedActions: botResponse.suggestedActions,
+        parsedActions: botResponse.parsedActions,
+        productCards: botResponse.productCards,
+        simulationImageUrl: botResponse.simulationImageUrl,
+        simulationSpace: botResponse.simulationSpace,
+        simulationColor: botResponse.simulationColor,
       };
 
       setChatMessages((prev) => [...prev, botMsg]);
-    }, 600);
+    }, 450);
   };
 
   return (
@@ -1293,6 +1378,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setIsAuthModalOpen,
         isChatOpen,
         setIsChatOpen,
+        cart,
+        addToCart,
+        removeFromCart,
+        updateCartQuantity,
+        clearCart,
+        isCartOpen,
+        setIsCartOpen,
+        cartTotalCOP,
+        cartItemsCount,
         chatMessages,
         sendChatMessage,
         calculateRequirements,

@@ -6,6 +6,9 @@ export interface PintuBotResponse {
   suggestedActions: { label: string; actionType: string; payload?: any }[];
   parsedActions: BotParsedAction[];
   productCards: PaintProduct[];
+  simulationImageUrl?: string;
+  simulationSpace?: string;
+  simulationColor?: string;
 }
 
 /**
@@ -86,6 +89,181 @@ export function processPintuBotMessage(userText: string): PintuBotResponse {
   const suggestedActions: { label: string; actionType: string; payload?: any }[] = [];
 
   let replyText = '';
+
+  // -------------------------------------------------------------------------
+  // 0. INTENCIÓN: ASISTENTE VISUAL DE PINTURAS & SIMULACIÓN ARQUITECTÓNICA
+  // -------------------------------------------------------------------------
+  const isImageOrSpaceInquiry =
+    lower.includes('image_0') ||
+    lower.includes('qué espacios') ||
+    lower.includes('que espacios') ||
+    lower.includes('identificado') ||
+    lower.includes('analiza la imagen') ||
+    lower.includes('analizar imagen') ||
+    lower.includes('segmentación') ||
+    lower.includes('segmentacion');
+
+  if (isImageOrSpaceInquiry) {
+    replyText = `He analizado la imagen y mediante segmentación semántica he identificado los siguientes 5 espacios arquitectónicos independientes para trabajar de forma individual:\n\n1. 🛋️ **Sala de Estar** (Muros principales con sofá, mesa de centro, tapete y ventanal aislados).\n2. 🍳 **Cocina** (Muros perimetrales con gabinetes superiores/inferiores, mesón y grifería aislados).\n3. 🛏️ **Habitación** (Pared de cabecero con cama, mesas de noche y clóset empotrado aislados).\n4. 🏡 **Exterior de Casa** (Fachada frontal contemporánea con vanos y cancelería aislados).\n5. 💼 **Oficina** (Pared de acento con escritorio de madera, silla y biblioteca aislados).\n\n¿Cuál de estos espacios deseas pintar y qué color te gustaría aplicarle? (Ej: *"Quiero ver la Sala de Estar de Verde Menta"* o *"Habitación con Azul Marino"*).`;
+
+    suggestedActions.push(
+      { label: '🛋️ Sala de Estar en Verde Menta', actionType: 'sim_sala_verde_menta' },
+      { label: '🛏️ Habitación en Azul Marino', actionType: 'sim_habitacion_azul' },
+      { label: '🏡 Exterior en Terracota', actionType: 'sim_exterior_terracota' },
+      { label: '💼 Oficina: Pared de Acento', actionType: 'sim_oficina_acento' },
+      { label: '🎨 Abrir Simulador 3D', actionType: 'navigate_simulator' }
+    );
+
+    return {
+      replyText,
+      suggestedActions,
+      parsedActions: [{ type: 'NAVIGATE_TO', path: '/simulador', rawText: '[ACTION: NAVIGATE_TO("/simulador")]' }],
+      productCards: [PRODUCTS_CATALOG[0]],
+    };
+  }
+
+  // Si el usuario pide pintar un espacio específico con un color
+  const isSimulateColorIntent =
+    (lower.includes('pintar') || lower.includes('color') || lower.includes('quiero ver') || lower.includes('simular') || lower.includes('aplica') || lower.includes('aplicar') || lower.includes('verde') || lower.includes('azul') || lower.includes('terracota') || lower.includes('blanco') || lower.includes('gris') || lower.includes('menta')) &&
+    (lower.includes('sala') || lower.includes('cocina') || lower.includes('habitacion') || lower.includes('habitación') || lower.includes('exterior') || lower.includes('fachada') || lower.includes('oficina') || lower.includes('pared') || lower.includes('muro'));
+
+  if (isSimulateColorIntent) {
+    let spaceName = 'Sala de Estar';
+    let spaceId = 'sala_de_estar';
+    let isolatedElements = 'el sofá, la mesa de centro, el tapete y la vista exterior';
+    let colorFile = 'verde_menta_claro.jpg';
+    let colorName = 'Verde Menta Luminoso';
+    let productRec = PRODUCTS_CATALOG[0];
+
+    // Detectar espacio
+    if (lower.includes('cocina')) {
+      spaceName = 'Cocina';
+      spaceId = 'cocina';
+      isolatedElements = 'los gabinetes blancos, el mesón de cuarzo gris, la grifería y el ventanal';
+      productRec = PRODUCTS_CATALOG.find((p) => p.code === 'VIN-120') || productRec;
+    } else if (lower.includes('habitacion') || lower.includes('habitación') || lower.includes('dormitorio') || lower.includes('cuarto')) {
+      spaceName = 'Habitación';
+      spaceId = 'habitacion';
+      isolatedElements = 'la cama, el respaldo de madera, las mesas de noche, las lámparas cálidas y el clóset';
+      productRec = PRODUCTS_CATALOG[0];
+    } else if (lower.includes('exterior') || lower.includes('fachada') || lower.includes('casa')) {
+      spaceName = 'Exterior de Casa';
+      spaceId = 'exterior_casa';
+      isolatedElements = 'la cancelería negra, ventanales, portón de garaje, andén de concreto y vegetación';
+      productRec = PRODUCTS_CATALOG.find((p) => p.code === 'KOR-200') || productRec;
+    } else if (lower.includes('oficina') || lower.includes('estudio')) {
+      spaceName = 'Oficina';
+      spaceId = 'oficina';
+      isolatedElements = 'el escritorio de madera, la silla ergonómica, la biblioteca con libros y la ventana';
+      productRec = PRODUCTS_CATALOG.find((p) => p.code === 'VIN-150') || productRec;
+    }
+
+    // Detectar color de entre los 20 colores reales
+    if (lower.includes('azul marino') || lower.includes('azul oscuro') || lower.includes('navy')) {
+      colorName = 'Azul Marino Profundo';
+      colorFile = 'azul_marino_profundo.jpg';
+    } else if (lower.includes('azul rey') || lower.includes('cobalto')) {
+      colorName = 'Azul Rey Cobalto';
+      colorFile = 'azul_rey_cobalto.jpg';
+    } else if (lower.includes('lavanda') || lower.includes('azul suave')) {
+      colorName = 'Azul Lavanda Sereno';
+      colorFile = 'azul_lavanda_sereno.jpg';
+    } else if (lower.includes('celeste') || lower.includes('azul cielo') || lower.includes('azul')) {
+      colorName = 'Azul Celeste Cielo';
+      colorFile = 'azul_celeste.jpg';
+    } else if (lower.includes('menta') || lower.includes('verde menta')) {
+      colorName = 'Verde Menta Luminoso';
+      colorFile = 'verde_menta_claro.jpg';
+    } else if (lower.includes('salvia') || lower.includes('verde salvia')) {
+      colorName = 'Verde Salvia Nórdico';
+      colorFile = 'verde_salvia.jpg';
+    } else if (lower.includes('bosque') || lower.includes('esmeralda') || lower.includes('verde oscuro')) {
+      colorName = 'Verde Bosque Profundo';
+      colorFile = 'verde_bosque.jpg';
+    } else if (lower.includes('oliva') || lower.includes('militar')) {
+      colorName = 'Verde Oliva Elegante';
+      colorFile = 'verde_oliva.jpg';
+    } else if (lower.includes('verde')) {
+      colorName = 'Verde Menta Luminoso';
+      colorFile = 'verde_menta_claro.jpg';
+    } else if (lower.includes('rosa') || lower.includes('rosado')) {
+      colorName = 'Rosa Pastel Suave';
+      colorFile = 'rosa_pastel.jpg';
+    } else if (lower.includes('coral') || lower.includes('salmon')) {
+      colorName = 'Coral Romántico';
+      colorFile = 'coral_romantico.jpg';
+    } else if (lower.includes('vino') || lower.includes('borgoña') || lower.includes('borgona')) {
+      colorName = 'Borgoña Vino Tinto';
+      colorFile = 'borgona_vino.jpg';
+    } else if (lower.includes('purpura') || lower.includes('púrpura') || lower.includes('amatista') || lower.includes('lila') || lower.includes('morado')) {
+      colorName = 'Púrpura Amatista';
+      colorFile = 'purpura_amatista.jpg';
+    } else if (lower.includes('amarillo') || lower.includes('mantequilla')) {
+      colorName = 'Amarillo Mantequilla Suave';
+      colorFile = 'amarillo_mantequilla.jpg';
+    } else if (lower.includes('ocre') || lower.includes('mostaza') || lower.includes('dorado')) {
+      colorName = 'Ocre Mostaza Cálido';
+      colorFile = 'ocre_mostaza.jpg';
+    } else if (lower.includes('rojo') || lower.includes('colonial')) {
+      colorName = 'Rojo Colonial Profundo';
+      colorFile = 'rojo_colonial.jpg';
+    } else if (lower.includes('terracota') || lower.includes('arcilla') || lower.includes('ladrillo') || lower.includes('naranja')) {
+      colorName = 'Terracota Arcilla';
+      colorFile = 'terracota_arcilla.jpg';
+    } else if (lower.includes('negro') || lower.includes('ebano') || lower.includes('grafito')) {
+      colorName = 'Negro Ébano Grafito';
+      colorFile = 'negro_ebano.jpg';
+    } else if (lower.includes('gris claro') || lower.includes('lino')) {
+      colorName = 'Gris Lino Claro';
+      colorFile = 'gris_lino.jpg';
+    } else if (lower.includes('gris') || lower.includes('plomo')) {
+      colorName = 'Gris Urbano Contemporáneo';
+      colorFile = 'gris_urbano.jpg';
+    } else if (lower.includes('blanco')) {
+      colorName = 'Blanco Puro Luminoso';
+      colorFile = 'blanco_puro.jpg';
+    }
+
+    let simulationImageUrl = '/assets/simulator/cocina.jpg';
+    if (spaceId === 'sala_de_estar') {
+      simulationImageUrl = `/assets/simulator/sala_variations/${colorFile}`;
+    } else if (spaceId === 'cocina') {
+      simulationImageUrl = `/assets/simulator/cocina_variations/${colorFile}`;
+    } else if (spaceId === 'habitacion') {
+      simulationImageUrl = `/assets/simulator/habitacion_variations/${colorFile}`;
+    } else if (spaceId === 'exterior_casa') {
+      simulationImageUrl = '/assets/simulator/exterior_casa.jpg';
+    } else if (spaceId === 'oficina') {
+      simulationImageUrl = '/assets/simulator/oficina.jpg';
+    }
+
+    const navAction = `[ACTION: NAVIGATE_TO("/simulador")]`;
+    parsedActions.push({
+      type: 'NAVIGATE_TO',
+      path: '/simulador',
+      rawText: navAction,
+    });
+
+    productCards.push(productRec);
+
+    replyText = `Aquí tienes la **${spaceName}** con las paredes pintadas en **'${colorName}'**.\n\nHe conservado intactos ${isolatedElements} para que puedas apreciar el cambio real con iluminación natural, sombras de esquinas y textura arquitectónica original.\n\n${navAction}\n\n• **Pintura recomendada:** ${productRec.name} (SKU: \`${productRec.code}\`)\n• **Precio:** $${productRec.pricePerGallonCOP.toLocaleString('es-CO')} COP / galón\n• **Rendimiento:** ~${productRec.coveragePerGallonSqM} m²/gal a 2 manos`;
+
+    suggestedActions.push(
+      { label: `🛒 Añadir ${productRec.name.split('®')[0]} al Carrito`, actionType: 'add_rec_to_cart', payload: productRec.code },
+      { label: '📐 Calcular galones m²', actionType: 'calc_prompt' },
+      { label: '🎨 Probar más tonos en el Simulador 3D', actionType: 'navigate_simulator' }
+    );
+
+    return {
+      replyText,
+      suggestedActions,
+      parsedActions,
+      productCards,
+      simulationImageUrl,
+      simulationSpace: spaceName,
+      simulationColor: colorName,
+    };
+  }
 
   // -------------------------------------------------------------------------
   // 1. INTENCIÓN: AGREGAR AL CARRITO DIRECTO

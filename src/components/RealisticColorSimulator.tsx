@@ -2,26 +2,20 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   Sparkles,
   RotateCcw,
-  ZoomIn,
-  ZoomOut,
-  Maximize2,
   Check,
   Calculator,
   Download,
-  Info,
-  ChevronRight,
   Eye,
-  Sliders,
   Layers,
   ArrowRight,
-  Sun,
   ShieldCheck,
   Droplets,
-  Share2,
+  Palette,
+  Maximize2,
+  Sliders,
+  CheckCircle2,
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
-import { COLOR_PALETTES } from '../data/initialData';
-import { ColorPaletteItem } from '../types';
 
 export interface RoomScenario {
   id: 'sala_de_estar' | 'cocina' | 'habitacion' | 'exterior_casa' | 'oficina';
@@ -41,37 +35,37 @@ export const ROOM_SCENARIOS: RoomScenario[] = [
     id: 'sala_de_estar',
     name: 'Sala de Estar',
     category: 'Interior',
-    description: 'Muros principales de mampostería y columna divisoria con iluminación natural.',
+    description: 'Muros principales con sofá gris, mesa de centro, tapete artesanal y ventanal al jardín.',
     surfaceType: 'Mampostería / Muros interiores',
     recommendedProduct: 'Viniltex Avanzado® Antibacterial (Lavable)',
     imageSrc: '/assets/simulator/sala_de_estar.jpg',
     maskSrc: '/assets/simulator/sala_de_estar_mask.png',
     aspectRatio: '702 / 382',
-    accentTip: 'Pintar el muro de fondo genera amplitud y contrasta con sofás grises y maderas claras.',
+    accentTip: '20 variaciones fotorrealistas con muebles y piso 100% aislados e intactos.',
   },
   {
     id: 'cocina',
     name: 'Cocina',
     category: 'Interior',
-    description: 'Muros superiores y perímetro de ventana sobre salpicadero de baldosas blancas.',
+    description: 'Muros perimetrales y vano de ventana sobre gabinetes blancos y mesón gris.',
     surfaceType: 'Zona Húmeda / Mampostería',
     recommendedProduct: 'Viniltex Baños & Cocina® Antihongos con Teflón®',
     imageSrc: '/assets/simulator/cocina.jpg',
     maskSrc: '/assets/simulator/cocina_mask.png',
     aspectRatio: '702 / 382',
-    accentTip: 'Resiste grasa y vapor; combina a la perfección con muebles blancos y cuarzo.',
+    accentTip: '20 variaciones fotorrealistas con gabinetes, mesón, grifería y ventana 100% aislados e intactos.',
   },
   {
     id: 'habitacion',
     name: 'Habitación',
     category: 'Interior',
-    description: 'Pared principal de cabecero con lámparas de noche cálidas y textiles neutros.',
+    description: 'Pared principal de cabecero con lámparas de noche cálidas, tocador y ventanal amplio.',
     surfaceType: 'Mampostería / Drywall',
     recommendedProduct: 'Viniltex Avanzado® Mate (Bajo Olor y Cero Brillo)',
     imageSrc: '/assets/simulator/habitacion.jpg',
     maskSrc: '/assets/simulator/habitacion_mask.png',
-    aspectRatio: '468 / 382',
-    accentTip: 'Los tonos serenos, tierras y salvia inducen el descanso profundo y confort acústico.',
+    aspectRatio: '702 / 382',
+    accentTip: '20 variaciones fotorrealistas con cama, cabecero, mesas de noche, tocador y lámparas 100% aislados e intactos.',
   },
   {
     id: 'exterior_casa',
@@ -99,133 +93,784 @@ export const ROOM_SCENARIOS: RoomScenario[] = [
   },
 ];
 
-export const RealisticColorSimulator: React.FC = () => {
-  const { setActiveView, setIsRequestModalOpen, simulatorScenario, setSimulatorScenario } = useApp();
+export interface RealWallColor {
+  id: string;
+  name: string;
+  code: string;
+  family: 'Verdes & Frescura' | 'Azules & Serenidad' | 'Rosas & Púrpuras' | 'Cálidos & Tierras' | 'Blancos, Grises & Neutros';
+  hex: string;
+  image: string;
+  description: string;
+}
 
-  // Selected scenario synced with context
+/**
+ * 20 COLORES REALES DE MURO DE LAS IMÁGENES
+ * Cada color corresponde exactamente al color de la pared de cada imagen
+ */
+export const SALA_WALL_COLORS: RealWallColor[] = [
+  // 1. Verdes & Frescura
+  {
+    id: 'verde_menta_claro',
+    name: 'Verde Menta Luminoso',
+    code: 'PIN-V01',
+    family: 'Verdes & Frescura',
+    hex: '#DCF5EF',
+    image: '/assets/simulator/sala_variations/verde_menta_claro.jpg',
+    description: 'Tono menta pastel muy luminoso y fresco; maximiza la entrada de luz natural.',
+  },
+  {
+    id: 'verde_salvia',
+    name: 'Verde Salvia Nórdico',
+    code: 'PIN-V02',
+    family: 'Verdes & Frescura',
+    hex: '#B1C5AC',
+    image: '/assets/simulator/sala_variations/verde_salvia.jpg',
+    description: 'Verde salvia orgánico de tendencia; aporta serenidad, equilibrio y confort visual.',
+  },
+  {
+    id: 'verde_bosque',
+    name: 'Verde Bosque Profundo',
+    code: 'PIN-V03',
+    family: 'Verdes & Frescura',
+    hex: '#2F5442',
+    image: '/assets/simulator/sala_variations/verde_bosque.jpg',
+    description: 'Verde esmeralda oscuro de acento arquitectónico; alto contraste con maderas claras.',
+  },
+  {
+    id: 'verde_oliva',
+    name: 'Verde Oliva Elegante',
+    code: 'PIN-V04',
+    family: 'Verdes & Frescura',
+    hex: '#444E35',
+    image: '/assets/simulator/sala_variations/verde_oliva.jpg',
+    description: 'Verde militar y oliva refinado con matices cálidos; sofisticado y contemporáneo.',
+  },
+
+  // 2. Azules & Serenidad
+  {
+    id: 'azul_celeste',
+    name: 'Azul Celeste Cielo',
+    code: 'PIN-A01',
+    family: 'Azules & Serenidad',
+    hex: '#A7DEFC',
+    image: '/assets/simulator/sala_variations/azul_celeste.jpg',
+    description: 'Azul cielo limpio y vibrante; genera sensación de amplitud y cielo abierto.',
+  },
+  {
+    id: 'azul_lavanda_sereno',
+    name: 'Azul Lavanda Sereno',
+    code: 'PIN-A02',
+    family: 'Azules & Serenidad',
+    hex: '#9FB3D6',
+    image: '/assets/simulator/sala_variations/azul_lavanda_sereno.jpg',
+    description: 'Azul lavanda grisáceo muy suave; perfecto para zonas de relajación y lectura.',
+  },
+  {
+    id: 'azul_rey_cobalto',
+    name: 'Azul Rey Cobalto',
+    code: 'PIN-A03',
+    family: 'Azules & Serenidad',
+    hex: '#254C83',
+    image: '/assets/simulator/sala_variations/azul_rey_cobalto.jpg',
+    description: 'Azul cobalto intenso de gran carácter; resalta molduras y muebles neutros.',
+  },
+  {
+    id: 'azul_marino_profundo',
+    name: 'Azul Marino Profundo',
+    code: 'PIN-A04',
+    family: 'Azules & Serenidad',
+    hex: '#1D2E48',
+    image: '/assets/simulator/sala_variations/azul_marino_profundo.jpg',
+    description: 'Azul noche profundo; transmite elegancia sobria, lujo y profundidad espacial.',
+  },
+
+  // 3. Rosas & Púrpuras
+  {
+    id: 'rosa_pastel',
+    name: 'Rosa Pastel Suave',
+    code: 'PIN-R01',
+    family: 'Rosas & Púrpuras',
+    hex: '#FDD9DD',
+    image: '/assets/simulator/sala_variations/rosa_pastel.jpg',
+    description: 'Rosa pálido aterciopelado; aporta calidez delicada sin saturar el ambiente.',
+  },
+  {
+    id: 'coral_romantico',
+    name: 'Coral Romántico',
+    code: 'PIN-R02',
+    family: 'Rosas & Púrpuras',
+    hex: '#CF8181',
+    image: '/assets/simulator/sala_variations/coral_romantico.jpg',
+    description: 'Rosa terracota y coral suave; combina calidez moderna y luminosidad acogedora.',
+  },
+  {
+    id: 'borgona_vino',
+    name: 'Borgoña Vino Tinto',
+    code: 'PIN-R03',
+    family: 'Rosas & Púrpuras',
+    hex: '#532F3D',
+    image: '/assets/simulator/sala_variations/borgona_vino.jpg',
+    description: 'Vino tinto profundo y suntuoso; ideal para muros de acento de alto impacto.',
+  },
+  {
+    id: 'purpura_amatista',
+    name: 'Púrpura Amatista',
+    code: 'PIN-R04',
+    family: 'Rosas & Púrpuras',
+    hex: '#8A6994',
+    image: '/assets/simulator/sala_variations/purpura_amatista.jpg',
+    description: 'Púrpura mineral equilibrado; estimula la creatividad y personalidad del espacio.',
+  },
+
+  // 4. Cálidos & Tierras
+  {
+    id: 'amarillo_mantequilla',
+    name: 'Amarillo Mantequilla Suave',
+    code: 'PIN-C01',
+    family: 'Cálidos & Tierras',
+    hex: '#FFF6B1',
+    image: '/assets/simulator/sala_variations/amarillo_mantequilla.jpg',
+    description: 'Amarillo suave y solar; ilumina espacios con poca entrada de luz exterior.',
+  },
+  {
+    id: 'ocre_mostaza',
+    name: 'Ocre Mostaza Cálido',
+    code: 'PIN-C02',
+    family: 'Cálidos & Tierras',
+    hex: '#F4B663',
+    image: '/assets/simulator/sala_variations/ocre_mostaza.jpg',
+    description: 'Ocre dorado energizante; calidez artesanal que resalta pisos de madera clara.',
+  },
+  {
+    id: 'rojo_colonial',
+    name: 'Rojo Colonial Profundo',
+    code: 'PIN-C03',
+    family: 'Cálidos & Tierras',
+    hex: '#662931',
+    image: '/assets/simulator/sala_variations/rojo_colonial.jpg',
+    description: 'Rojo vino colonial tradicional; presencia imponente y raíces arquitectónicas.',
+  },
+  {
+    id: 'terracota_arcilla',
+    name: 'Terracota Arcilla',
+    code: 'PIN-C04',
+    family: 'Cálidos & Tierras',
+    hex: '#90451D',
+    image: '/assets/simulator/sala_variations/terracota_arcilla.jpg',
+    description: 'Tierra cocida mediterránea y artesanal; textura cálida de gran arraigo visual.',
+  },
+
+  // 5. Blancos, Grises & Neutros
+  {
+    id: 'blanco_puro',
+    name: 'Blanco Puro Luminoso',
+    code: 'PIN-N01',
+    family: 'Blancos, Grises & Neutros',
+    hex: '#F2F4F3',
+    image: '/assets/simulator/sala_variations/blanco_puro.jpg',
+    description: 'Blanco arquitectónico neutro; máxima reflectancia lumínica y pureza visual.',
+  },
+  {
+    id: 'gris_lino',
+    name: 'Gris Lino Claro',
+    code: 'PIN-N02',
+    family: 'Blancos, Grises & Neutros',
+    hex: '#C7C5C8',
+    image: '/assets/simulator/sala_variations/gris_lino.jpg',
+    description: 'Gris muy claro con destellos cálidos; base neutral ideal para diseño escandinavo.',
+  },
+  {
+    id: 'gris_urbano',
+    name: 'Gris Urbano Contemporáneo',
+    code: 'PIN-N03',
+    family: 'Blancos, Grises & Neutros',
+    hex: '#6F6F6F',
+    image: '/assets/simulator/sala_variations/gris_urbano.jpg',
+    description: 'Gris medio de alta versatilidad; contrasta limpiamente con techos blancos y sofás.',
+  },
+  {
+    id: 'negro_ebano',
+    name: 'Negro Ébano Grafito',
+    code: 'PIN-N04',
+    family: 'Blancos, Grises & Neutros',
+    hex: '#363636',
+    image: '/assets/simulator/sala_variations/negro_ebano.jpg',
+    description: 'Grafito oscuro de estética industrial; drama visual y modernismo sobrio.',
+  },
+];
+
+/**
+ * 20 COLORES REALES DE MURO DE LAS IMÁGENES PARA COCINA
+ * Cada color corresponde exactamente al color de la pared de cada imagen
+ */
+export const COCINA_WALL_COLORS: RealWallColor[] = [
+  // 1. Verdes & Frescura
+  {
+    id: 'verde_menta_claro',
+    name: 'Verde Menta Luminoso',
+    code: 'PIN-V01',
+    family: 'Verdes & Frescura',
+    hex: '#D6F4EA',
+    image: '/assets/simulator/cocina_variations/verde_menta_claro.jpg',
+    description: 'Tono menta fresco y luminoso; ideal para cocinas modernas con luz natural.',
+  },
+  {
+    id: 'verde_salvia',
+    name: 'Verde Salvia Nórdico',
+    code: 'PIN-V02',
+    family: 'Verdes & Frescura',
+    hex: '#9FB495',
+    image: '/assets/simulator/cocina_variations/verde_salvia.jpg',
+    description: 'Verde salvia orgánico; armoniza perfectamente con gabinetes blancos y madera.',
+  },
+  {
+    id: 'verde_bosque',
+    name: 'Verde Bosque Profundo',
+    code: 'PIN-V03',
+    family: 'Verdes & Frescura',
+    hex: '#325444',
+    image: '/assets/simulator/cocina_variations/verde_bosque.jpg',
+    description: 'Verde esmeralda profundo; contraste premium con mesones y electrodomésticos.',
+  },
+  {
+    id: 'verde_oliva',
+    name: 'Verde Oliva Elegante',
+    code: 'PIN-V04',
+    family: 'Verdes & Frescura',
+    hex: '#455238',
+    image: '/assets/simulator/cocina_variations/verde_oliva.jpg',
+    description: 'Verde oliva contemporáneo con matices cálidos; sofisticado y acogedor.',
+  },
+
+  // 2. Azules & Serenidad
+  {
+    id: 'azul_celeste',
+    name: 'Azul Celeste Cielo',
+    code: 'PIN-A01',
+    family: 'Azules & Serenidad',
+    hex: '#ABE3FE',
+    image: '/assets/simulator/cocina_variations/azul_celeste.jpg',
+    description: 'Azul cielo limpio y vibrante; aporta frescura y sensación de amplitud.',
+  },
+  {
+    id: 'azul_lavanda_sereno',
+    name: 'Azul Lavanda Sereno',
+    code: 'PIN-A02',
+    family: 'Azules & Serenidad',
+    hex: '#95A9CC',
+    image: '/assets/simulator/cocina_variations/azul_lavanda_sereno.jpg',
+    description: 'Azul lavanda suave; serenidad y equilibrio para el corazón del hogar.',
+  },
+  {
+    id: 'azul_rey_cobalto',
+    name: 'Azul Rey Cobalto',
+    code: 'PIN-A03',
+    family: 'Azules & Serenidad',
+    hex: '#254E84',
+    image: '/assets/simulator/cocina_variations/azul_rey_cobalto.jpg',
+    description: 'Azul cobalto intenso; gran impacto visual en muros de cocina.',
+  },
+  {
+    id: 'azul_marino_profundo',
+    name: 'Azul Marino Profundo',
+    code: 'PIN-A04',
+    family: 'Azules & Serenidad',
+    hex: '#213349',
+    image: '/assets/simulator/cocina_variations/azul_marino_profundo.jpg',
+    description: 'Azul noche sofisticado; lujo moderno con gabinetes y cuarzo blanco.',
+  },
+
+  // 3. Rosas & Púrpuras
+  {
+    id: 'rosa_pastel',
+    name: 'Rosa Pastel Suave',
+    code: 'PIN-R01',
+    family: 'Rosas & Púrpuras',
+    hex: '#F8D1D4',
+    image: '/assets/simulator/cocina_variations/rosa_pastel.jpg',
+    description: 'Rosa suave y cálido; añade un toque de luminosidad pastel acogedora.',
+  },
+  {
+    id: 'coral_romantico',
+    name: 'Coral Romántico',
+    code: 'PIN-R02',
+    family: 'Rosas & Púrpuras',
+    hex: '#D18683',
+    image: '/assets/simulator/cocina_variations/coral_romantico.jpg',
+    description: 'Coral terracota vibrante; estimula el apetito y la calidez familiar.',
+  },
+  {
+    id: 'borgona_vino',
+    name: 'Borgoña Vino Tinto',
+    code: 'PIN-R03',
+    family: 'Rosas & Púrpuras',
+    hex: '#512F3F',
+    image: '/assets/simulator/cocina_variations/borgona_vino.jpg',
+    description: 'Vino tinto profundo; carácter gourmet de alta cocina europea.',
+  },
+  {
+    id: 'purpura_amatista',
+    name: 'Púrpura Amatista',
+    code: 'PIN-R04',
+    family: 'Rosas & Púrpuras',
+    hex: '#9372A1',
+    image: '/assets/simulator/cocina_variations/purpura_amatista.jpg',
+    description: 'Púrpura amatista refinado; personalidad creativa y distinción culinaria.',
+  },
+
+  // 4. Cálidos & Tierras
+  {
+    id: 'amarillo_mantequilla',
+    name: 'Amarillo Mantequilla Suave',
+    code: 'PIN-C01',
+    family: 'Cálidos & Tierras',
+    hex: '#F9F0AF',
+    image: '/assets/simulator/cocina_variations/amarillo_mantequilla.jpg',
+    description: 'Amarillo cálido y solar; maximiza la luz matutina en la cocina.',
+  },
+  {
+    id: 'ocre_mostaza',
+    name: 'Ocre Mostaza Cálido',
+    code: 'PIN-C02',
+    family: 'Cálidos & Tierras',
+    hex: '#D29135',
+    image: '/assets/simulator/cocina_variations/ocre_mostaza.jpg',
+    description: 'Ocre dorado energizante; calidez artesanal y estilo rústico moderno.',
+  },
+  {
+    id: 'rojo_colonial',
+    name: 'Rojo Colonial Profundo',
+    code: 'PIN-C03',
+    family: 'Cálidos & Tierras',
+    hex: '#562B34',
+    image: '/assets/simulator/cocina_variations/rojo_colonial.jpg',
+    description: 'Rojo colonial clásico; tradición gastronómica y energía vibrante.',
+  },
+  {
+    id: 'terracota_arcilla',
+    name: 'Terracota Arcilla',
+    code: 'PIN-C04',
+    family: 'Cálidos & Tierras',
+    hex: '#934F2C',
+    image: '/assets/simulator/cocina_variations/terracota_arcilla.jpg',
+    description: 'Tierra cocida mediterránea; estilo toscano rústico y acogedor.',
+  },
+
+  // 5. Blancos, Grises & Neutros
+  {
+    id: 'blanco_puro',
+    name: 'Blanco Puro Luminoso',
+    code: 'PIN-N01',
+    family: 'Blancos, Grises & Neutros',
+    hex: '#EFEFEF',
+    image: '/assets/simulator/cocina_variations/blanco_puro.jpg',
+    description: 'Blanco arquitectónico puro; máxima higiene visual, amplitud y luminosidad.',
+  },
+  {
+    id: 'gris_lino',
+    name: 'Gris Lino Claro',
+    code: 'PIN-N02',
+    family: 'Blancos, Grises & Neutros',
+    hex: '#B7B9B8',
+    image: '/assets/simulator/cocina_variations/gris_lino.jpg',
+    description: 'Gris neutro luminoso; base contemporánea perfecta para cocinas minimalistas.',
+  },
+  {
+    id: 'gris_urbano',
+    name: 'Gris Urbano Contemporáneo',
+    code: 'PIN-N03',
+    family: 'Blancos, Grises & Neutros',
+    hex: '#535456',
+    image: '/assets/simulator/cocina_variations/gris_urbano.jpg',
+    description: 'Gris medio de alta elegancia; contraste sobrio con blanco y madera clara.',
+  },
+  {
+    id: 'negro_ebano',
+    name: 'Negro Ébano Grafito',
+    code: 'PIN-N04',
+    family: 'Blancos, Grises & Neutros',
+    hex: '#242323',
+    image: '/assets/simulator/cocina_variations/negro_ebano.jpg',
+    description: 'Negro grafito de vanguardia; estética industrial moderna de alto nivel.',
+  },
+];
+
+/**
+ * 20 COLORES REALES DE MURO DE LAS IMÁGENES PARA HABITACIÓN
+ * Cada color corresponde exactamente al color de la pared de cada imagen
+ */
+export const HABITACION_WALL_COLORS: RealWallColor[] = [
+  // 1. Verdes & Frescura
+  {
+    id: 'verde_menta_claro',
+    name: 'Verde Menta Luminoso',
+    code: 'PIN-V01',
+    family: 'Verdes & Frescura',
+    hex: '#C7E5DB',
+    image: '/assets/simulator/habitacion_variations/verde_menta_claro.jpg',
+    description: 'Tono menta relajante y luminoso; aporta frescura serena y descanso visual.',
+  },
+  {
+    id: 'verde_salvia',
+    name: 'Verde Salvia Nórdico',
+    code: 'PIN-V02',
+    family: 'Verdes & Frescura',
+    hex: '#89997E',
+    image: '/assets/simulator/habitacion_variations/verde_salvia.jpg',
+    description: 'Verde salvia orgánico; equilibrio natural que induce calma y descanso profundo.',
+  },
+  {
+    id: 'verde_bosque',
+    name: 'Verde Bosque Profundo',
+    code: 'PIN-V03',
+    family: 'Verdes & Frescura',
+    hex: '#1B3C2B',
+    image: '/assets/simulator/habitacion_variations/verde_bosque.jpg',
+    description: 'Verde bosque envolvente; crea un muro de acento íntimo y acogedor.',
+  },
+  {
+    id: 'verde_oliva',
+    name: 'Verde Oliva Elegante',
+    code: 'PIN-V04',
+    family: 'Verdes & Frescura',
+    hex: '#2B351D',
+    image: '/assets/simulator/habitacion_variations/verde_oliva.jpg',
+    description: 'Verde oliva cálido y sobrio; combina calidez orgánica y distinción.',
+  },
+
+  // 2. Azules & Serenidad
+  {
+    id: 'azul_celeste',
+    name: 'Azul Celeste Cielo',
+    code: 'PIN-A01',
+    family: 'Azules & Serenidad',
+    hex: '#9DD8F8',
+    image: '/assets/simulator/habitacion_variations/azul_celeste.jpg',
+    description: 'Azul celeste pacífico; transmite paz, frescura y sensación de espacio abierto.',
+  },
+  {
+    id: 'azul_lavanda_sereno',
+    name: 'Azul Lavanda Sereno',
+    code: 'PIN-A02',
+    family: 'Azules & Serenidad',
+    hex: '#7E8DB4',
+    image: '/assets/simulator/habitacion_variations/azul_lavanda_sereno.jpg',
+    description: 'Azul lavanda suave; perfecto para dormitorios por sus propiedades relajantes.',
+  },
+  {
+    id: 'azul_rey_cobalto',
+    name: 'Azul Rey Cobalto',
+    code: 'PIN-A03',
+    family: 'Azules & Serenidad',
+    hex: '#163B6F',
+    image: '/assets/simulator/habitacion_variations/azul_rey_cobalto.jpg',
+    description: 'Azul cobalto sofisticado; cabecero de alto impacto y carácter refinado.',
+  },
+  {
+    id: 'azul_marino_profundo',
+    name: 'Azul Marino Profundo',
+    code: 'PIN-A04',
+    family: 'Azules & Serenidad',
+    hex: '#0B1C2C',
+    image: '/assets/simulator/habitacion_variations/azul_marino_profundo.jpg',
+    description: 'Azul noche profundo; atmósfera de hotel boutique con textiles blancos.',
+  },
+
+  // 3. Rosas & Púrpuras
+  {
+    id: 'rosa_pastel',
+    name: 'Rosa Pastel Suave',
+    code: 'PIN-R01',
+    family: 'Rosas & Púrpuras',
+    hex: '#EABFC6',
+    image: '/assets/simulator/habitacion_variations/rosa_pastel.jpg',
+    description: 'Rosa empolvado cálido; ternura, luminosidad y confort acogedor.',
+  },
+  {
+    id: 'coral_romantico',
+    name: 'Coral Romántico',
+    code: 'PIN-R02',
+    family: 'Rosas & Púrpuras',
+    hex: '#C86F6B',
+    image: '/assets/simulator/habitacion_variations/coral_romantico.jpg',
+    description: 'Coral suave aterciopelado; calidez envolvente de estilo mediterráneo.',
+  },
+  {
+    id: 'borgona_vino',
+    name: 'Borgoña Vino Tinto',
+    code: 'PIN-R03',
+    family: 'Rosas & Púrpuras',
+    hex: '#3E1920',
+    image: '/assets/simulator/habitacion_variations/borgona_vino.jpg',
+    description: 'Vino tinto aterciopelado; elegancia dramática y lujo sensorial.',
+  },
+  {
+    id: 'purpura_amatista',
+    name: 'Púrpura Amatista',
+    code: 'PIN-R04',
+    family: 'Rosas & Púrpuras',
+    hex: '#775B84',
+    image: '/assets/simulator/habitacion_variations/purpura_amatista.jpg',
+    description: 'Púrpura amatista sereno; estimula el bienestar espiritual y la calma.',
+  },
+
+  // 4. Cálidos & Tierras
+  {
+    id: 'amarillo_mantequilla',
+    name: 'Amarillo Mantequilla Suave',
+    code: 'PIN-C01',
+    family: 'Cálidos & Tierras',
+    hex: '#E8DFA4',
+    image: '/assets/simulator/habitacion_variations/amarillo_mantequilla.jpg',
+    description: 'Amarillo crema suave; despierta con luz dorada natural cada mañana.',
+  },
+  {
+    id: 'ocre_mostaza',
+    name: 'Ocre Mostaza Cálido',
+    code: 'PIN-C02',
+    family: 'Cálidos & Tierras',
+    hex: '#A9701F',
+    image: '/assets/simulator/habitacion_variations/ocre_mostaza.jpg',
+    description: 'Ocre mostaza artesanal; calidez acogedora con muebles de nogal.',
+  },
+  {
+    id: 'rojo_colonial',
+    name: 'Rojo Colonial Profundo',
+    code: 'PIN-C03',
+    family: 'Cálidos & Tierras',
+    hex: '#3F161A',
+    image: '/assets/simulator/habitacion_variations/rojo_colonial.jpg',
+    description: 'Rojo vino colonial; intimidad clásica y calidez arquitectónica.',
+  },
+  {
+    id: 'terracota_arcilla',
+    name: 'Terracota Arcilla',
+    code: 'PIN-C04',
+    family: 'Cálidos & Tierras',
+    hex: '#713209',
+    image: '/assets/simulator/habitacion_variations/terracota_arcilla.jpg',
+    description: 'Terracota artesanal; atmósfera rústica de retiro campestre.',
+  },
+
+  // 5. Blancos, Grises & Neutros
+  {
+    id: 'blanco_puro',
+    name: 'Blanco Puro Luminoso',
+    code: 'PIN-N01',
+    family: 'Blancos, Grises & Neutros',
+    hex: '#DDDDDD',
+    image: '/assets/simulator/habitacion_variations/blanco_puro.jpg',
+    description: 'Blanco puro arquitectónico; pureza visual, luminosidad total y serenidad.',
+  },
+  {
+    id: 'gris_lino',
+    name: 'Gris Lino Claro',
+    code: 'PIN-N02',
+    family: 'Blancos, Grises & Neutros',
+    hex: '#A1A1A1',
+    image: '/assets/simulator/habitacion_variations/gris_lino.jpg',
+    description: 'Gris lino suave; base neutral ideal para descanso de estilo escandinavo.',
+  },
+  {
+    id: 'gris_urbano',
+    name: 'Gris Urbano Contemporáneo',
+    code: 'PIN-N03',
+    family: 'Blancos, Grises & Neutros',
+    hex: '#5A585B',
+    image: '/assets/simulator/habitacion_variations/gris_urbano.jpg',
+    description: 'Gris medio sofisticado; perfecto contraste con lencería blanca de cama.',
+  },
+  {
+    id: 'negro_ebano',
+    name: 'Negro Ébano Grafito',
+    code: 'PIN-N04',
+    family: 'Blancos, Grises & Neutros',
+    hex: '#171717',
+    image: '/assets/simulator/habitacion_variations/negro_ebano.jpg',
+    description: 'Negro grafito sobrio; muro de cabecero de máximo impacto contemporáneo.',
+  },
+];
+
+export const getScenarioWallColors = (scenarioId: string): RealWallColor[] => {
+  if (scenarioId === 'habitacion') return HABITACION_WALL_COLORS;
+  if (scenarioId === 'cocina') return COCINA_WALL_COLORS;
+  return SALA_WALL_COLORS;
+};
+
+export const RealisticColorSimulator: React.FC = () => {
+  const { setActiveView, setIsRequestModalOpen, simulatorScenario, setSimulatorScenario, addToCart, setIsCartOpen } = useApp();
+
+  // Selected scenario
   const selectedScenario = ROOM_SCENARIOS.find((s) => s.id === simulatorScenario) || ROOM_SCENARIOS[0];
   const handleSelectScenario = (scenario: RoomScenario) => {
     setSimulatorScenario(scenario.id);
   };
 
-  // Selected color
-  const [selectedColor, setSelectedColor] = useState<ColorPaletteItem>(
-    COLOR_PALETTES.find((c) => c.name === 'Azul Pintuco') || COLOR_PALETTES[5]
+  // Active palette depends on selected scenario (Habitación, Cocina o Sala de Estar)
+  const currentScenarioColors = getScenarioWallColors(selectedScenario.id);
+
+  // Selected real wall color
+  const [selectedColor, setSelectedColor] = useState<RealWallColor>(
+    getScenarioWallColors(simulatorScenario)[0]
   );
 
-  // Paint finish & simulation adjustments
-  const [opacity, setOpacity] = useState<number>(0.85);
-  const [blendMode, setBlendMode] = useState<'multiply' | 'color' | 'overlay' | 'soft-light'>('multiply');
-  const [finishEffect, setFinishEffect] = useState<'mate' | 'satinado' | 'brillante'>('mate');
+  // Sync selectedColor whenever scenario changes so it points to the matching color in the new room
+  useEffect(() => {
+    const list = getScenarioWallColors(selectedScenario.id);
+    const match = list.find((c) => c.id === selectedColor.id) || list[0];
+    setSelectedColor(match);
+  }, [selectedScenario.id]);
 
   // Compare mode (toggle original photo vs painted)
   const [showOriginal, setShowOriginal] = useState<boolean>(false);
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
 
-  // Canvas ref for real-time rendering & export
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  // Paint finish
+  const [finishEffect, setFinishEffect] = useState<'mate' | 'satinado' | 'brillante'>('mate');
 
   // Filter palette categories
-  const [activeCategory, setActiveCategory] = useState<string>('all');
-  const colorCategories = ['all', 'Blancos & Neutros', 'Corporativo & Acentos', 'Vivos & Tendencia', 'Cálidos & Tierras'];
+  const [activeFamily, setActiveFamily] = useState<string>('all');
+  const colorFamilies = [
+    'all',
+    'Verdes & Frescura',
+    'Azules & Serenidad',
+    'Rosas & Púrpuras',
+    'Cálidos & Tierras',
+    'Blancos, Grises & Neutros',
+  ];
 
-  const filteredColors = COLOR_PALETTES.filter((c) => {
-    if (activeCategory === 'all') return true;
-    return c.category === activeCategory;
+  const filteredColors = currentScenarioColors.filter((c) => {
+    if (activeFamily === 'all') return true;
+    return c.family === activeFamily;
   });
 
-  // Render simulation on canvas preserving natural lighting, texture, and shadows
+  // Canvas ref for real-time rendering & high-res export
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+
+  // Render simulation
   const renderSimulation = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
+    setIsProcessing(true);
+
     const baseImg = new Image();
-    const maskImg = new Image();
-
     baseImg.crossOrigin = 'anonymous';
-    maskImg.crossOrigin = 'anonymous';
 
-    baseImg.src = selectedScenario.imageSrc;
-    maskImg.src = selectedScenario.maskSrc;
+    // Para Sala de Estar, Cocina y Habitación:
+    // Si showOriginal está activo, dibuja la foto base original blanca.
+    // Si showOriginal es falso, dibuja la foto de alta fidelidad de la variación seleccionada.
+    if (selectedScenario.id === 'sala_de_estar' || selectedScenario.id === 'cocina' || selectedScenario.id === 'habitacion') {
+      baseImg.src = showOriginal ? selectedScenario.imageSrc : selectedColor.image;
 
-    let loadedCount = 0;
-    const onLoad = () => {
-      loadedCount++;
-      if (loadedCount < 2) return;
+      baseImg.onload = () => {
+        canvas.width = baseImg.naturalWidth || 702;
+        canvas.height = baseImg.naturalHeight || 382;
 
-      canvas.width = baseImg.naturalWidth || 702;
-      canvas.height = baseImg.naturalHeight || 382;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(baseImg, 0, 0, canvas.width, canvas.height);
 
-      // Draw original photo first
-      ctx.drawImage(baseImg, 0, 0, canvas.width, canvas.height);
+        // Aplica brillo sutil si es satinado o brillante
+        if (!showOriginal && (finishEffect === 'satinado' || finishEffect === 'brillante')) {
+          ctx.save();
+          ctx.globalAlpha = finishEffect === 'satinado' ? 0.08 : 0.16;
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          ctx.restore();
+        }
 
-      if (showOriginal) {
         setIsProcessing(false);
-        return;
-      }
+      };
+    } else {
+      // Para los otros 4 espacios (Cocina, Habitación, Exterior, Oficina):
+      // Aplicación por máscara y composición de luminancia natural
+      const maskImg = new Image();
+      maskImg.crossOrigin = 'anonymous';
 
-      // Offscreen buffer for tinted mask
-      const offscreen = document.createElement('canvas');
-      offscreen.width = canvas.width;
-      offscreen.height = canvas.height;
-      const offCtx = offscreen.getContext('2d');
-      if (!offCtx) return;
+      baseImg.src = selectedScenario.imageSrc;
+      maskImg.src = selectedScenario.maskSrc;
 
-      // Draw mask
-      offCtx.drawImage(maskImg, 0, 0, canvas.width, canvas.height);
+      let loadedCount = 0;
+      const onLoadBoth = () => {
+        loadedCount++;
+        if (loadedCount < 2) return;
 
-      // Colorize mask with selected color using source-in
-      offCtx.globalCompositeOperation = 'source-in';
-      offCtx.fillStyle = selectedColor.hex;
-      offCtx.fillRect(0, 0, canvas.width, canvas.height);
+        canvas.width = baseImg.naturalWidth || 702;
+        canvas.height = baseImg.naturalHeight || 382;
 
-      // Apply finish highlight if satinado or brillante
-      if (finishEffect === 'satinado') {
-        offCtx.globalAlpha = 0.15;
-        offCtx.fillStyle = '#ffffff';
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(baseImg, 0, 0, canvas.width, canvas.height);
+
+        if (showOriginal) {
+          setIsProcessing(false);
+          return;
+        }
+
+        const offscreen = document.createElement('canvas');
+        offscreen.width = canvas.width;
+        offscreen.height = canvas.height;
+        const offCtx = offscreen.getContext('2d');
+        if (!offCtx) return;
+
+        offCtx.drawImage(maskImg, 0, 0, canvas.width, canvas.height);
+        offCtx.globalCompositeOperation = 'source-in';
+        offCtx.fillStyle = selectedColor.hex;
         offCtx.fillRect(0, 0, canvas.width, canvas.height);
-      } else if (finishEffect === 'brillante') {
-        offCtx.globalAlpha = 0.28;
-        offCtx.fillStyle = '#ffffff';
-        offCtx.fillRect(0, 0, canvas.width, canvas.height);
-      }
 
-      // Blend colored wall onto base photo
-      ctx.save();
-      ctx.globalAlpha = opacity;
-      ctx.globalCompositeOperation = blendMode;
-      ctx.drawImage(offscreen, 0, 0);
+        if (finishEffect === 'satinado') {
+          offCtx.globalAlpha = 0.15;
+          offCtx.fillStyle = '#ffffff';
+          offCtx.fillRect(0, 0, canvas.width, canvas.height);
+        } else if (finishEffect === 'brillante') {
+          offCtx.globalAlpha = 0.28;
+          offCtx.fillStyle = '#ffffff';
+          offCtx.fillRect(0, 0, canvas.width, canvas.height);
+        }
 
-      // Secondary soft pass for deep colors to enrich saturation
-      if (blendMode === 'multiply') {
-        ctx.globalAlpha = opacity * 0.35;
+        ctx.save();
+        ctx.globalAlpha = 0.85;
+        ctx.globalCompositeOperation = 'multiply';
+        ctx.drawImage(offscreen, 0, 0);
+
+        ctx.globalAlpha = 0.35;
         ctx.globalCompositeOperation = 'color';
         ctx.drawImage(offscreen, 0, 0);
-      }
 
-      ctx.restore();
-      setIsProcessing(false);
-    };
+        ctx.restore();
+        setIsProcessing(false);
+      };
 
-    setIsProcessing(true);
-    baseImg.onload = onLoad;
-    maskImg.onload = onLoad;
-  }, [selectedScenario, selectedColor, opacity, blendMode, finishEffect, showOriginal]);
+      baseImg.onload = onLoadBoth;
+      maskImg.onload = onLoadBoth;
+    }
+  }, [selectedScenario, selectedColor, showOriginal, finishEffect]);
 
   useEffect(() => {
     renderSimulation();
   }, [renderSimulation]);
 
-  // Download high-res simulated photo
+  // Export / Download High-Res Photo
   const handleDownloadSimulation = () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const link = document.createElement('a');
-    link.download = `pintuco_simulacion_${selectedScenario.id}_${selectedColor.name.toLowerCase().replace(/\s+/g, '_')}.jpg`;
+    link.download = `pintuco_${selectedScenario.id}_${selectedColor.id}.jpg`;
     link.href = canvas.toDataURL('image/jpeg', 0.95);
     link.click();
+  };
+
+  const handleAddToCart = () => {
+    addToCart({
+      name: `${selectedScenario.recommendedProduct} (${selectedColor.name})`,
+      colorName: selectedColor.name,
+      colorHex: selectedColor.hex,
+      presentation: 'Galón',
+      quantity: 1,
+      image: selectedColor.image,
+    });
+    setIsCartOpen(true);
   };
 
   return (
@@ -249,10 +894,10 @@ export const RealisticColorSimulator: React.FC = () => {
               <span className="w-9 h-9 rounded-2xl bg-[#2FAE6D] text-white flex items-center justify-center shrink-0 shadow-xs">
                 <Sparkles className="w-5 h-5" />
               </span>
-              <span>Simulador Arquitectónico Pintuco® ColorLink</span>
+              <span>Simulador Arquitectónico de Color Pintuco®</span>
             </h1>
             <p className="text-xs sm:text-sm text-slate-500 mt-1 max-w-2xl leading-relaxed">
-              Aislamiento fotográfico de precisión: muebles, pisos, ventanas, electrodomésticos y techos permanecen intactos con sus texturas y sombras originales. Solo cambian los muros.
+              Selecciona el color de pared que deseas probar. El sofá, mesa, tapete, pisos, ventanas y accesorios permanecen 100% intactos con sus sombras y luces originales.
             </p>
           </div>
 
@@ -265,6 +910,13 @@ export const RealisticColorSimulator: React.FC = () => {
               <span>Cotizar este Color en m²</span>
             </button>
             <button
+              onClick={handleAddToCart}
+              className="px-4 py-2.5 bg-[#1B2A6B] hover:bg-[#142154] text-white rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 shadow-xs cursor-pointer transition-all active:scale-95"
+            >
+              <Droplets className="w-4 h-4 text-emerald-400" />
+              <span>Agregar Galón al Carrito</span>
+            </button>
+            <button
               onClick={handleDownloadSimulation}
               className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-1.5 cursor-pointer transition-all"
               title="Descargar foto simulada"
@@ -275,16 +927,16 @@ export const RealisticColorSimulator: React.FC = () => {
           </div>
         </div>
 
-        {/* 1. SELECTOR DE ESCENARIOS (Los 5 espacios recortados e independientes) */}
+        {/* 1. SELECTOR DE ESPACIOS ARQUITECTÓNICOS */}
         <div className="bg-white p-4 sm:p-5 rounded-3xl border border-slate-200 shadow-xs space-y-3">
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-xs font-black uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
                 <Layers className="w-3.5 h-3.5 text-[#1B2A6B]" />
-                <span>1. Elige el Escenario a Simular (5 Espacios Independientes)</span>
+                <span>1. Espacio Seleccionado para Simulación</span>
               </h2>
               <p className="text-xs text-slate-600 mt-0.5">
-                Cada escenario fue recortado y aislado de forma autónoma con su propia máscara de pared.
+                En la <strong>Sala de Estar</strong>, <strong>Cocina</strong> y <strong>Habitación</strong> dispones de las <strong>20 imágenes fotorrealistas</strong> correspondientes a cada color exacto de pared.
               </p>
             </div>
             <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200">
@@ -307,7 +959,17 @@ export const RealisticColorSimulator: React.FC = () => {
                 >
                   <div className="aspect-video w-full overflow-hidden bg-slate-100 relative">
                     <img
-                      src={scenario.imageSrc}
+                      src={
+                        scenario.id === selectedScenario.id
+                          ? selectedColor.image
+                          : scenario.id === 'sala_de_estar'
+                          ? '/assets/simulator/sala_variations/verde_menta_claro.jpg'
+                          : scenario.id === 'cocina'
+                          ? '/assets/simulator/cocina_variations/verde_menta_claro.jpg'
+                          : scenario.id === 'habitacion'
+                          ? '/assets/simulator/habitacion_variations/verde_menta_claro.jpg'
+                          : scenario.imageSrc
+                      }
                       alt={scenario.name}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
@@ -315,6 +977,11 @@ export const RealisticColorSimulator: React.FC = () => {
                       <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-[#2FAE6D] text-white flex items-center justify-center shadow-xs">
                         <Check className="w-3.5 h-3.5 stroke-3" />
                       </div>
+                    )}
+                    {(scenario.id === 'sala_de_estar' || scenario.id === 'cocina' || scenario.id === 'habitacion') && (
+                      <span className="absolute top-2 left-2 px-1.5 py-0.5 rounded text-[9px] font-black bg-emerald-600 text-white shadow-xs">
+                        20 Tonos Reales
+                      </span>
                     )}
                     <span className="absolute bottom-2 left-2 px-2 py-0.5 rounded text-[10px] font-bold bg-slate-900/80 text-white backdrop-blur-xs">
                       {scenario.category}
@@ -334,21 +1001,24 @@ export const RealisticColorSimulator: React.FC = () => {
           </div>
         </div>
 
-        {/* 2. CANVAS DE SIMULACIÓN Y PANEL DE CONTROL */}
+        {/* 2. VISOR PRINCIPAL Y SELECTOR DE BOTONES DE COLOR DE PARED */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
           
           {/* Main Visualizer (7 Columns on large screens) */}
-          <div className="lg:col-span-8 bg-white p-4 sm:p-5 rounded-3xl border border-slate-200 shadow-xs space-y-4">
+          <div className="lg:col-span-7 bg-white p-4 sm:p-5 rounded-3xl border border-slate-200 shadow-xs space-y-4">
             
             {/* Visualizer Toolbar */}
             <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-100">
-              <div className="flex items-center gap-2">
-                <span className="w-3 h-3 rounded-full" style={{ backgroundColor: selectedColor.hex }} />
+              <div className="flex items-center gap-2.5">
+                <span
+                  className="w-4 h-4 rounded-full border border-black/15 shadow-xs"
+                  style={{ backgroundColor: selectedColor.hex }}
+                />
                 <span className="text-xs font-bold text-slate-900">
                   {selectedColor.name} ({selectedColor.code})
                 </span>
-                <span className="text-slate-400 text-xs">•</span>
-                <span className="text-xs text-slate-500 font-mono">{selectedColor.hex}</span>
+                <span className="text-slate-300 text-xs">•</span>
+                <span className="text-xs text-slate-500 font-mono font-bold">{selectedColor.hex}</span>
               </div>
 
               {/* Compare toggle button */}
@@ -360,53 +1030,46 @@ export const RealisticColorSimulator: React.FC = () => {
                   onTouchStart={() => setShowOriginal(true)}
                   onTouchEnd={() => setShowOriginal(false)}
                   className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold flex items-center gap-1.5 cursor-pointer select-none transition-colors"
-                  title="Mantén presionado para ver la foto original"
+                  title="Mantén presionado para ver la pared original blanca"
                 >
                   <Eye className="w-3.5 h-3.5 text-slate-500" />
-                  <span>Mantén para ver Original</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    setOpacity(0.85);
-                    setBlendMode('multiply');
-                    setFinishEffect('mate');
-                  }}
-                  className="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 cursor-pointer"
-                  title="Restablecer ajustes de luz"
-                >
-                  <RotateCcw className="w-3.5 h-3.5" />
+                  <span>Mantén para ver Pared Original</span>
                 </button>
               </div>
             </div>
 
-            {/* Interactive Stage Canvas Container */}
+            {/* Stage Canvas / High-Res Image Viewport */}
             <div className="relative rounded-2xl overflow-hidden bg-slate-950 shadow-inner flex items-center justify-center border border-slate-200">
               <canvas
                 ref={canvasRef}
-                className="w-full h-auto max-h-[540px] object-contain transition-all duration-200"
+                className="w-full h-auto max-h-[520px] object-contain transition-all duration-200"
               />
 
               {isProcessing && (
                 <div className="absolute inset-0 bg-slate-900/30 backdrop-blur-2xs flex items-center justify-center">
                   <div className="px-3.5 py-1.5 rounded-full bg-white/90 text-slate-800 text-xs font-bold shadow-md flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-[#2FAE6D] animate-ping" />
-                    <span>Renderizando luz natural...</span>
+                    <span>Cargando color de pared...</span>
                   </div>
                 </div>
               )}
 
               {/* Floating Color Badge */}
-              <div className="absolute bottom-3 left-3 bg-white/95 backdrop-blur-md px-3 py-2 rounded-xl shadow-md border border-white/40 flex items-center gap-2.5">
+              <div className="absolute bottom-3 left-3 bg-white/95 backdrop-blur-md px-3.5 py-2.5 rounded-2xl shadow-lg border border-white/40 flex items-center gap-3">
                 <div
-                  className="w-6 h-6 rounded-lg shadow-2xs border border-black/10 shrink-0"
+                  className="w-7 h-7 rounded-xl shadow-xs border border-black/15 shrink-0"
                   style={{ backgroundColor: selectedColor.hex }}
                 />
                 <div className="text-[11px] leading-tight">
-                  <strong className="text-slate-900 block font-bold">{selectedColor.name}</strong>
-                  <span className="text-slate-500 font-mono">{selectedScenario.name}</span>
+                  <strong className="text-slate-900 block font-black text-xs">{selectedColor.name}</strong>
+                  <span className="text-slate-500 font-mono text-[10px]">{selectedColor.code} • {selectedColor.family}</span>
                 </div>
+              </div>
+
+              {/* High-Fidelity Protection Marker */}
+              <div className="absolute top-3 right-3 bg-slate-900/85 backdrop-blur-md px-2.5 py-1 rounded-xl shadow-xs border border-white/10 text-white flex items-center gap-1.5 text-[10px] font-bold pointer-events-none">
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                <span>Muebles, Piso y Ventana Intactos</span>
               </div>
             </div>
 
@@ -418,137 +1081,305 @@ export const RealisticColorSimulator: React.FC = () => {
                   Recomendación Oficial Pintuco para {selectedScenario.name}:
                 </strong>
                 <p className="text-[11px] text-emerald-800 mt-0.5">
-                  {selectedScenario.recommendedProduct}. {selectedScenario.accentTip}
+                  {selectedScenario.recommendedProduct}. {selectedColor.description}
                 </p>
               </div>
             </div>
           </div>
 
-          {/* Color Palette & Customizer (5 Columns on large screens) */}
-          <div className="lg:col-span-4 bg-white p-4 sm:p-5 rounded-3xl border border-slate-200 shadow-xs space-y-5">
+          {/* Color Buttons Palette (5 Columns on large screens) */}
+          <div className="lg:col-span-5 bg-white p-4 sm:p-5 rounded-3xl border border-slate-200 shadow-xs space-y-4">
             
-            {/* Color Palette Header */}
+            {/* Header */}
             <div>
-              <h2 className="text-xs font-black uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
-                <Droplets className="w-3.5 h-3.5 text-[#2FAE6D]" />
-                <span>2. Carta de Colores Oficiales Pintuco</span>
-              </h2>
+              <div className="flex items-center justify-between">
+                <h2 className="text-xs font-black uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                  <Palette className="w-3.5 h-3.5 text-[#2FAE6D]" />
+                  <span>2. Elige el Color de la Pared (20 Tonos Reales)</span>
+                </h2>
+                <span className="text-[10px] font-mono text-slate-400">
+                  {filteredColors.length} disponibles
+                </span>
+              </div>
               <p className="text-xs text-slate-600 mt-0.5">
-                Haz clic en cualquier tono para aplicarlo instantáneamente al muro.
+                Haz clic en cualquier botón de color para ver instantáneamente la imagen de la pared en ese tono.
               </p>
             </div>
 
             {/* Category filter pills */}
             <div className="flex flex-wrap gap-1">
-              {colorCategories.map((cat) => (
+              {colorFamilies.map((fam) => (
                 <button
-                  key={cat}
-                  onClick={() => setActiveCategory(cat)}
+                  key={fam}
+                  onClick={() => setActiveFamily(fam)}
                   className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-colors cursor-pointer ${
-                    activeCategory === cat
+                    activeFamily === fam
                       ? 'bg-[#142154] text-white shadow-2xs'
                       : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                   }`}
                 >
-                  {cat === 'all' ? 'Todos' : cat}
+                  {fam === 'all' ? 'Todos (20)' : fam.split('&')[0]}
                 </button>
               ))}
             </div>
 
-            {/* Swatches Grid */}
-            <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 max-h-72 overflow-y-auto pr-1">
-              {filteredColors.map((col) => {
-                const isSelected = selectedColor.name === col.name;
+            {/* COLOR BUTTONS GRID: Cada imagen tiene su botón con el color exacto de la pared */}
+            <div className="grid grid-cols-2 sm:grid-cols-2 gap-2.5 max-h-[460px] overflow-y-auto pr-1">
+              {filteredColors.map((colorItem) => {
+                const isSelected = selectedColor.id === colorItem.id;
                 return (
                   <button
-                    key={col.name}
-                    onClick={() => setSelectedColor(col)}
-                    className={`group p-2 rounded-xl border text-left transition-all cursor-pointer flex flex-col items-center gap-1.5 ${
+                    key={colorItem.id}
+                    onClick={() => setSelectedColor(colorItem)}
+                    className={`group p-2.5 rounded-2xl border text-left transition-all cursor-pointer flex items-center gap-2.5 relative ${
                       isSelected
-                        ? 'border-[#2FAE6D] ring-2 ring-emerald-300 bg-emerald-50/40 shadow-xs'
+                        ? 'border-[#2FAE6D] ring-2 ring-emerald-300 bg-emerald-50/50 shadow-md'
                         : 'border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50'
                     }`}
-                    title={`${col.name} (${col.code})`}
+                    title={`Ver imagen con pared en ${colorItem.name}`}
                   >
+                    {/* Color Swatch Circle / Square with wall color */}
                     <div
-                      className="w-full aspect-square rounded-lg border border-black/10 shadow-2xs relative"
-                      style={{ backgroundColor: col.hex }}
+                      className="w-10 h-10 rounded-xl border border-black/15 shadow-xs shrink-0 relative overflow-hidden flex items-center justify-center"
+                      style={{ backgroundColor: colorItem.hex }}
                     >
                       {isSelected && (
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <div className="w-4 h-4 rounded-full bg-white/90 text-slate-900 flex items-center justify-center shadow-xs">
-                            <Check className="w-2.5 h-2.5 stroke-3" />
-                          </div>
+                        <div className="w-5 h-5 rounded-full bg-white/90 text-slate-900 flex items-center justify-center shadow-xs">
+                          <Check className="w-3 h-3 stroke-3 text-emerald-700" />
                         </div>
                       )}
                     </div>
-                    <span className="text-[10px] font-bold text-slate-800 text-center line-clamp-1 w-full">
-                      {col.name}
-                    </span>
+
+                    {/* Text Details */}
+                    <div className="min-w-0 flex-1">
+                      <span className="font-extrabold text-[11px] text-slate-900 block truncate group-hover:text-[#1B2A6B]">
+                        {colorItem.name}
+                      </span>
+                      <div className="flex items-center gap-1.5 text-[10px] text-slate-500 font-mono">
+                        <span>{colorItem.code}</span>
+                        <span>•</span>
+                        <span className="font-bold text-slate-700">{colorItem.hex}</span>
+                      </div>
+                    </div>
                   </button>
                 );
               })}
             </div>
 
-            {/* Customizer: Acabado y Transmitancia de Luz */}
-            <div className="pt-4 border-t border-slate-100 space-y-3 text-xs">
+            {/* Finish & Lighting Customizer */}
+            <div className="pt-3 border-t border-slate-100 space-y-2.5 text-xs">
               <span className="font-black text-slate-900 block uppercase tracking-wider text-[11px]">
-                3. Acabado & Comportamiento de Luz
+                3. Acabado de la Pintura
               </span>
 
-              {/* Acabado buttons */}
-              <div>
-                <label className="block text-slate-500 font-bold mb-1.5 text-[11px]">Tipo de Acabado:</label>
-                <div className="grid grid-cols-3 gap-1.5">
-                  {(['mate', 'satinado', 'brillante'] as const).map((fin) => (
-                    <button
-                      key={fin}
-                      type="button"
-                      onClick={() => setFinishEffect(fin)}
-                      className={`py-1.5 px-2 rounded-xl text-xs font-bold capitalize transition-colors cursor-pointer border ${
-                        finishEffect === fin
-                          ? 'bg-[#142154] text-white border-[#142154] shadow-xs'
-                          : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
-                      }`}
-                    >
-                      {fin}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Opacity slider */}
-              <div>
-                <div className="flex justify-between items-center mb-1 text-[11px]">
-                  <span className="text-slate-500 font-bold">Intensidad del Pigmento:</span>
-                  <span className="font-mono font-bold text-slate-800">{Math.round(opacity * 100)}%</span>
-                </div>
-                <input
-                  type="range"
-                  min="0.5"
-                  max="1.0"
-                  step="0.05"
-                  value={opacity}
-                  onChange={(e) => setOpacity(parseFloat(e.target.value))}
-                  className="w-full accent-[#2FAE6D] cursor-pointer"
-                />
+              <div className="grid grid-cols-3 gap-1.5">
+                {(['mate', 'satinado', 'brillante'] as const).map((fin) => (
+                  <button
+                    key={fin}
+                    type="button"
+                    onClick={() => setFinishEffect(fin)}
+                    className={`py-1.5 px-2 rounded-xl text-xs font-bold capitalize transition-colors cursor-pointer border ${
+                      finishEffect === fin
+                        ? 'bg-[#142154] text-white border-[#142154] shadow-xs'
+                        : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                    }`}
+                  >
+                    {fin}
+                  </button>
+                ))}
               </div>
             </div>
 
-            {/* Cotizar CTA Button */}
-            <div className="pt-3 border-t border-slate-100">
+            {/* Actions: Cotizar & Carrito */}
+            <div className="pt-2 border-t border-slate-100 space-y-2">
+              <button
+                type="button"
+                onClick={handleAddToCart}
+                className="w-full py-3 bg-[#2FAE6D] hover:bg-[#27995f] text-white rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all cursor-pointer active:scale-98"
+              >
+                <Droplets className="w-4 h-4" />
+                <span>Comprar Galón de {selectedColor.name}</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+
               <button
                 type="button"
                 onClick={() => setIsRequestModalOpen(true)}
-                className="w-full py-3 bg-[#2FAE6D] hover:bg-[#27995f] text-white rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all cursor-pointer active:scale-95"
+                className="w-full py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer transition-colors"
               >
-                <Calculator className="w-4 h-4" />
-                <span>Calcular m² para {selectedScenario.name}</span>
-                <ArrowRight className="w-4 h-4" />
+                <Calculator className="w-3.5 h-3.5 text-slate-600" />
+                <span>Calcular cuántos galones necesito para mi pared</span>
               </button>
             </div>
+
           </div>
         </div>
+
+        {/* 3. GALERÍA VISUAL DE LAS LÁMINAS ENVIADAS POR EL CLIENTE */}
+        <div className="bg-white p-5 sm:p-6 rounded-3xl border border-slate-200 shadow-xs space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-sm font-black text-slate-900 flex items-center gap-2">
+                <Palette className="w-4 h-4 text-[#2FAE6D]" />
+                <span>
+                  Catálogo Completo de las 5 Gamas de Color en {selectedScenario.id === 'cocina' ? 'Cocina' : selectedScenario.id === 'habitacion' ? 'Habitación' : 'Sala de Estar'}
+                </span>
+              </h2>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Cada lámina agrupa 4 tonos fotorrealistas coordinados probados sobre este espacio arquitectónico.
+              </p>
+            </div>
+            <span className="text-xs font-bold text-[#1B2A6B] bg-blue-50 px-3 py-1 rounded-full border border-blue-200">
+              5 Gamas • 20 Variaciones
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+            {(selectedScenario.id === 'habitacion'
+              ? [
+                  {
+                    title: 'Gama Verdes & Frescura',
+                    file: '/assets/aistudio/Gemini_Generated_Image_pebrrzpebrrzpebr_a2b09c1a.jpeg',
+                    tones: ['Menta', 'Salvia', 'Bosque', 'Oliva'],
+                    firstColorId: 'verde_menta_claro',
+                  },
+                  {
+                    title: 'Gama Azules & Serenidad',
+                    file: '/assets/aistudio/Gemini_Generated_Image_nm9cspnm9cspnm9c_941d347d.jpeg',
+                    tones: ['Celeste', 'Lavanda', 'Cobalto', 'Marino'],
+                    firstColorId: 'azul_marino_profundo',
+                  },
+                  {
+                    title: 'Gama Rosas & Púrpuras',
+                    file: '/assets/aistudio/Gemini_Generated_Image_axs5iuaxs5iuaxs5_2b6ea660.jpeg',
+                    tones: ['Pastel', 'Coral', 'Borgoña', 'Púrpura'],
+                    firstColorId: 'rosa_pastel',
+                  },
+                  {
+                    title: 'Gama Cálidos & Tierras',
+                    file: '/assets/aistudio/Gemini_Generated_Image_2ix1oc2ix1oc2ix1_ed90b233.jpeg',
+                    tones: ['Mantequilla', 'Mostaza', 'Colonial', 'Terracota'],
+                    firstColorId: 'terracota_arcilla',
+                  },
+                  {
+                    title: 'Gama Neutros & Grafito',
+                    file: '/assets/aistudio/Gemini_Generated_Image_2ec1v32ec1v32ec1_ad8f3ef8.jpeg',
+                    tones: ['Blanco', 'Lino', 'Gris Urbano', 'Ébano'],
+                    firstColorId: 'gris_urbano',
+                  },
+                ]
+              : selectedScenario.id === 'cocina'
+              ? [
+                  {
+                    title: 'Gama Verdes & Menta',
+                    file: '/assets/aistudio/Gemini_Generated_Image_9pjd5s9pjd5s9pjd_ac7f1e98.jpeg',
+                    tones: ['Menta', 'Salvia', 'Bosque', 'Oliva'],
+                    firstColorId: 'verde_menta_claro',
+                  },
+                  {
+                    title: 'Gama Azules & Serenidad',
+                    file: '/assets/aistudio/Gemini_Generated_Image_390tpr390tpr390t_d8b232a3.jpeg',
+                    tones: ['Celeste', 'Lavanda', 'Cobalto', 'Marino'],
+                    firstColorId: 'azul_marino_profundo',
+                  },
+                  {
+                    title: 'Gama Rosas & Púrpuras',
+                    file: '/assets/aistudio/Gemini_Generated_Image_twhlr0twhlr0twhl_f49a80b7.jpeg',
+                    tones: ['Pastel', 'Coral', 'Borgoña', 'Púrpura'],
+                    firstColorId: 'rosa_pastel',
+                  },
+                  {
+                    title: 'Gama Cálidos & Tierras',
+                    file: '/assets/aistudio/Gemini_Generated_Image_gfffmjgfffmjgfff_addbaa80.jpeg',
+                    tones: ['Mantequilla', 'Mostaza', 'Colonial', 'Terracota'],
+                    firstColorId: 'terracota_arcilla',
+                  },
+                  {
+                    title: 'Gama Neutros & Grafito',
+                    file: '/assets/aistudio/Gemini_Generated_Image_5dt0tg5dt0tg5dt0_241ef644.jpeg',
+                    tones: ['Blanco', 'Lino', 'Gris Urbano', 'Ébano'],
+                    firstColorId: 'gris_urbano',
+                  },
+                ]
+              : [
+                  {
+                    title: 'Gama Verdes & Menta',
+                    file: '/assets/aistudio/Gemini_Generated_Image_h0otsth0otsth0ot_03ec4492.jpeg',
+                    tones: ['Menta', 'Salvia', 'Bosque', 'Oliva'],
+                    firstColorId: 'verde_menta_claro',
+                  },
+                  {
+                    title: 'Gama Azules & Serenidad',
+                    file: '/assets/aistudio/Gemini_Generated_Image_c2py0xc2py0xc2py_7caccba0.jpeg',
+                    tones: ['Celeste', 'Lavanda', 'Cobalto', 'Marino'],
+                    firstColorId: 'azul_marino_profundo',
+                  },
+                  {
+                    title: 'Gama Rosas & Púrpuras',
+                    file: '/assets/aistudio/Gemini_Generated_Image_ega9ucega9ucega9_329437da.jpeg',
+                    tones: ['Pastel', 'Coral', 'Borgoña', 'Púrpura'],
+                    firstColorId: 'rosa_pastel',
+                  },
+                  {
+                    title: 'Gama Cálidos & Tierras',
+                    file: '/assets/aistudio/Gemini_Generated_Image_d4megfd4megfd4me_305142ee.jpeg',
+                    tones: ['Mantequilla', 'Mostaza', 'Colonial', 'Terracota'],
+                    firstColorId: 'terracota_arcilla',
+                  },
+                  {
+                    title: 'Gama Neutros & Grafito',
+                    file: '/assets/aistudio/Gemini_Generated_Image_nxwpdmnxwpdmnxwp_ba1ef253.jpeg',
+                    tones: ['Blanco', 'Lino', 'Gris Urbano', 'Ébano'],
+                    firstColorId: 'gris_urbano',
+                  },
+                ]
+            ).map((sheet, idx) => (
+              <div
+                key={idx}
+                className="group rounded-2xl border border-slate-200 hover:border-emerald-500 overflow-hidden bg-slate-50 flex flex-col transition-all shadow-xs hover:shadow-md"
+              >
+                <div className="aspect-video w-full overflow-hidden bg-slate-900 relative">
+                  <img
+                    src={sheet.file}
+                    alt={sheet.title}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                  <span className="absolute bottom-2 left-2 px-2 py-0.5 rounded text-[10px] font-bold bg-slate-900/80 text-white backdrop-blur-xs">
+                    4 Tonos
+                  </span>
+                </div>
+
+                <div className="p-3 flex-1 flex flex-col justify-between space-y-2.5">
+                  <div>
+                    <h3 className="font-bold text-xs text-slate-900">{sheet.title}</h3>
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {sheet.tones.map((t, tidx) => (
+                        <span key={tidx} className="text-[9px] bg-white border border-slate-200 px-1.5 py-0.5 rounded text-slate-600 font-medium">
+                          {t}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const list = getScenarioWallColors(selectedScenario.id);
+                      const match = list.find((c) => c.id === sheet.firstColorId);
+                      if (match) setSelectedColor(match);
+                      window.scrollTo({ top: 320, behavior: 'smooth' });
+                    }}
+                    className="w-full py-1.5 bg-white hover:bg-[#2FAE6D] hover:text-white border border-slate-200 hover:border-[#2FAE6D] text-slate-700 text-[11px] font-bold rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1"
+                  >
+                    <span>Probar Gama</span>
+                    <ArrowRight className="w-3 h-3" />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
       </div>
     </div>
   );

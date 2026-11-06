@@ -1,0 +1,182 @@
+[
+  {
+    "id": "verde_menta_claro",
+    "name": "Verde Menta Luminoso",
+    "code": "PIN-V01",
+    "family": "Verdes & Frescura",
+    "hex": "#C7E5DB",
+    "image": "/assets/simulator/habitacion_variations/verde_menta_claro.jpg",
+    "description": "Tono menta relajante y luminoso; aporta frescura serena y descanso visual."
+  },
+  {
+    "id": "verde_salvia",
+    "name": "Verde Salvia N\u00f3rdico",
+    "code": "PIN-V02",
+    "family": "Verdes & Frescura",
+    "hex": "#89997E",
+    "image": "/assets/simulator/habitacion_variations/verde_salvia.jpg",
+    "description": "Verde salvia org\u00e1nico; equilibrio natural que induce calma y descanso profundo."
+  },
+  {
+    "id": "verde_bosque",
+    "name": "Verde Bosque Profundo",
+    "code": "PIN-V03",
+    "family": "Verdes & Frescura",
+    "hex": "#1B3C2B",
+    "image": "/assets/simulator/habitacion_variations/verde_bosque.jpg",
+    "description": "Verde bosque envolvente; crea un muro de acento \u00edntimo y acogedor."
+  },
+  {
+    "id": "verde_oliva",
+    "name": "Verde Oliva Elegante",
+    "code": "PIN-V04",
+    "family": "Verdes & Frescura",
+    "hex": "#2B351D",
+    "image": "/assets/simulator/habitacion_variations/verde_oliva.jpg",
+    "description": "Verde oliva c\u00e1lido y sobrio; combina calidez org\u00e1nica y distinci\u00f3n."
+  },
+  {
+    "id": "azul_celeste",
+    "name": "Azul Celeste Cielo",
+    "code": "PIN-A01",
+    "family": "Azules & Serenidad",
+    "hex": "#9DD8F8",
+    "image": "/assets/simulator/habitacion_variations/azul_celeste.jpg",
+    "description": "Azul celeste pac\u00edfico; transmite paz, frescura y sensaci\u00f3n de espacio abierto."
+  },
+  {
+    "id": "azul_lavanda_sereno",
+    "name": "Azul Lavanda Sereno",
+    "code": "PIN-A02",
+    "family": "Azules & Serenidad",
+    "hex": "#7E8DB4",
+    "image": "/assets/simulator/habitacion_variations/azul_lavanda_sereno.jpg",
+    "description": "Azul lavanda suave; perfecto para dormitorios por sus propiedades relajantes."
+  },
+  {
+    "id": "azul_rey_cobalto",
+    "name": "Azul Rey Cobalto",
+    "code": "PIN-A03",
+    "family": "Azules & Serenidad",
+    "hex": "#163B6F",
+    "image": "/assets/simulator/habitacion_variations/azul_rey_cobalto.jpg",
+    "description": "Azul cobalto sofisticado; cabecero de alto impacto y car\u00e1cter refinado."
+  },
+  {
+    "id": "azul_marino_profundo",
+    "name": "Azul Marino Profundo",
+    "code": "PIN-A04",
+    "family": "Azules & Serenidad",
+    "hex": "#0B1C2C",
+    "image": "/assets/simulator/habitacion_variations/azul_marino_profundo.jpg",
+    "description": "Azul noche profundo; atm\u00f3sfera de hotel boutique con textiles blancos."
+  },
+  {
+    "id": "rosa_pastel",
+    "name": "Rosa Pastel Suave",
+    "code": "PIN-R01",
+    "family": "Rosas & P\u00farpuras",
+    "hex": "#EABFC6",
+    "image": "/assets/simulator/habitacion_variations/rosa_pastel.jpg",
+    "description": "Rosa empolvado c\u00e1lido; ternura, luminosidad y confort acogedor."
+  },
+  {
+    "id": "coral_romantico",
+    "name": "Coral Rom\u00e1ntico",
+    "code": "PIN-R02",
+    "family": "Rosas & P\u00farpuras",
+    "hex": "#C86F6B",
+    "image": "/assets/simulator/habitacion_variations/coral_romantico.jpg",
+    "description": "Coral suave aterciopelado; calidez envolvente de estilo mediterr\u00e1neo."
+  },
+  {
+    "id": "borgona_vino",
+    "name": "Borgo\u00f1a Vino Tinto",
+    "code": "PIN-R03",
+    "family": "Rosas & P\u00farpuras",
+    "hex": "#3E1920",
+    "image": "/assets/simulator/habitacion_variations/borgona_vino.jpg",
+    "description": "Vino tinto aterciopelado; elegancia dram\u00e1tica y lujo sensorial."
+  },
+  {
+    "id": "purpura_amatista",
+    "name": "P\u00farpura Amatista",
+    "code": "PIN-R04",
+    "family": "Rosas & P\u00farpuras",
+    "hex": "#775B84",
+    "image": "/assets/simulator/habitacion_variations/purpura_amatista.jpg",
+    "description": "P\u00farpura amatista sereno; estimula el bienestar espiritual y la calma."
+  },
+  {
+    "id": "amarillo_mantequilla",
+    "name": "Amarillo Mantequilla Suave",
+    "code": "PIN-C01",
+    "family": "C\u00e1lidos & Tierras",
+    "hex": "#E8DFA4",
+    "image": "/assets/simulator/habitacion_variations/amarillo_mantequilla.jpg",
+    "description": "Amarillo crema suave; despierta con luz dorada natural cada ma\u00f1ana."
+  },
+  {
+    "id": "ocre_mostaza",
+    "name": "Ocre Mostaza C\u00e1lido",
+    "code": "PIN-C02",
+    "family": "C\u00e1lidos & Tierras",
+    "hex": "#A9701F",
+    "image": "/assets/simulator/habitacion_variations/ocre_mostaza.jpg",
+    "description": "Ocre mostaza artesanal; calidez acogedora con muebles de nogal."
+  },
+  {
+    "id": "rojo_colonial",
+    "name": "Rojo Colonial Profundo",
+    "code": "PIN-C03",
+    "family": "C\u00e1lidos & Tierras",
+    "hex": "#3F161A",
+    "image": "/assets/simulator/habitacion_variations/rojo_colonial.jpg",
+    "description": "Rojo vino colonial; intimidad cl\u00e1sica y calidez arquitect\u00f3nica."
+  },
+  {
+    "id": "terracota_arcilla",
+    "name": "Terracota Arcilla",
+    "code": "PIN-C04",
+    "family": "C\u00e1lidos & Tierras",
+    "hex": "#713209",
+    "image": "/assets/simulator/habitacion_variations/terracota_arcilla.jpg",
+    "description": "Terracota artesanal; atm\u00f3sfera r\u00fastica de retiro campestre."
+  },
+  {
+    "id": "blanco_puro",
+    "name": "Blanco Puro Luminoso",
+    "code": "PIN-N01",
+    "family": "Blancos, Grises & Neutros",
+    "hex": "#DDDDDD",
+    "image": "/assets/simulator/habitacion_variations/blanco_puro.jpg",
+    "description": "Blanco puro arquitect\u00f3nico; pureza visual, luminosidad total y serenidad."
+  },
+  {
+    "id": "gris_lino",
+    "name": "Gris Lino Claro",
+    "code": "PIN-N02",
+    "family": "Blancos, Grises & Neutros",
+    "hex": "#A1A1A1",
+    "image": "/assets/simulator/habitacion_variations/gris_lino.jpg",
+    "description": "Gris lino suave; base neutral ideal para descanso de estilo escandinavo."
+  },
+  {
+    "id": "gris_urbano",
+    "name": "Gris Urbano Contempor\u00e1neo",
+    "code": "PIN-N03",
+    "family": "Blancos, Grises & Neutros",
+    "hex": "#5A585B",
+    "image": "/assets/simulator/habitacion_variations/gris_urbano.jpg",
+    "description": "Gris medio sofisticado; perfecto contraste con lencer\u00eda blanca de cama."
+  },
+  {
+    "id": "negro_ebano",
+    "name": "Negro \u00c9bano Grafito",
+    "code": "PIN-N04",
+    "family": "Blancos, Grises & Neutros",
+    "hex": "#161616",
+    "image": "/assets/simulator/habitacion_variations/negro_ebano.jpg",
+    "description": "Negro grafito sobrio; muro de cabecero de m\u00e1ximo impacto contempor\u00e1neo."
+  }
+]

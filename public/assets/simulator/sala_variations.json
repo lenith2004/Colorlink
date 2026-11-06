@@ -1,0 +1,162 @@
+[
+  {
+    "id": "verde_menta_claro",
+    "name": "Verde Menta Luminoso",
+    "code": "PIN-V01",
+    "family": "Verdes & Frescura",
+    "hex": "#DCF5EF",
+    "image": "/assets/simulator/sala_variations/verde_menta_claro.jpg"
+  },
+  {
+    "id": "verde_salvia",
+    "name": "Verde Salvia N\u00f3rdico",
+    "code": "PIN-V02",
+    "family": "Verdes & Frescura",
+    "hex": "#B1C5AC",
+    "image": "/assets/simulator/sala_variations/verde_salvia.jpg"
+  },
+  {
+    "id": "verde_bosque",
+    "name": "Verde Bosque Profundo",
+    "code": "PIN-V03",
+    "family": "Verdes & Frescura",
+    "hex": "#2F5442",
+    "image": "/assets/simulator/sala_variations/verde_bosque.jpg"
+  },
+  {
+    "id": "verde_oliva",
+    "name": "Verde Oliva Elegante",
+    "code": "PIN-V04",
+    "family": "Verdes & Frescura",
+    "hex": "#444E35",
+    "image": "/assets/simulator/sala_variations/verde_oliva.jpg"
+  },
+  {
+    "id": "azul_celeste",
+    "name": "Azul Celeste Cielo",
+    "code": "PIN-A01",
+    "family": "Azules & Serenidad",
+    "hex": "#A7DEFC",
+    "image": "/assets/simulator/sala_variations/azul_celeste.jpg"
+  },
+  {
+    "id": "azul_lavanda_sereno",
+    "name": "Azul Lavanda Sereno",
+    "code": "PIN-A02",
+    "family": "Azules & Serenidad",
+    "hex": "#9FB3D6",
+    "image": "/assets/simulator/sala_variations/azul_lavanda_sereno.jpg"
+  },
+  {
+    "id": "azul_rey_cobalto",
+    "name": "Azul Rey Cobalto",
+    "code": "PIN-A03",
+    "family": "Azules & Serenidad",
+    "hex": "#254C83",
+    "image": "/assets/simulator/sala_variations/azul_rey_cobalto.jpg"
+  },
+  {
+    "id": "azul_marino_profundo",
+    "name": "Azul Marino Profundo",
+    "code": "PIN-A04",
+    "family": "Azules & Serenidad",
+    "hex": "#1D2E48",
+    "image": "/assets/simulator/sala_variations/azul_marino_profundo.jpg"
+  },
+  {
+    "id": "rosa_pastel",
+    "name": "Rosa Pastel Suave",
+    "code": "PIN-R01",
+    "family": "Rosas & P\u00farpuras",
+    "hex": "#FDD9DD",
+    "image": "/assets/simulator/sala_variations/rosa_pastel.jpg"
+  },
+  {
+    "id": "coral_romantico",
+    "name": "Coral Rom\u00e1ntico",
+    "code": "PIN-R02",
+    "family": "Rosas & P\u00farpuras",
+    "hex": "#CF8181",
+    "image": "/assets/simulator/sala_variations/coral_romantico.jpg"
+  },
+  {
+    "id": "borgona_vino",
+    "name": "Borgo\u00f1a Vino Tinto",
+    "code": "PIN-R03",
+    "family": "Rosas & P\u00farpuras",
+    "hex": "#532F3D",
+    "image": "/assets/simulator/sala_variations/borgona_vino.jpg"
+  },
+  {
+    "id": "purpura_amatista",
+    "name": "P\u00farpura Amatista",
+    "code": "PIN-R04",
+    "family": "Rosas & P\u00farpuras",
+    "hex": "#8A6994",
+    "image": "/assets/simulator/sala_variations/purpura_amatista.jpg"
+  },
+  {
+    "id": "amarillo_mantequilla",
+    "name": "Amarillo Mantequilla Suave",
+    "code": "PIN-C01",
+    "family": "C\u00e1lidos & Tierras",
+    "hex": "#FFF6B1",
+    "image": "/assets/simulator/sala_variations/amarillo_mantequilla.jpg"
+  },
+  {
+    "id": "ocre_mostaza",
+    "name": "Ocre Mostaza C\u00e1lido",
+    "code": "PIN-C02",
+    "family": "C\u00e1lidos & Tierras",
+    "hex": "#F4B663",
+    "image": "/assets/simulator/sala_variations/ocre_mostaza.jpg"
+  },
+  {
+    "id": "rojo_colonial",
+    "name": "Rojo Colonial Profundo",
+    "code": "PIN-C03",
+    "family": "C\u00e1lidos & Tierras",
+    "hex": "#662931",
+    "image": "/assets/simulator/sala_variations/rojo_colonial.jpg"
+  },
+  {
+    "id": "terracota_arcilla",
+    "name": "Terracota Arcilla",
+    "code": "PIN-C04",
+    "family": "C\u00e1lidos & Tierras",
+    "hex": "#90451D",
+    "image": "/assets/simulator/sala_variations/terracota_arcilla.jpg"
+  },
+  {
+    "id": "blanco_puro",
+    "name": "Blanco Puro Luminoso",
+    "code": "PIN-N01",
+    "family": "Blancos, Grises & Neutros",
+    "hex": "#F2F4F3",
+    "image": "/assets/simulator/sala_variations/blanco_puro.jpg"
+  },
+  {
+    "id": "gris_lino",
+    "name": "Gris Lino Claro",
+    "code": "PIN-N02",
+    "family": "Blancos, Grises & Neutros",
+    "hex": "#C7C5C8",
+    "image": "/assets/simulator/sala_variations/gris_lino.jpg"
+  },
+  {
+    "id": "gris_urbano",
+    "name": "Gris Urbano Contempor\u00e1neo",
+    "code": "PIN-N03",
+    "family": "Blancos, Grises & Neutros",
+    "hex": "#6F6F6F",
+    "image": "/assets/simulator/sala_variations/gris_urbano.jpg"
+  },
+  {
+    "id": "negro_ebano",
+    "name": "Negro \u00c9bano Grafito",
+    "code": "PIN-N04",
+    "family": "Blancos, Grises & Neutros",
+    "hex": "#363636",
+    "image": "/assets/simulator/sala_variations/negro_ebano.jpg"
+  }
+]

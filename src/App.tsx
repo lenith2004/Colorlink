@@ -14,6 +14,7 @@ import { Footer } from './components/Footer';
 import { SupabaseProductsList } from './components/SupabaseProductsList';
 import { RealisticColorSimulator } from './components/RealisticColorSimulator';
 import { SimulatorHomeSection } from './components/SimulatorHomeSection';
+import { CartDrawer } from './components/CartDrawer';
 
 // Client Dashboard
 import { ClientDashboard } from './components/RoleDashboards/ClientDashboard';
@@ -153,10 +154,11 @@ const MainContent: React.FC = () => {
         onClose={() => setSelectedProcessId(null)}
       />
 
-      {/* Global Modals & Floating Assistant */}
+      {/* Global Modals, Cart & Floating Assistant */}
       <ClientRequestModal />
       <RequestDetailModal />
       <AuthModal />
+      <CartDrawer />
       <ColorLinkChatBot />
 
       <Footer />
